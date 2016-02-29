@@ -1,3 +1,27 @@
+#' MCMC parameter setup
+#'
+#' Sets up the parameter table for use in \code{\link{run_metropolis_MCMC}}
+#' @param pars the vector of parameters that would be used for the ODE model
+#' @return a matrix of needed settings for the MCMC algorithm. For each parameter, gives a name, lower and upper bounds, boolean for log scale, initial step sizes, log proposal and whether or not the parameter should be fixed.
+#' @export
+setupParTable <- function(pars){
+    use_log <- rep(0,length(pars))
+    lower_bounds <- rep(0,length(pars))
+    upper_bounds <- c(7,1,60,10,60,10,1,1,100,100,1,1,1,1,200,1,1,2)
+    steps <- rep(0.1,length(pars))
+    log_proposal <- rep(0,length(pars))
+    fixed <- c(1,1,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,1)
+    names <- c("sampFreq","sampPropn","muI","sdI","muN","sdN","probMicro","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","P_HM","P_MH","t_seed")
+    paramTable <- cbind("use_log"=use_log,"lower_bounds"=lower_bounds,"upper_bounds"=upper_bounds,"steps"=steps,"log_proposal"=log_proposal,"fixed"=fixed)
+    paramTable <- as.data.frame(paramTable)
+    paramTable <- cbind(names, paramTable)
+    paramTable$names <- as.character(paramTable$names)
+    return(paramTable)
+
+}
+
+
+
 #' Scale step sizes
 #'
 #' Scales the given step size (between 0 and 1) based on the current acceptance rate to get closed to the desired acceptance rate
