@@ -107,8 +107,8 @@ void derivs (int *neq, double *t, double *y, double *ydot, double *yout, int *ip
   
   // Saving movements out of pregnancy class for post processing
   ydot[15] = I_F/D_F;
-  ydot[15] = I_F/D_IH;
-  ydot[16] = y[5]/D_F + E_F/D_F + R_F/D_F + I_F/D_F;
+  ydot[16] = I_F/D_IH;
+  ydot[17] = y[5]/D_F + E_F/D_F + R_F/D_F + I_F/D_F;
  
 	 
   //  ydot[17] = lambda_H*y[3] + lambda_H*y[4] + lambda_H*y[5];
