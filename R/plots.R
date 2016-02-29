@@ -5,6 +5,7 @@
 #' @param N_H human population size
 #' @param N_M mosquito population size
 #' @param file.name optional filename at which to save the plot. Must be a PNG. If NULL, does not open the png device.
+#' @export
 #' @useDynLib zikaProj
 plot.dynamics <- function(y, N_H, N_M, file.name = NULL){
     y <- as.data.frame(y)

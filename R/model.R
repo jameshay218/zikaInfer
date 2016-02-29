@@ -18,15 +18,15 @@ zika.sim <- function(allPars){
   probMicro <- pars[7]
   
   pars <- allPars[[3]][8:length(allPars[[3]])]
-  y <- ode(y0s,ts,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4)
+  y <- ode(y0s,ts,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4,nout=4)
 
                                         #  y <- lsoda(y0sa,ts,zika.ode,pars)
   y <- as.data.frame(y)
   colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","IfA","fB")
   y <- y[y$times > pars[length(pars)],]
                                         #  return(y)
-  tmp <- numeric(max(y$times)*365/sampFreq*7)
-  tmpN <- numeric(max(y$times)*365/sampFreq*7)
+  tmp <- numeric(max(y$times)*sampFreq)
+  tmpN <- numeric(max(y$times)*sampFreq)
   tmp[1] <- y$IfA[1]
   tmpN[1] <- y$fB[1]
   
@@ -40,7 +40,7 @@ zika.sim <- function(allPars){
       alpha_I <- probMicro*tmp[index]/tmpN[index]
       
       N <- sampPropn*(tmpN[index])
-      N <- 13500/(12*4) * sampPropn
+#      N <- 13500/(12*4) * sampPropn
 #      print(N)
       components <- sample(1:2,c(alpha_I,1-alpha_I),size=N,replace=TRUE)
       mus <- c(mu_I,mu_N)
@@ -116,10 +116,10 @@ b.calc <- function(params,NH,NM,R0){    pars <- params[8:length(params)]
 #' @export
 #' @useDynLib zikaProj
 setupParsODE <- function(){
-    D_EM=10.5/365
-    D_EH=4/365
-    D_IH=5/365
-    L_M=14/365
+    D_EM=10.5/360
+    D_EH=4/360
+    D_IH=5/360
+    L_M=14/360
     L=73.6
     D_C=18
     D_F=3/12
@@ -143,7 +143,7 @@ setupParsODE <- function(){
 #' @useDynLib zikaProj
 setupParsLong <- function(){
     pars <- setupParsODE()
-    sampFreq <- 7
+    sampFreq <- 1/48
     sampPropn <- 0.9
     mu_I <- 28
     sd_I <- 2
@@ -185,7 +185,7 @@ setupListPars <- function(duration=10){
     R_F = 0
 
     y0 <- c(S_M, E_M,I_M,S_C,S_A,S_F,E_C,E_A,E_F,I_C,I_A,I_F,R_C,R_A,R_F, 0, 0, 0)
-    ts <- 0:(365*duration) / 365
+    ts <- 0:(360*duration) / 360
     
     return(list(ts,y0,unname(pars)))
 }

@@ -24,7 +24,7 @@ void initmod(void (* odeparms)(int *, double *))
   odeparms(&N, parms);
 }
 /* Derivatives and 1 output variable */
-void derivs (int *neq, double *t, double *y, double *ydot)
+void derivs (int *neq, double *t, double *y, double *ydot, double *yout, int *ip)
 {
   double epsilon = 0.0001; // Constant to check for seeding event
   double B_H = L_H - D_C; // Rate of entering the first trimester class (ie. rate of getting pregnant)
@@ -108,7 +108,12 @@ void derivs (int *neq, double *t, double *y, double *ydot)
   // Saving movements out of pregnancy class for post processing
   ydot[15] = I_F/D_F;
   ydot[16] = y[5]/D_F + E_F/D_F + R_F/D_F + I_F/D_F;
-
+  yout[0] = I_F/D_F;
+  yout[1] = I_F/D_IH;
+  yout[2] = y[5]/D_F + E_F/D_F + R_F/D_F + I_F/D_F;
+  yout[3] = E_C/D_EH + E_A/D_EH + E_F/D_EH;
+  
+	 
   //  ydot[17] = lambda_H*y[3] + lambda_H*y[4] + lambda_H*y[5];
   // Save human incidence
   ydot[17] = E_C/D_EH + E_A/D_EH + E_F/D_EH;
