@@ -8,7 +8,7 @@
 #' @param max the maximum value on the linear scale
 #' @return the value converted to a unit scale
 #' @export
-#' @useDynLib(zikaProj)
+#' @useDynLib zikaProj
 toUnitScale <- function(x, min, max) {
     .Call('zikaProj_toUnitScale', PACKAGE = 'zikaProj', x, min, max)
 }
@@ -20,7 +20,7 @@ toUnitScale <- function(x, min, max) {
 #' @param max the maximum value on the linear scale
 #' @return the value converted to a linear scale
 #' @export
-#' @useDynLib(zikaProj)
+#' @useDynLib zikaProj 
 fromUnitScale <- function(x, min, max) {
     .Call('zikaProj_fromUnitScale', PACKAGE = 'zikaProj', x, min, max)
 }

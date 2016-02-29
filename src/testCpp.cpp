@@ -8,7 +8,7 @@ using namespace Rcpp;
 //' @param max the maximum value on the linear scale
 //' @return the value converted to a unit scale
 //' @export
-//' @useDynLib(zikaProj)
+//' @useDynLib zikaProj
 //[[Rcpp::export]]
 double toUnitScale(double x, double min, double max){
   return((x-min)/(max-min));
@@ -21,7 +21,7 @@ double toUnitScale(double x, double min, double max){
 //' @param max the maximum value on the linear scale
 //' @return the value converted to a linear scale
 //' @export
-//' @useDynLib(zikaProj)
+//' @useDynLib zikaProj 
 //[[Rcpp::export]]
 double fromUnitScale(double x, double min, double max){
   return(min + (max-min)*x);
