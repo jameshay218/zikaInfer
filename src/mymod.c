@@ -107,18 +107,16 @@ void derivs (int *neq, double *t, double *y, double *ydot, double *yout, int *ip
   
   // Saving movements out of pregnancy class for post processing
   ydot[15] = I_F/D_F;
+  ydot[15] = I_F/D_IH;
   ydot[16] = y[5]/D_F + E_F/D_F + R_F/D_F + I_F/D_F;
  
 	 
   //  ydot[17] = lambda_H*y[3] + lambda_H*y[4] + lambda_H*y[5];
   // Save human incidence
-  ydot[17] = E_C/D_EH + E_A/D_EH + E_F/D_EH;
+  ydot[18] = E_C/D_EH + E_A/D_EH + E_F/D_EH;
 
-  yout[0] = I_F/D_F;
-  yout[1] = I_F/D_IH;
-  yout[2] = y[5]/D_F + E_F/D_F + R_F/D_F + I_F/D_F;
-  yout[3] = E_C/D_EH + E_A/D_EH + E_F/D_EH;
- 
-
-
-}
+  //  yout[0] = I_F/D_F; // People going from Infected Pregnant to Infected Adult
+  //yout[1] = I_F/D_IH; // People going from Infected Pregnant to Recovered Pregnant
+  //yout[2] = y[5]/D_F + E_F/D_F + R_F/D_F + I_F/D_F; // People going from Pregnant to Adult
+  //yout[3] = E_C/D_EH + E_A/D_EH + E_F/D_EH; // Daily incidence
+ }

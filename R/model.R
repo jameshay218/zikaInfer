@@ -18,11 +18,12 @@ zika.sim <- function(allPars){
   probMicro <- pars[7]
   
   pars <- allPars[[3]][8:length(allPars[[3]])]
-  y <- ode(y0s,ts,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4,nout=5)
+  y <- ode(y0s,ts,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4,nout=0)
 
                                         #  y <- lsoda(y0sa,ts,zika.ode,pars)
   y <- as.data.frame(y)
-  colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RatePregnantAll","CumInc","leavingIf","recoverIf","allBirths","inc")
+  colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RateInfected","RatePregnantAll","CumInc")
+                  #,"leavingIf","recoverIf","allBirths","inc")
   y <- y[y$times > pars[length(pars)],]
                                         #  return(y)
   tmp <- numeric(max(y$times)*sampFreq)
@@ -184,7 +185,7 @@ setupListPars <- function(duration=10){
     R_A = 0
     R_F = 0
 
-    y0 <- c(S_M, E_M,I_M,S_C,S_A,S_F,E_C,E_A,E_F,I_C,I_A,I_F,R_C,R_A,R_F, 0, 0, 0)
+    y0 <- c(S_M, E_M,I_M,S_C,S_A,S_F,E_C,E_A,E_F,I_C,I_A,I_F,R_C,R_A,R_F, 0, 0, 0,0)
     ts <- 0:(360*duration) / 360
     
     return(list(ts,y0,unname(pars)))
