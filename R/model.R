@@ -18,7 +18,7 @@ zika.sim <- function(allPars){
   probMicro <- pars[7]
   
   pars <- allPars[[3]][8:length(allPars[[3]])]
-  y <- ode(y0s,ts,func="derivs",parms=pars,dllname="mymod",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4)
+  y <- ode(y0s,ts,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4)
 
                                         #  y <- lsoda(y0sa,ts,zika.ode,pars)
   y <- as.data.frame(y)

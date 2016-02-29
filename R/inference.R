@@ -78,7 +78,7 @@ posterior <- function(ts, y0s, pars, dat){
   pars1 <- pars[8:length(pars)]
 
   #y <- ode(y0s,t,zika.ode,pars1)
-  y <- ode(y0s,ts,func="derivs",parms=pars1,dllname="mymod",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4)
+  y <- ode(y0s,ts,func="derivs",parms=pars1,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4)
   y <- y[y[,1] > pars[length(pars)],]
   alphas <- calculate_alphas(y[,c(ncol(y)-2,ncol(y)-1)],probMicro,sampFreq)
   alphas[alphas < 1e-5] <- 0
