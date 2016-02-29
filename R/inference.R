@@ -1,3 +1,12 @@
+#' Scale step sizes
+#'
+#' Scales the given step size (between 0 and 1) based on the current acceptance rate to get closed to the desired acceptance rate
+#' @param step the current step size
+#' @param popt the desired acceptance rate
+#' @param pcur the current acceptance rate
+#' @return the scaled step size
+#' @export
+#' @useDynLib zikaProj
 scaletuning <- function(step, popt,pcur){
     if(pcur ==1) pcur <- 0.99
     if(pcur == 0) pcur <- 0.01
@@ -6,8 +15,16 @@ scaletuning <- function(step, popt,pcur){
     return(step)
 }
 
-
-proposalfunction1 <- function(param,param_table,index){
+#' MCMC proposal function
+#'
+#' Proposal function for MCMC random walk, taking random steps of a given size. Random walk may be on a linear or log scale
+#' @param param a vector of the parameters to be explored
+#' @param param_table a matrix of flags and bounds that specify how the proposal should be treated. Crucial elements are the 3rd column (lower bound), 4th column (upper bound), 5th column )step size) and 6th column (flag for log proposal)
+#' @param index numeric value for the index of the parameter to be moved from the param table and vector
+#' @return the parameter vector after step
+#' @export
+#' @useDynLib zikaProj
+proposalfunction <- function(param,param_table,index){
     # 4th index is upper bound, 3rd is lower
     # 1st and 2nd index used in other functions
     mn <- param_table[index,"lower_bounds"]
@@ -40,22 +57,58 @@ proposalfunction1 <- function(param,param_table,index){
     rtn
 }
 
+#' Posterior function for ODE model
+#'
+#' Given the time vector, initial conditions and ODE parameters, calculates the posterior value for a given data set. Note that no priors are used here.
+#' @param ts time vector over which to solve the ODE model
+#' @param y0s initial conditions for the ODE model
+#' @param pars ODE parameters
+#' @param dat unnamed matrix over which to calculate likelihoods
+#' @return a single value for the posterior
+#' @export
+#' @useDynLib zikaProj
+posterior <- function(ts, y0s, pars, dat){
+  sampFreq <- pars[1]
+  sampPropn <- pars[2]
+  mu_I <- pars[3]
+  sd_I <- pars[4]
+  mu_N <- pars[5]
+  sd_N <- pars[6]
+  probMicro <- pars[7]
+  pars1 <- pars[8:length(pars)]
 
-run_metropolis_MCMC <- function(startvalue,
-                                iterations=1000,
-                                data,
-                                ts,
-                                y0s,
-                                param_table,
-                                popt=0.44,
-                                opt_freq=50,
-                                thin=1,
-                                burnin=100,
-                                adaptive_period=1,
-                                filename,
-                                save_block = 500,
-                                VERBOSE=FALSE
-                                ){
+  #y <- ode(y0s,t,zika.ode,pars1)
+  y <- ode(y0s,ts,func="derivs",parms=pars1,dllname="mymod",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4)
+  y <- y[y[,1] > pars[length(pars)],]
+  alphas <- calculate_alphas(y[,c(ncol(y)-2,ncol(y)-1)],probMicro,sampFreq)
+  alphas[alphas < 1e-5] <- 0
+  #return(alphas)
+  lik <- likelihood(dat,unname(cbind(1-alphas,alphas)),c(mu_N,mu_I),c(sd_N,sd_I))
+  return(lik)
+}
+
+#' Adaptive Metropolis-within-Gibbs Random Walk Algorithm.
+#'
+#' The Adaptive Metropolis-within-Gibbs algorithm. Given a starting point and the necessary MCMC parameters as set out below, performs a random-walk of the posterior space to produce an MCMC chain that can be used to generate MCMC density and iteration plots. The algorithm undergoes an adaptive period, where it changes the step size of the random walk for each parameter to approach the desired acceptance rate, popt. After this, a burn in period is established, and the algorithm then uses \code{\link{proposalfunction}} to explore the parameter space, recording the value and posterior value at each step. The MCMC chain is saved in blocks as a .csv file at the location given by filename.
+#' @param startvalue a vector of parameter values used as the starting point for the MCMC chain. MUST be valid parameters for the model function
+#' @param iterations number of iterations to run the MCMC chain for. Note that each parameter is moved once independently for each iteration. Defaults to 1000
+#' @param data the data against which the likelihood is calculated
+#' @param ts vector of times to solve the ODE model over
+#' @param y0s starting conditions for the ODE model
+#' @param param_table a table of parameter data used for information such as bounds and prior function pointers.
+#' @param popt the desired acceptance rate. Defaults to 0.44
+#' @param opt_freq how frequently the acceptance rate is adapted. Defaults to 50
+#' @param thin thinning value for the MCMC chain. Default is 1
+#' @param burnin the length of the burn in period. Defaults to 100
+#' @param adaptive_period length of the adaptive period. Defaults to 1
+#' @param filename the full filepath at which the MCMC chain should be saved. "_chain.csv" will be appended to the end of this, so filename should have no file extensions
+#' @param save_block the number of iterations that R will keep in memory before writing to .csv. Defaults to 500
+#' @param VERBOSE boolean flag for additional output. Defaults to FALSE
+#' @return the full file path at which the MCMC chain is saved as a .csv file
+#' @export
+#' @seealso \code{\link{posterior}}, \code{\link{proposalfunction}}
+#' @useDynLib zikaProj
+run_metropolis_MCMC <- function(startvalue, iterations=1000, data, ts, y0s, param_table, popt=0.44, opt_freq=50, thin=1, burnin=100,adaptive_period=1,filename, save_block = 500, VERBOSE=FALSE){
     TUNING_ERROR<- 0.1
 
     if(opt_freq ==0 && VERBOSE){ print("Not running adaptive MCMC - opt_freq set to 0")}
@@ -107,8 +160,7 @@ run_metropolis_MCMC <- function(startvalue,
         j <- sample(non_fixed_params,1)
      #   for(j in non_fixed_params){
                                         # Propose new parameters and calculate posterior
-            #'if(i > adaptive_period + burnin) browser()
-        proposal <- proposalfunction1(current_params,param_transform_table,j)
+        proposal <- proposalfunction(current_params,param_transform_table,j)
         #print(proposal)
         #proposal <- current_params
         #proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"steps"])
@@ -178,4 +230,63 @@ run_metropolis_MCMC <- function(startvalue,
         print(param_table$step)
     }
     return(mcmc_chain_file)
+}
+
+#' MCMC diagnostic tests
+#'
+#' Runs some basic MCMC diagnostics on the given chain and saves a few plots. The diagnostics are:
+#' \itemize{
+#' \item{Gelman Diagnostics: }{Saves the Gelman plots at the given file location}
+#' \item{Auto-correlation: }{Saves autocorrelation plots at the given file location}
+#' }
+#' @param mcmc_chains the entire MCMC chain to be tested
+#' @param filename the full file path at which to save the diagnostics. _gelman.pdf will be appended, for example
+#' @param param_table the parameter table
+#' @param VERBOSE boolean flag for additional output. Defaulst to FALSE
+#' @return returns any error messages raised during the tests
+#' @export
+mcmc_diagnostics <- function(mcmc_chains, filename, param_table,VERBOSE=FALSE){
+    errors <- NULL
+    final <- NULL
+    if(length(mcmc_chains) > 1){
+        gelman.error <- tryCatch({
+            if(VERBOSE) print("Saving Gelman diagnostics")
+            gelman.filename <- paste(filename,"_gelman.pdf",sep="")
+            pdf(gelman.filename)
+            gelman.plot(as.mcmc.list(mcmc_chains)[,which(param_table$fixed==0)])
+            if(VERBOSE) print("Gelman diagnostics:")
+            gelman.diag(as.mcmc.list(mcmc_chains)[,which(param_table$fixed==0)])
+            final <- NULL
+        }, warnings=function(war1){
+            if(VERBOSE) print(paste("A warnings occured in gelman diagnostics: ", war1))
+            final <- war1
+        }, error=function(err1){
+            if(VERBOSE) print(paste("An error occured in gelman diagnostics: ", err1))
+            final <- err1
+        }, finally = {
+            dev.off()
+            errors <- c(errors, final)
+        })
+    }
+
+    for(i in 1:length(mcmc_chains)){
+        autocorr.error <- tryCatch({
+            if(VERBOSE) print("Saving auto-correlation plot")
+            autocorr.filename <- paste(filename,"_autocor_",i,".pdf",sep="")
+            pdf(autocorr.filename)
+            autocorr.plot(mcmc_chains[[i]][,which(param_table$fixed==0)])
+            final <- NULL
+        }, warnings=function(war2){
+            if(VERBOSE) print(paste("A warnings occured in autocorr plot: ", war2))
+            final <- war2
+        }, error=function(err2){
+            if(VERBOSE) print(paste("An error occured in autocorr plot diagnostics: ", err2))
+            final <- err2
+        }, finally = {
+            dev.off()
+            errors <- c(errors, final)            
+        })
+    }
+    
+    return(errors)
 }

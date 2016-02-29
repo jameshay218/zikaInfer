@@ -1,11 +1,12 @@
-
 #' SEIR dynamics plot
 #'
 #' Plots SEIR dynamics given a data frame of solved ODEs
 #' @param y The data frame or matrix of times and population sizes
 #' @param N_H human population size
 #' @param N_M mosquito population size
-plot.dynamics <- function(ym N_H, N_M, file.name = NULL){
+#' @param file.name optional filename at which to save the plot. Must be a PNG. If NULL, does not open the png device.
+#' @useDynLib zikaProj
+plot.dynamics <- function(y, N_H, N_M, file.name = NULL){
     y <- as.data.frame(y)
     n <- ncol(y)
     cols <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","IfA","fB")
@@ -39,3 +40,9 @@ plot.dynamics <- function(ym N_H, N_M, file.name = NULL){
     }
     
 }
+
+#' Head circumference heatmap
+#'
+#' Given a matrix or data frame of head sizes over time (rows represent sampling times), plots a heatmap showing distribution and mean head sizes over time.
+#' @param
+#'
