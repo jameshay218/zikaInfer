@@ -18,11 +18,11 @@ zika.sim <- function(allPars){
   probMicro <- pars[7]
   
   pars <- allPars[[3]][8:length(allPars[[3]])]
-  y <- ode(y0s,ts,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4,nout=4)
+  y <- ode(y0s,ts,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4,nout=5)
 
                                         #  y <- lsoda(y0sa,ts,zika.ode,pars)
   y <- as.data.frame(y)
-  colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","IfA","fB")
+  colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RatePregnantAll","CumInc","leavingIf","recoverIf","allBirths","inc")
   y <- y[y$times > pars[length(pars)],]
                                         #  return(y)
   tmp <- numeric(max(y$times)*sampFreq)
