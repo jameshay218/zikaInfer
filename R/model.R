@@ -32,19 +32,22 @@ zika.sim <- function(allPars){
   
   y <- as.data.frame(y)
   colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RateInfected","RatePregnantAll","CumInc")
-                                        #,"leavingIf","recoverIf","allBirths","inc")
+
+  print("Solved")
+  
   daysPerYear <- nrow(y)/max(y$times)
   birthsPerYear <- sum(y0s[4:6])/pars[3]
   birthsPerDay <- ceiling(birthsPerYear/daysPerYear)
 
   alphas_I<- calculate_alphas(as.matrix(y[,c("If","Sf","Ef","Rf")]),probMicro,sampFreq)
+  print("Alphas calculated")
   alphas_N <- 1 - alphas_I
   N <- sampPropn*birthsPerDay*sampFreq
 
   i <- 1 + sampFreq
   index <- 1
   all <- NULL
-
+print("Before loop")
   while(index <= nrow(y)/sampFreq){
       N <- sampPropn*(birthsPerDay*sampFreq)
       components <- sample(1:2,c(alphas_I[index],alphas_N[index]),size=N,replace=TRUE)
@@ -56,6 +59,7 @@ zika.sim <- function(allPars){
       index <- index + 1
       i <- i + sampFreq
   }
+  print("After loop")
   return(as.matrix(rbind.fill(lapply(all,function(x) as.data.frame(t(x))))))
 }
 
