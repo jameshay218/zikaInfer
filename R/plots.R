@@ -69,9 +69,3 @@ plot <- ggplot(tmp) + geom_raster(aes(x=Day,y=Size,fill=Proportion),interpolate=
     )
 return(plot)
 }
-
-plotHeatmapDensity <- function(y){
-
-
-
-}

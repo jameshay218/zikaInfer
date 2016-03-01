@@ -67,9 +67,7 @@ NumericVector calculate_alphas(NumericMatrix y, double probMicro, double sampFre
   int index = 0;
   NumericVector alphas(y.nrow()/sampFreq);
   NumericVector tmpPropn(sampFreq);
-  Rcpp::Rcout << "Here" << std::endl;
   while(i < y.nrow()){
-    Rcpp::Rcout << i << std::endl;
     for(int j =0;j <= sampFreq;++j){
       tmpPropn[j] = y(i-j,0)/(y(i-j,0)+y(i-j,1)+y(i-j,2)+y(i-j,3));
     }
