@@ -27,7 +27,15 @@ double fromUnitScale(double x, double min, double max){
   return(min + (max-min)*x);
 }
 
-// [[Rcpp::export]]
+//' Converts to linear scale
+//'
+//' @param x the double to be converted back to linear scale
+//' @param min the minimum value on the linear scale
+//' @param max the maximum value on the linear scale
+//' @return the value converted to a linear scale
+//' @export
+//' @useDynLib zikaProj 
+//[[Rcpp::export]]
 double likelihood(NumericMatrix dat, NumericMatrix alphas, NumericVector mus, NumericVector sds){
   double lnlik = 0;
   double tmp = 0;
@@ -45,7 +53,15 @@ double likelihood(NumericMatrix dat, NumericMatrix alphas, NumericVector mus, Nu
   return(lnlik);
 }
 
-// [[Rcpp::export]]
+//' Converts to linear scale
+//'
+//' @param x the double to be converted back to linear scale
+//' @param min the minimum value on the linear scale
+//' @param max the maximum value on the linear scale
+//' @return the value converted to a linear scale
+//' @export
+//' @useDynLib zikaProj 
+//[[Rcpp::export]]
 NumericVector calculate_alphas(NumericMatrix y, double probMicro, double sampFreq){
   int i = 0 + sampFreq;
   int index = 0;

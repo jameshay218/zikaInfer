@@ -25,10 +25,26 @@ fromUnitScale <- function(x, min, max) {
     .Call('zikaProj_fromUnitScale', PACKAGE = 'zikaProj', x, min, max)
 }
 
+#' Converts to linear scale
+#'
+#' @param x the double to be converted back to linear scale
+#' @param min the minimum value on the linear scale
+#' @param max the maximum value on the linear scale
+#' @return the value converted to a linear scale
+#' @export
+#' @useDynLib zikaProj 
 likelihood <- function(dat, alphas, mus, sds) {
     .Call('zikaProj_likelihood', PACKAGE = 'zikaProj', dat, alphas, mus, sds)
 }
 
+#' Converts to linear scale
+#'
+#' @param x the double to be converted back to linear scale
+#' @param min the minimum value on the linear scale
+#' @param max the maximum value on the linear scale
+#' @return the value converted to a linear scale
+#' @export
+#' @useDynLib zikaProj 
 calculate_alphas <- function(y, probMicro, sampFreq) {
     .Call('zikaProj_calculate_alphas', PACKAGE = 'zikaProj', y, probMicro, sampFreq)
 }
