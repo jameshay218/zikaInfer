@@ -39,7 +39,7 @@ zika.sim <- function(allPars){
   birthsPerYear <- sum(y0s[4:6])/pars[3]
   birthsPerDay <- ceiling(birthsPerYear/daysPerYear)
 
-  alphas_I<- calculate_alphas(as.matrix(y[,c("If","Sf","Ef","Rf")]),probMicro,sampFreq)
+  alphas_I<- calculate_alphas(as.matrix(unname(y[,c("If","Sf","Ef","Rf")])),probMicro,sampFreq)
   print("Alphas calculated")
   alphas_N <- 1 - alphas_I
   N <- sampPropn*birthsPerDay*sampFreq

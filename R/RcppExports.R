@@ -29,8 +29,6 @@ likelihood <- function(dat, alphas, mus, sds) {
     .Call('zikaProj_likelihood', PACKAGE = 'zikaProj', dat, alphas, mus, sds)
 }
 
-#' @export
-#' @useDynLib zikaProj
 calculate_alphas <- function(y, probMicro, sampFreq) {
     .Call('zikaProj_calculate_alphas', PACKAGE = 'zikaProj', y, probMicro, sampFreq)
 }

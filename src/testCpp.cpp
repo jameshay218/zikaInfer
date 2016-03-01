@@ -45,9 +45,6 @@ double likelihood(NumericMatrix dat, NumericMatrix alphas, NumericVector mus, Nu
   return(lnlik);
 }
 
-
-//' @export
-//' @useDynLib zikaProj
 // [[Rcpp::export]]
 NumericVector calculate_alphas(NumericMatrix y, double probMicro, double sampFreq){
   int i = 0 + sampFreq;
