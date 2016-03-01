@@ -51,13 +51,13 @@ NumericVector calculate_alphas(NumericMatrix y, double probMicro, int sampFreq){
   int i = 0 + sampFreq;
   int index = 0;
   NumericVector alphas(y.nrow()/sampFreq);
-  double tmpI;
-  double tmpN;
-
+  NumericVector tmpPropn(sampFreq);
+  
   while(i < y.nrow()){
-    tmpI = y(i,0) - y(i-sampFreq,0);
-    tmpN = y(i,1) - y(i-sampFreq,1);
-    alphas[index++] = probMicro*(tmpI/tmpN);
+    for(int j =0;j <= sampFreq;++j){
+      tmpPropn[j] = y(i-j,0)/(y(i-j,0)+y(i-j,1)+y(i-j,2)+y(i-j,3));
+    }
+    alphas[index++] = probMicro*mean(tmpPropn);
     i += sampFreq;
   }
   return(alphas);

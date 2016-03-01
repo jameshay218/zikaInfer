@@ -105,8 +105,8 @@ posterior <- function(ts, y0s, pars, dat){
   y <- ode(y0s,ts,func="derivs",parms=pars1,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4,nout=0)
   colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RateInfected","RatePregnantAll","CumInc")
   y <- y[y[,1] > pars[length(pars)],]
-  alphas <- calculate_alphas(y[,c("leavingIf","allBirths")],probMicro,sampFreq)
-  alphas[alphas < 1e-5] <- 0
+  alphas <- calculate_alphas(y[,c("If","Sf","Ef","Rf")],probMicro,sampFreq)
+  #alphas[alphas < 1e-5] <- 0
   #return(alphas)
   lik <- likelihood(dat,unname(cbind(1-alphas,alphas)),c(mu_N,mu_I),c(sd_N,sd_I))
   return(lik)

@@ -20,27 +20,38 @@ zika.sim <- function(allPars){
   pars <- allPars[[3]][8:length(allPars[[3]])]
   y <- ode(y0s,ts,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4,nout=0)
 
-                                        #  y <- lsoda(y0sa,ts,zika.ode,pars)
+                                         # y <- lsoda(y0s,ts,zika.ode,pars)
   y <- as.data.frame(y)
   colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RateInfected","RatePregnantAll","CumInc")
                   #,"leavingIf","recoverIf","allBirths","inc")
-  y <- y[y$times > pars[length(pars)],]
+  daysPerYear <- nrow(y)/max(y$times)
+  y <- y[y$times > pars[11],]
+
                                         #  return(y)
-  tmp <- numeric(max(y$times)*sampFreq)
-  tmpN <- numeric(max(y$times)*sampFreq)
-  tmp[1] <- y$IfA[1]
-  tmpN[1] <- y$fB[1]
+  tmp <- numeric(ceiling(max(y$times)*daysPerYear/sampFreq))
+  tmpN <- numeric(ceiling(max(y$times)*daysPerYear/sampFreq))
+  tmp[1] <- y[1,"If"]
+  tmpN[1] <- sum(y[1,c("Sf","Ef","If","Rf")])
   
   i <- 1 + sampFreq
   index <- 1
   all <- NULL
+  birthsPerYear <- sum(y0s[4:6])/pars[3]
+  birthsPerDay <- ceiling(birthsPerYear/daysPerYear)
+  
   while(i <= nrow(y)){
-      tmp[index] <- y$IfA[i] - y$IfA[i-sampFreq]
-      tmpN[index] <- y$fB[i] - y$fB[i-sampFreq]
+#      tmp[index] <- y[(i-sampFreq):i, "If"]
+      is <- y[(i-sampFreq):i, "If"]
+      ns <- rowSums(y[(i-sampFreq):i,c("Sf","Ef","If","Rf")])
+      propns <- mean(na.omit(is/ns))
+#      tmp[index] <- y$IfA[i] - y$IfA[i-sampFreq]
+ #     tmpN[index] <- y$fB[i] - y$fB[i-sampFreq]
+      #tmpN[index] <- sum(y[(i-sampFreq):i,c("Sf","Ef","If","Rf")])
       
-      alpha_I <- probMicro*tmp[index]/tmpN[index]
+#      alpha_I <- probMicro*tmp[index]/tmpN[index]
+      alpha_I <- probMicro * propns
       
-      N <- sampPropn*(tmpN[index])
+      N <- sampPropn*(birthsPerDay*sampFreq)
 #      N <- 13500/(12*4) * sampPropn
 #      print(N)
       components <- sample(1:2,c(alpha_I,1-alpha_I),size=N,replace=TRUE)
@@ -144,7 +155,7 @@ setupParsODE <- function(){
 #' @useDynLib zikaProj
 setupParsLong <- function(){
     pars <- setupParsODE()
-    sampFreq <- 1/48
+    sampFreq <- 7
     sampPropn <- 0.9
     mu_I <- 28
     sd_I <- 2
@@ -174,12 +185,12 @@ setupListPars <- function(duration=10){
     I_M = 0
     S_F = 0.001*N_H
     S_C = D_C*N_H/(L+D_C)
-    S_A = (1-0.001-D_C/(L+D_C))*N_H-(1/100000)*N_H
+    S_A = (1-0.001-D_C/(L+D_C))*N_H
     E_C = 0
     E_A = 0
     E_F = 0
     I_C = 0
-    I_A = (1/100000)*N_H
+    I_A = 0
     I_F = 0
     R_C = 0
     R_A = 0

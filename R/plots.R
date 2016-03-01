@@ -45,5 +45,33 @@ plot_dynamics <- function(y, N_H, N_M, file.name = NULL){
 #' Head circumference heatmap
 #'
 #' Given a matrix or data frame of head sizes over time (rows represent sampling times), plots a heatmap showing distribution and mean head sizes over time.
-#' @param
-#'
+#' @param dat matrix of head count data. Rows represent sampling times and columns represent individual measurements.
+#' @return A ggplot object with the heatmap of head sizes over time. White line shows mean head size.
+#' @export
+plotDataHeatMap <- function(dat){
+tmp <- createCounts(dat)
+meanDat <- tmp[[2]]
+tmp <- tmp[[1]]
+
+plot <- ggplot(tmp) + geom_raster(aes(x=Day,y=Size,fill=Proportion),interpolate=FALSE) +
+    geom_line(data=meanDat,aes(y=y,x=x),linetype=2,colour="white",size=1)+
+    scale_fill_gradientn(colours=c("darkblue","red")) +
+    scale_y_continuous(expand=c(0,0),breaks=seq(0,max(tmp$Size),by=1),limits=c(19,50),labels=seq(0,max(tmp$Size),by=1))+
+    scale_x_continuous(expand=c(0,0),breaks=seq(0,max(tmp$Day),by=max(tmp$Day)/15),labels=round(seq(0,max(tmp$Day),by=max(tmp$Day)/15),digits=0))+
+    theme(
+        panel.grid.major = element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.background = element_blank(),
+        text=element_text(size=16,colour="gray20"),
+        axis.line=element_line(colour="gray20"),
+        axis.line.x = element_line(colour = "gray20"),
+        axis.line.y=element_line(colour="gray20")
+    )
+return(plot)
+}
+
+plotHeatmapDensity <- function(y){
+
+
+
+}

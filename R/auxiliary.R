@@ -7,13 +7,17 @@
 #' @useDynLib zikaProj
 createCounts <- function(dat){
     all <- NULL
-    for(i in 1:nrow(dat)){
-        tmp <- as.data.frame(table(dat[i,]))
-        tmp[,2] <- tmp[,2]/sum(tmp[,2])
-        tmp <- cbind(tmp, i)
-        all <- rbind(all, tmp)
-    }
-    return(all)
+    means <- NULL
+    all <- apply(dat,1,table)
+    all <- lapply(all,as.data.frame)
+    all <- lapply(seq_along(all),function(x) cbind(all[[x]],x))
+    all <- do.call("rbind",all)
+    means <- apply(dat,1,mean)
+    
+    all[,1] <- as.numeric(as.character(all[,1]))
+    colnames(all) <- c("Size","Proportion","Day")
+    meanDat <- data.frame(x=seq(1,max(all$Day),by=1),y=means)
+    return(list(all,meanDat))
 }
 
 #' Sets up R environment
@@ -54,4 +58,23 @@ simeq <- function(par,R0){
     A <- par[1]
     f1 <- A - (1-exp(-R0*A))
     f1
+}
+
+calc.alphas <- function(y, sampFreq,probMicro){
+    daysPerYear <- nrow(y)/max(y$times)
+    i <- 1 + sampFreq
+    index <- 1
+    all <- NULL
+    birthsPerYear <- sum(y0s[4:6])/sampFreq
+    birthsPerDay <- ceiling(birthsPerYear/daysPerYear)
+    alphas <- numeric(ceiling(max(y$times)*daysPerYear/sampFreq))
+    while(i <= nrow(y)){
+        is <- y[(i-sampFreq):i, "If"]
+        ns <- rowSums(y[(i-sampFreq):i,c("Sf","Ef","If","Rf")])
+        propns <- mean(na.omit(is/ns))
+        alphas[index] <- probMicro * propns
+        index <- index + 1
+        i <- i + sampFreq
+    }
+    return(alphas)
 }
