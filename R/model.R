@@ -16,45 +16,38 @@ zika.sim <- function(allPars){
   mu_N <- pars[5]
   sd_N <- pars[6]
   probMicro <- pars[7]
+  seeding <- pars[8]
+  I0 <- y0s[11]
+  y0s[11] <- 0
   
-  pars <- allPars[[3]][8:length(allPars[[3]])]
-  y <- ode(y0s,ts,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4,nout=0)
+  pars <- allPars[[3]][9:length(allPars[[3]])]
+  ts1 <- ts[ts < seeding]
+  ts2 <- ts[ts >= seeding]
 
-                                         # y <- lsoda(y0s,ts,zika.ode,pars)
+  y1 <- ode(y0s,ts1,func="derivs",parms=pars,dllname="mymod",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,nout=0)
+  y0s2 <- y1[nrow(y1),2:ncol(y1)]
+  y0s2[11] <- I0
+  y0s2[5] <- y0s2[5] - I0
+  y <- ode(y0s2,ts2,func="derivs",parms=pars,dllname="mymod",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,nout=0)
+  
   y <- as.data.frame(y)
   colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RateInfected","RatePregnantAll","CumInc")
-                  #,"leavingIf","recoverIf","allBirths","inc")
+                                        #,"leavingIf","recoverIf","allBirths","inc")
   daysPerYear <- nrow(y)/max(y$times)
-  y <- y[y$times > pars[11],]
+  birthsPerYear <- sum(y0s[4:6])/pars[3]
+  birthsPerDay <- ceiling(birthsPerYear/daysPerYear)
 
-                                        #  return(y)
-  tmp <- numeric(ceiling(max(y$times)*daysPerYear/sampFreq))
-  tmpN <- numeric(ceiling(max(y$times)*daysPerYear/sampFreq))
-  tmp[1] <- y[1,"If"]
-  tmpN[1] <- sum(y[1,c("Sf","Ef","If","Rf")])
-  
+  alphas_I<- calculate_alphas(as.matrix(y[,c("If","Sf","Ef","Rf")]),probMicro,sampFreq)
+  alphas_N <- 1 - alphas_I
+  N <- sampPropn*birthsPerDay*sampFreq
+
   i <- 1 + sampFreq
   index <- 1
   all <- NULL
-  birthsPerYear <- sum(y0s[4:6])/pars[3]
-  birthsPerDay <- ceiling(birthsPerYear/daysPerYear)
-  
-  while(i <= nrow(y)){
-#      tmp[index] <- y[(i-sampFreq):i, "If"]
-      is <- y[(i-sampFreq):i, "If"]
-      ns <- rowSums(y[(i-sampFreq):i,c("Sf","Ef","If","Rf")])
-      propns <- mean(na.omit(is/ns))
-#      tmp[index] <- y$IfA[i] - y$IfA[i-sampFreq]
- #     tmpN[index] <- y$fB[i] - y$fB[i-sampFreq]
-      #tmpN[index] <- sum(y[(i-sampFreq):i,c("Sf","Ef","If","Rf")])
-      
-#      alpha_I <- probMicro*tmp[index]/tmpN[index]
-      alpha_I <- probMicro * propns
-      
+
+  while(index <= nrow(y)/sampFreq){
       N <- sampPropn*(birthsPerDay*sampFreq)
-#      N <- 13500/(12*4) * sampPropn
-#      print(N)
-      components <- sample(1:2,c(alpha_I,1-alpha_I),size=N,replace=TRUE)
+      components <- sample(1:2,c(alphas_I[index],alphas_N[index]),size=N,replace=TRUE)
       mus <- c(mu_I,mu_N)
       sds <- c(sd_I,sd_N)
       
@@ -76,7 +69,7 @@ zika.sim <- function(allPars){
 #' @export
 #' @seealso \code{\link{b.calc}}
 r0.calc <- function(params,NH,NM){
-    pars <- params[8:length(params)]
+    pars <- params[9:length(params)]
     muM <- 1/pars[1]
     sigmaM <- 1/pars[2]
 
@@ -106,7 +99,8 @@ r0.calc <- function(params,NH,NM){
 #' @return A single value for bite rate
 #' @export
 #' @seealso \code{\link{r0.calc}}
-b.calc <- function(params,NH,NM,R0){    pars <- params[8:length(params)]
+b.calc <- function(params,NH,NM,R0){
+    pars <- params[9:length(params)]
     muM <- 1/pars[1]
     sigmaM <- 1/pars[2]
 
@@ -138,11 +132,9 @@ setupParsODE <- function(){
     b=100
     p_MH=0.5
     p_HM=0.5
-    t_seed <- 2
-    I0 <- 10
     offset <- 0
     
-    pars <- c("L_M"=L_M,"D_EM"=D_EM,"L_H"=L,"D_C"=D_C,"D_F"=D_F,"D_EH"=D_EH,"D_IH"=D_IH,"b"=b,"p_HM"=p_HM,"p_MH"=p_MH,"t_seed"=t_seed,"I0"=I0,"constSeed"=offset)
+    pars <- c("L_M"=L_M,"D_EM"=D_EM,"L_H"=L,"D_C"=D_C,"D_F"=D_F,"D_EH"=D_EH,"D_IH"=D_IH,"b"=b,"p_HM"=p_HM,"p_MH"=p_MH,"constSeed"=offset)
     return(pars)
 }
 
@@ -162,7 +154,8 @@ setupParsLong <- function(){
     mu_N <- 35
     sd_N <- 2
     probMicro <- 1
-    pars <- c("sampFreq"=sampFreq,"sampPropn"=sampPropn,"mu_I"=mu_I,"sd_I"=sd_I,"mu_N"=mu_N,"sd_N"=sd_N,"probMicro"=probMicro,pars)
+    seeding <- 5
+    pars <- c("sampFreq"=sampFreq,"sampPropn"=sampPropn,"mu_I"=mu_I,"sd_I"=sd_I,"mu_N"=mu_N,"sd_N"=sd_N,"probMicro"=probMicro,"seeding"=seeding,pars)
     return(pars)   
 }
 

@@ -46,14 +46,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // calculate_alphas
-NumericVector calculate_alphas(NumericMatrix y, double probMicro, int sampFreq);
+NumericVector calculate_alphas(NumericMatrix y, double probMicro, double sampFreq);
 RcppExport SEXP zikaProj_calculate_alphas(SEXP ySEXP, SEXP probMicroSEXP, SEXP sampFreqSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< NumericMatrix >::type y(ySEXP);
     Rcpp::traits::input_parameter< double >::type probMicro(probMicroSEXP);
-    Rcpp::traits::input_parameter< int >::type sampFreq(sampFreqSEXP);
+    Rcpp::traits::input_parameter< double >::type sampFreq(sampFreqSEXP);
     __result = Rcpp::wrap(calculate_alphas(y, probMicro, sampFreq));
     return __result;
 END_RCPP

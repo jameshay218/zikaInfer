@@ -2,7 +2,7 @@
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
 
-static double parms[13];
+static double parms[11];
 #define L_M parms[0]
 #define D_EM parms[1]
 #define L_H parms[2]
@@ -13,14 +13,12 @@ static double parms[13];
 #define b parms[7]
 #define P_HM parms[8]
 #define P_MH parms[9]
-#define t_seed parms[10]
-#define I0 parms[11]
-#define offset1 parms[12]
+#define seeding parms[10]
 
 /* initializer */
 void initmod(void (* odeparms)(int *, double *))
 {
-  int N=13;
+  int N=11;
   odeparms(&N, parms);
 }
 /* Derivatives and 1 output variable */
@@ -46,7 +44,6 @@ void derivs (int *neq, double *t, double *y, double *ydot, double *yout, int *ip
   double R_C = 0; // Recovered children
   double R_A = 0; // Recovered adults
   double R_F = 0; // Recovered first trimester adults
-  double offset = 0;
 
   E_M = y[1];
   I_M = y[2];
@@ -59,23 +56,13 @@ void derivs (int *neq, double *t, double *y, double *ydot, double *yout, int *ip
   R_C = y[12];
   R_A = y[13];
   R_F = y[14];
-  double seed = 0;
-
-  // Checks if passed the seeding time of the epidemic. If yes, add constant seeding to FOI.
-  if(*t >= t_seed){
-    offset = offset1;
-    // Just after seeding time, give a pulse of initial infecteds
-    if(*t < t_seed + epsilon){
-      seed = I0;
-    }
-  }
 
   // Calculate total population sizes
   double N_H = S_C + S_A + S_F + E_C + I_C + E_A + I_A + E_F + I_F + R_C + R_A + R_F;
   double N_M = S_M + E_M + I_M;
 
   // Force of infection from humans to mosquitoes. Note that this comes from infected humans plus the initial seed and constant influx of infecteds
-  double lambda_M = b*P_HM*(I_C + I_A + I_F + offset + seed)/N_H;
+  double lambda_M = b*P_HM*(I_C + I_A + I_F + seeding)/N_H;
   // FOI from mosquitoes to humans
   double lambda_H = b*P_MH*(I_M)/N_H;
 
@@ -110,13 +97,6 @@ void derivs (int *neq, double *t, double *y, double *ydot, double *yout, int *ip
   ydot[16] = I_F/D_IH;
   ydot[17] = y[5]/D_F + E_F/D_F + R_F/D_F + I_F/D_F;
  
-	 
-  //  ydot[17] = lambda_H*y[3] + lambda_H*y[4] + lambda_H*y[5];
-  // Save human incidence
+ // Save human incidence
   ydot[18] = E_C/D_EH + E_A/D_EH + E_F/D_EH;
-
-  //  yout[0] = I_F/D_F; // People going from Infected Pregnant to Infected Adult
-  //yout[1] = I_F/D_IH; // People going from Infected Pregnant to Recovered Pregnant
-  //yout[2] = y[5]/D_F + E_F/D_F + R_F/D_F + I_F/D_F; // People going from Pregnant to Adult
-  //yout[3] = E_C/D_EH + E_A/D_EH + E_F/D_EH; // Daily incidence
  }

@@ -47,7 +47,7 @@ double likelihood(NumericMatrix dat, NumericMatrix alphas, NumericVector mus, Nu
 
 
 // [[Rcpp::export]]
-NumericVector calculate_alphas(NumericMatrix y, double probMicro, int sampFreq){
+NumericVector calculate_alphas(NumericMatrix y, double probMicro, double sampFreq){
   int i = 0 + sampFreq;
   int index = 0;
   NumericVector alphas(y.nrow()/sampFreq);

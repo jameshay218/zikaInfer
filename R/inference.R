@@ -92,24 +92,33 @@ proposalfunction <- function(param,param_table,index){
 #' @export
 #' @useDynLib zikaProj
 posterior <- function(ts, y0s, pars, dat){
-  sampFreq <- pars[1]
-  sampPropn <- pars[2]
-  mu_I <- pars[3]
-  sd_I <- pars[4]
-  mu_N <- pars[5]
-  sd_N <- pars[6]
-  probMicro <- pars[7]
-  pars1 <- pars[8:length(pars)]
+    sampFreq <- pars[1]
+    sampPropn <- pars[2]
+    mu_I <- pars[3]
+    sd_I <- pars[4]
+    mu_N <- pars[5]
+    sd_N <- pars[6]
+    probMicro <- pars[7]
+    epiStart <- pars[8]
+    I0 <- y0s[11]
+    y0s[11] <- 0
+    pars1 <- pars[9:length(pars)]
+    ts1 <- ts[ts < epiStart]
+    ts2 <- ts[ts >= epiStart]
+    
+    y1 <- ode(y0s,ts1,func="derivs",parms=pars1,dllname="mymod",initfunc="initmod",maxsteps=100000,nout=0)
+    y0s2 <- y1[nrow(y1),2:ncol(y1)]
+    
+    y0s2[11] <- I0
+    y0s2[5] <- y0s2[5] - I0
+    
+    y <- ode(y0s2,ts2,func="derivs",parms=pars1,dllname="mymod",initfunc="initmod",maxsteps=100000,nout=0)
+    
+    colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RateInfected","RatePregnantAll","CumInc")
 
-  #y <- ode(y0s,t,zika.ode,pars1)
-  y <- ode(y0s,ts,func="derivs",parms=pars1,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-4,nout=0)
-  colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RateInfected","RatePregnantAll","CumInc")
-  y <- y[y[,1] > pars[length(pars)],]
-  alphas <- calculate_alphas(y[,c("If","Sf","Ef","Rf")],probMicro,sampFreq)
-  #alphas[alphas < 1e-5] <- 0
-  #return(alphas)
-  lik <- likelihood(dat,unname(cbind(1-alphas,alphas)),c(mu_N,mu_I),c(sd_N,sd_I))
-  return(lik)
+    alphas <- calculate_alphas(as.matrix(unname(y[,c("If","Sf","Ef","Rf")])),probMicro,sampFreq)
+    lik <- likelihood(dat,unname(cbind(1-alphas,alphas)),c(mu_N,mu_I),c(sd_N,sd_I))
+    return(lik)
 }
 
 #' Adaptive Metropolis-within-Gibbs Random Walk Algorithm.
