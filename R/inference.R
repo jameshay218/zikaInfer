@@ -91,7 +91,7 @@ proposalfunction <- function(param,param_table,index){
 #' @return a single value for the posterior
 #' @export
 #' @useDynLib zikaProj
-posterior <- function(ts, y0s, pars, dat, threshold=FALSE){
+posterior <- function(ts, y0s, pars, dat, threshold=NULL){
     sampFreq <- pars[1]
     sampPropn <- pars[2]
     mu_I <- pars[3]
@@ -117,7 +117,7 @@ posterior <- function(ts, y0s, pars, dat, threshold=FALSE){
     colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RateInfected","RatePregnantAll","CumInc")
 
     alphas <- calculate_alphas(as.matrix(unname(y[,c("If","Sf","Ef","Rf")])),probMicro,sampFreq)
-    if(threshold) lik <- likelihood_threshold(dat,unname(cbind(alphas,1-alphas)),c(mu_I,mu_N),c(sd_I,sd_N))
+    if(!is.null(threshold)) lik <- likelihood_threshold(dat,unname(cbind(alphas,1-alphas)),c(mu_I,mu_N),c(sd_I,sd_N),threshold)
     else lik <- likelihood(dat,unname(cbind(1-alphas,alphas)),c(mu_N,mu_I),c(sd_N,sd_I))
     return(lik)
 }
@@ -144,7 +144,7 @@ posterior <- function(ts, y0s, pars, dat, threshold=FALSE){
 #' @export
 #' @seealso \code{\link{posterior}}, \code{\link{proposalfunction}}
 #' @useDynLib zikaProj
-run_metropolis_MCMC <- function(startvalue, iterations=1000, data, ts, y0s, param_table, popt=0.44, opt_freq=50, thin=1, burnin=100,adaptive_period=1,filename, save_block = 500, VERBOSE=FALSE,threshold=FALSE){
+run_metropolis_MCMC <- function(startvalue, iterations=1000, data, ts, y0s, param_table, popt=0.44, opt_freq=50, thin=1, burnin=100,adaptive_period=1,filename, save_block = 500, VERBOSE=FALSE,threshold=NULL){
     TUNING_ERROR<- 0.1
 
     if(opt_freq ==0 && VERBOSE){ print("Not running adaptive MCMC - opt_freq set to 0")}

@@ -7,7 +7,7 @@
 run_metropolis_MCMC(startvalue, iterations = 1000, data, ts, y0s, param_table,
   popt = 0.44, opt_freq = 50, thin = 1, burnin = 100,
   adaptive_period = 1, filename, save_block = 500, VERBOSE = FALSE,
-  threshold = FALSE)
+  threshold = NULL)
 }
 \arguments{
 \item{startvalue}{a vector of parameter values used as the starting point for the MCMC chain. MUST be valid parameters for the model function}
