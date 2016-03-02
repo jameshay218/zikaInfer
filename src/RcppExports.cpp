@@ -45,6 +45,21 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// likelihood_threshold
+double likelihood_threshold(NumericMatrix dat, NumericMatrix alphas, NumericVector mus, NumericVector sds, double threshold);
+RcppExport SEXP zikaProj_likelihood_threshold(SEXP datSEXP, SEXP alphasSEXP, SEXP musSEXP, SEXP sdsSEXP, SEXP thresholdSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericMatrix >::type dat(datSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type alphas(alphasSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mus(musSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type sds(sdsSEXP);
+    Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
+    __result = Rcpp::wrap(likelihood_threshold(dat, alphas, mus, sds, threshold));
+    return __result;
+END_RCPP
+}
 // calculate_alphas
 NumericVector calculate_alphas(NumericMatrix y, double probMicro, double sampFreq);
 RcppExport SEXP zikaProj_calculate_alphas(SEXP ySEXP, SEXP probMicroSEXP, SEXP sampFreqSEXP) {

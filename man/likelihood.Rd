@@ -2,21 +2,23 @@
 % Please edit documentation in R/RcppExports.R
 \name{likelihood}
 \alias{likelihood}
-\title{Converts to linear scale}
+\title{Calculate gaussian mixture model likelihood}
 \usage{
 likelihood(dat, alphas, mus, sds)
 }
 \arguments{
-\item{x}{the double to be converted back to linear scale}
+\item{dat}{the matrix of data}
 
-\item{min}{the minimum value on the linear scale}
+\item{alphas}{matrix of of alphas. 2 columns (1 for both distributions) with number of rows matching number of rows in dat}
 
-\item{max}{the maximum value on the linear scale}
+\item{mus}{vector of mus for the 2 distributions}
+
+\item{sds}{vector of sds for the 2 distributions}
 }
 \value{
-the value converted to a linear scale
+a single log likelihood
 }
 \description{
-Converts to linear scale
+Given a matrix of data points (columns represent individuals, rows represent sampling times), computes the log likelihood using the gaussian mixture model with known alphas, mus and sds.
 }
 

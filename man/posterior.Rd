@@ -4,7 +4,7 @@
 \alias{posterior}
 \title{Posterior function for ODE model}
 \usage{
-posterior(ts, y0s, pars, dat)
+posterior(ts, y0s, pars, dat, threshold = FALSE)
 }
 \arguments{
 \item{ts}{time vector over which to solve the ODE model}

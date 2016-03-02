@@ -6,7 +6,8 @@
 \usage{
 run_metropolis_MCMC(startvalue, iterations = 1000, data, ts, y0s, param_table,
   popt = 0.44, opt_freq = 50, thin = 1, burnin = 100,
-  adaptive_period = 1, filename, save_block = 500, VERBOSE = FALSE)
+  adaptive_period = 1, filename, save_block = 500, VERBOSE = FALSE,
+  threshold = FALSE)
 }
 \arguments{
 \item{startvalue}{a vector of parameter values used as the starting point for the MCMC chain. MUST be valid parameters for the model function}
@@ -36,6 +37,8 @@ run_metropolis_MCMC(startvalue, iterations = 1000, data, ts, y0s, param_table,
 \item{save_block}{the number of iterations that R will keep in memory before writing to .csv. Defaults to 500}
 
 \item{VERBOSE}{boolean flag for additional output. Defaults to FALSE}
+
+\item{_threshold}{boolean value that is true if using threshold data}
 }
 \value{
 the full file path at which the MCMC chain is saved as a .csv file

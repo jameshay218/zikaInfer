@@ -25,16 +25,33 @@ fromUnitScale <- function(x, min, max) {
     .Call('zikaProj_fromUnitScale', PACKAGE = 'zikaProj', x, min, max)
 }
 
-#' Converts to linear scale
+#' Calculate gaussian mixture model likelihood
 #'
-#' @param x the double to be converted back to linear scale
-#' @param min the minimum value on the linear scale
-#' @param max the maximum value on the linear scale
-#' @return the value converted to a linear scale
+#' Given a matrix of data points (columns represent individuals, rows represent sampling times), computes the log likelihood using the gaussian mixture model with known alphas, mus and sds.
+#' @param dat the matrix of data
+#' @param alphas matrix of of alphas. 2 columns (1 for both distributions) with number of rows matching number of rows in dat
+#' @param mus vector of mus for the 2 distributions 
+#' @param sds vector of sds for the 2 distributions
+#' @return a single log likelihood
 #' @export
 #' @useDynLib zikaProj 
 likelihood <- function(dat, alphas, mus, sds) {
     .Call('zikaProj_likelihood', PACKAGE = 'zikaProj', dat, alphas, mus, sds)
+}
+
+#' Calculate likelihood for threshold data
+#'
+#' Given a matrix of threshold data (ie. microcephaly or not) for different sampling times, gives a log likelihood with the given parameter values
+#' @param dat the matrix of data. 2 columns for counts of positive and negative, and N rows for each sampling time
+#' @param alphas matrix of of alphas. 2 columns (1 for both distributions) with number of rows matching number of rows in dat
+#' @param mus vector of mus for the 2 distributions 
+#' @param sds vector of sds for the 2 distributions
+#' @param threshold the threshold value below which a data point is classified as having microcephaly
+#' @return a single log likelihood
+#' @export
+#' @useDynLib zikaProj 
+likelihood_threshold <- function(dat, alphas, mus, sds, threshold) {
+    .Call('zikaProj_likelihood_threshold', PACKAGE = 'zikaProj', dat, alphas, mus, sds, threshold)
 }
 
 #' Converts to linear scale

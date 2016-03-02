@@ -91,7 +91,7 @@ proposalfunction <- function(param,param_table,index){
 #' @return a single value for the posterior
 #' @export
 #' @useDynLib zikaProj
-posterior <- function(ts, y0s, pars, dat){
+posterior <- function(ts, y0s, pars, dat, threshold=FALSE){
     sampFreq <- pars[1]
     sampPropn <- pars[2]
     mu_I <- pars[3]
@@ -117,7 +117,8 @@ posterior <- function(ts, y0s, pars, dat){
     colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RateInfected","RatePregnantAll","CumInc")
 
     alphas <- calculate_alphas(as.matrix(unname(y[,c("If","Sf","Ef","Rf")])),probMicro,sampFreq)
-    lik <- likelihood(dat,unname(cbind(1-alphas,alphas)),c(mu_N,mu_I),c(sd_N,sd_I))
+    if(threshold) lik <- likelihood_threshold(dat,unname(cbind(alphas,1-alphas)),c(mu_I,mu_N),c(sd_I,sd_N))
+    else lik <- likelihood(dat,unname(cbind(1-alphas,alphas)),c(mu_N,mu_I),c(sd_N,sd_I))
     return(lik)
 }
 
@@ -137,12 +138,13 @@ posterior <- function(ts, y0s, pars, dat){
 #' @param adaptive_period length of the adaptive period. Defaults to 1
 #' @param filename the full filepath at which the MCMC chain should be saved. "_chain.csv" will be appended to the end of this, so filename should have no file extensions
 #' @param save_block the number of iterations that R will keep in memory before writing to .csv. Defaults to 500
+#' @param _threshold boolean value that is true if using threshold data
 #' @param VERBOSE boolean flag for additional output. Defaults to FALSE
 #' @return the full file path at which the MCMC chain is saved as a .csv file
 #' @export
 #' @seealso \code{\link{posterior}}, \code{\link{proposalfunction}}
 #' @useDynLib zikaProj
-run_metropolis_MCMC <- function(startvalue, iterations=1000, data, ts, y0s, param_table, popt=0.44, opt_freq=50, thin=1, burnin=100,adaptive_period=1,filename, save_block = 500, VERBOSE=FALSE){
+run_metropolis_MCMC <- function(startvalue, iterations=1000, data, ts, y0s, param_table, popt=0.44, opt_freq=50, thin=1, burnin=100,adaptive_period=1,filename, save_block = 500, VERBOSE=FALSE,threshold=FALSE){
     TUNING_ERROR<- 0.1
 
     if(opt_freq ==0 && VERBOSE){ print("Not running adaptive MCMC - opt_freq set to 0")}
@@ -174,7 +176,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, ts, y0s, para
     # Create array to store values
     empty_values <- values <- sample <- numeric(save_block)
 
-    probab <- posterior(ts, y0s, startvalue, data)
+    probab <- posterior(ts, y0s, startvalue, data,threshold)
 
     # Set up initial csv file
     tmp_table <- array(dim=c(1,length(chain_colnames)))
@@ -198,7 +200,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, ts, y0s, para
         #print(proposal)
         #proposal <- current_params
         #proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"steps"])
-        newprobab <- posterior(ts, y0s, proposal, data)
+        newprobab <- posterior(ts, y0s, proposal, data,threshold)
 
         #print(newprobab)
                                         # Calculate log difference in posteriors and accept/reject
