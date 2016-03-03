@@ -73,18 +73,6 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// proposal_function
-double proposal_function(double current, double step);
-RcppExport SEXP zikaProj_proposal_function(SEXP currentSEXP, SEXP stepSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< double >::type current(currentSEXP);
-    Rcpp::traits::input_parameter< double >::type step(stepSEXP);
-    __result = Rcpp::wrap(proposal_function(current, step));
-    return __result;
-END_RCPP
-}
 // scaletuning2
 double scaletuning2(double step, double popt, double pcur);
 RcppExport SEXP zikaProj_scaletuning2(SEXP stepSEXP, SEXP poptSEXP, SEXP pcurSEXP) {
@@ -95,6 +83,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type popt(poptSEXP);
     Rcpp::traits::input_parameter< double >::type pcur(pcurSEXP);
     __result = Rcpp::wrap(scaletuning2(step, popt, pcur));
+    return __result;
+END_RCPP
+}
+// proposal_function
+double proposal_function(double current, double lower, double upper, double step);
+RcppExport SEXP zikaProj_proposal_function(SEXP currentSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP stepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< double >::type current(currentSEXP);
+    Rcpp::traits::input_parameter< double >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< double >::type upper(upperSEXP);
+    Rcpp::traits::input_parameter< double >::type step(stepSEXP);
+    __result = Rcpp::wrap(proposal_function(current, lower, upper, step));
     return __result;
 END_RCPP
 }

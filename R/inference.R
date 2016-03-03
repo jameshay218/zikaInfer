@@ -196,26 +196,26 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, ts, y0s, para
         j <- sample(non_fixed_params,1)
      #   for(j in non_fixed_params){
                                         # Propose new parameters and calculate posterior
-        proposal <- proposalfunction(current_params,param_transform_table,j)
+        #proposal <- proposalfunction(current_params,param_transform_table,j)
         #print(proposal)
-        #proposal <- current_params
-        #proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"steps"])
+        proposal <- current_params
+        proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"upper_bounds"],param_transform_table[j,"lower_bounds"],param_transform_table[j,"steps"])
         newprobab <- posterior(ts, y0s, proposal, data,threshold)
 
-        #print(newprobab)
+                                        #print(newprobab)
                                         # Calculate log difference in posteriors and accept/reject
         difflike <- newprobab - probab
         
         if ((!is.nan(difflike) & !is.infinite(newprobab)) & (runif(1) < exp(difflike) |  difflike > 0)){
-            if(proposal[j] < param_transform_table[j,"upper_bounds"] & proposal[j] > param_transform_table[j,"lower_bounds"]){
+            if(proposal[j] <= param_transform_table[j,"upper_bounds"] & proposal[j] >= param_transform_table[j,"lower_bounds"]){
                 current_params <- proposal
-            probab <- newprobab
-            tempaccepted[j] <- tempaccepted[j] + 1
+                probab <- newprobab
+                tempaccepted[j] <- tempaccepted[j] + 1
             }
         }
-            tempiter[j] <- tempiter[j] + 1
+        tempiter[j] <- tempiter[j] + 1
 
-           # If current iteration matches with recording frequency, store in the chain. If we are at the limit of the save block,
+                                        # If current iteration matches with recording frequency, store in the chain. If we are at the limit of the save block,
            # save this block of chain to file and reset chain
         if(sampno %% thin ==0){
 
@@ -243,8 +243,8 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, ts, y0s, para
             tmp_transform <- param_transform_table[,"steps"]
             for(x in non_fixed_params){
                 if(pcur[x] < popt - (TUNING_ERROR*popt) | pcur[x] > popt + (TUNING_ERROR*popt)){
-                    tmp_transform[x] <- scaletuning(tmp_transform[x],popt,pcur[x])
-                    #tmp_transform[x] <- scaletuning2(tmp_transform[x],popt,pcur[x])
+                    #tmp_transform[x] <- scaletuning(tmp_transform[x],popt,pcur[x])
+                    tmp_transform[x] <- scaletuning2(tmp_transform[x],popt,pcur[x])
                 }
             }
             print("Step sizes:")

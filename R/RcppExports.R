@@ -66,11 +66,11 @@ calculate_alphas <- function(y, probMicro, sampFreq) {
     .Call('zikaProj_calculate_alphas', PACKAGE = 'zikaProj', y, probMicro, sampFreq)
 }
 
-proposal_function <- function(current, step) {
-    .Call('zikaProj_proposal_function', PACKAGE = 'zikaProj', current, step)
-}
-
 scaletuning2 <- function(step, popt, pcur) {
     .Call('zikaProj_scaletuning2', PACKAGE = 'zikaProj', step, popt, pcur)
+}
+
+proposal_function <- function(current, lower, upper, step) {
+    .Call('zikaProj_proposal_function', PACKAGE = 'zikaProj', current, lower, upper, step)
 }
 

@@ -104,15 +104,6 @@ NumericVector calculate_alphas(NumericMatrix y, double probMicro, double sampFre
 }
 
 //[[Rcpp::export]]
-double proposal_function(double current, double step){
-  double update;
-  double move;
-  update = R::rnorm(current, step*step);
-  return(update);
-  
-}
-
-//[[Rcpp::export]]
 double scaletuning2(double step, double popt, double pcur){
   if(pcur>=1) pcur = 0.99;
   if(pcur<=0) pcur = 0.01;
@@ -120,3 +111,21 @@ double scaletuning2(double step, double popt, double pcur){
   return(step);
 }
 
+
+//[[Rcpp::export]]
+double proposal_function(double current, double lower, double upper, double step){
+  double update;
+  double move;
+  double new1;
+  new1 = toUnitScale(current,lower,upper);
+  
+  do {
+    new1 = toUnitScale(current,lower,upper);
+    update = R::rnorm(0, 1);
+    new1 = new1 + update*step;
+  } while(new1 > 1 || new1 < 0);
+  
+  new1 = fromUnitScale(new1,lower,upper);
+  
+  return(new1);
+}
