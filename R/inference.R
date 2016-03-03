@@ -196,10 +196,10 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, ts, y0s, para
         j <- sample(non_fixed_params,1)
      #   for(j in non_fixed_params){
                                         # Propose new parameters and calculate posterior
-        #proposal <- proposalfunction(current_params,param_transform_table,j)
+        proposal <- proposalfunction(current_params,param_transform_table,j)
         #print(proposal)
-        proposal <- current_params
-        proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"upper_bounds"],param_transform_table[j,"lower_bounds"],param_transform_table[j,"steps"])
+        #proposal <- current_params
+        #proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"upper_bounds"],param_transform_table[j,"lower_bounds"],param_transform_table[j,"steps"])
         newprobab <- posterior(ts, y0s, proposal, data,threshold)
 
                                         #print(newprobab)
@@ -243,11 +243,11 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, ts, y0s, para
             tmp_transform <- param_transform_table[,"steps"]
             for(x in non_fixed_params){
                 if(pcur[x] < popt - (TUNING_ERROR*popt) | pcur[x] > popt + (TUNING_ERROR*popt)){
-                    #tmp_transform[x] <- scaletuning(tmp_transform[x],popt,pcur[x])
-                    tmp_transform[x] <- scaletuning2(tmp_transform[x],popt,pcur[x])
-                }
+                    tmp_transform[x] <- scaletuning(tmp_transform[x],popt,pcur[x])
+                    #tmp_transform[x] <- scaletuning2(tmp_transform[x],popt,pcur[x])
             }
-            print("Step sizes:")
+        }
+        print("Step sizes:")
             print(tmp_transform[non_fixed_params])
             param_transform_table[,"steps"] <- tmp_transform
             
