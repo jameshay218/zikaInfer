@@ -24,11 +24,11 @@ zika.sim <- function(allPars){
   ts1 <- ts[ts < seeding]
   ts2 <- ts[ts >= seeding]
 
-  y1 <- ode(y0s,ts1,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,nout=0)
+  y1 <- ode(y0s,ts1,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,hmax=1e-3,nout=0)
   y0s2 <- y1[nrow(y1),2:ncol(y1)]
   y0s2[11] <- I0
   y0s2[5] <- y0s2[5] - I0
-  y <- ode(y0s2,ts2,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,nout=0)
+  y <- ode(y0s2,ts2,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,hmax=1e-3,nout=0)
   
   y <- as.data.frame(y)
   colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RateInfected","RatePregnantAll","CumInc")
