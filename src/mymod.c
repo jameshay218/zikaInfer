@@ -91,12 +91,4 @@ void derivs (int *neq, double *t, double *y, double *ydot, double *yout, int *ip
   ydot[12] = I_C/D_IH - R_C/L_H - R_C/D_C;
   ydot[13] = I_A/D_IH + R_C/D_C - R_A/L_H - R_A/B_H + R_F/D_F;
   ydot[14] = I_F/D_IH + R_A/B_H - R_F/D_F - R_F/L_H;
-  
-  // Saving movements out of pregnancy class for post processing
-  ydot[15] = I_F/D_F;
-  ydot[16] = I_F/D_IH;
-  ydot[17] = y[5]/D_F + E_F/D_F + R_F/D_F + I_F/D_F;
- 
- // Save human incidence
-  ydot[18] = E_C/D_EH + E_A/D_EH + E_F/D_EH;
  }

@@ -10,7 +10,7 @@
 plot_dynamics <- function(y, N_H, N_M, file.name = NULL){
     y <- as.data.frame(y)
     n <- ncol(y)
-    cols <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","IfA","fB")
+    cols <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf")
     y <- y[,1:length(cols)]
     colnames(y) <- cols
 

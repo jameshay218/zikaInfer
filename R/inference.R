@@ -7,11 +7,11 @@
 setupParTable <- function(pars){
     use_log <- rep(0,length(pars))
     lower_bounds <- rep(0,length(pars))
-    upper_bounds <- c(7,1,60,10,60,10,1,100,1,100,100,1,1,1,1,200,1,1,10)
+    upper_bounds <- c(7,1,60,10,60,10,1,100,100,1,100,100,1,1,1,1,200,1,1,10)
     steps <- rep(0.1,length(pars))
     log_proposal <- rep(0,length(pars))
-    fixed <- c(1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1)
-    names <- c("sampFreq","sampPropn","muI","sdI","muN","sdN","probMicro","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","P_HM","P_MH","constSeed")
+    fixed <- c(1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1)
+    names <- c("sampFreq","sampPropn","muI","sdI","muN","sdN","probMicro","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","P_HM","P_MH","constSeed")
     paramTable <- cbind("use_log"=use_log,"lower_bounds"=lower_bounds,"upper_bounds"=upper_bounds,"steps"=steps,"log_proposal"=log_proposal,"fixed"=fixed)
     paramTable <- as.data.frame(paramTable)
     paramTable <- cbind(names, paramTable)
@@ -99,10 +99,11 @@ posterior <- function(ts, y0s, pars, dat, threshold=NULL){
     mu_N <- pars[5]
     sd_N <- pars[6]
     probMicro <- pars[7]
-    epiStart <- pars[8]
+    burnin <- pars[8]
+    epiStart <- pars[9]
     I0 <- y0s[11]
     y0s[11] <- 0
-    pars1 <- pars[9:length(pars)]
+    pars1 <- pars[10:length(pars)]
     ts1 <- ts[ts < epiStart]
     ts2 <- ts[ts >= epiStart]
     
@@ -113,8 +114,10 @@ posterior <- function(ts, y0s, pars, dat, threshold=NULL){
     y0s2[5] <- y0s2[5] - I0
     
     y <- ode(y0s2,ts2,func="derivs",parms=pars1,dllname="zikaProj",initfunc="initmod",maxsteps=100000,hmax=1e-4,nout=0)
+
+    y <- rbind(y1[y1[,1] > burnin,],y)
     
-    colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RateInfected","RatePregnantAll","CumInc")
+    colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf")
 
     alphas <- calculate_alphas(as.matrix(unname(y[,c("If","Sf","Ef","Rf")])),probMicro,sampFreq)
     if(!is.null(threshold)) lik <- likelihood_threshold(dat,unname(cbind(alphas,1-alphas)),c(mu_I,mu_N),c(sd_I,sd_N),threshold)

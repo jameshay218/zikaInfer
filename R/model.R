@@ -16,22 +16,24 @@ zika.sim <- function(allPars){
   mu_N <- pars[5]
   sd_N <- pars[6]
   probMicro <- pars[7]
-  seeding <- pars[8]
+  burnin <- pars[8]
+  epiStart <- pars[9]
   I0 <- y0s[11]
   y0s[11] <- 0
   
-  pars <- allPars[[3]][9:length(allPars[[3]])]
-  ts1 <- ts[ts < seeding]
-  ts2 <- ts[ts >= seeding]
+  pars <- allPars[[3]][10:length(allPars[[3]])]
+  ts1 <- ts[ts < epiStart]
+  ts2 <- ts[ts >= epiStart]
 
   y1 <- ode(y0s,ts1,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,hmax=1e-3,nout=0)
   y0s2 <- y1[nrow(y1),2:ncol(y1)]
   y0s2[11] <- I0
   y0s2[5] <- y0s2[5] - I0
   y <- ode(y0s2,ts2,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,hmax=1e-3,nout=0)
+  y <- rbind(y1[y1[,1] > burnin,],y)
   
   y <- as.data.frame(y)
-  colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RateInfected","RatePregnantAll","CumInc")
+  colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf")
 
   daysPerYear <- nrow(y)/max(y$times)
   birthsPerYear <- sum(y0s[4:6])/pars[3]
@@ -75,22 +77,23 @@ solveModel <- function(allPars){
     mu_N <- pars[5]
     sd_N <- pars[6]
     probMicro <- pars[7]
-    seeding <- pars[8]
+    burnin <- pars[8]
+    epiStart <- pars[9]
     I0 <- y0s[11]
     y0s[11] <- 0
     
-    pars <- allPars[[3]][9:length(allPars[[3]])]
-    ts1 <- ts[ts < seeding]
-    ts2 <- ts[ts >= seeding]
+    pars <- allPars[[3]][10:length(allPars[[3]])]
+    ts1 <- ts[ts < epiStart]
+    ts2 <- ts[ts >= epiStart]
 
-    y1 <- ode(y0s,ts1,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-3,nout=0)
+    y1 <- ode(y0s,ts1,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,hmax=1e-3,nout=0)
     y0s2 <- y1[nrow(y1),2:ncol(y1)]
     y0s2[11] <- I0
     y0s2[5] <- y0s2[5] - I0
-    y <- ode(y0s2,ts2,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,atol=1e-10,reltol=1e-10,hmax=1e-3,nout=0)
-    
+    y <- ode(y0s2,ts2,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,hmax=1e-3,nout=0)
+    y <- rbind(y1[y1[,1] > burnin,],y)
     y <- as.data.frame(y)
-    colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf","RatePregnantI","RateInfected","RatePregnantAll","CumInc")
+    colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf")
     return(y)
     
 }
@@ -106,7 +109,7 @@ solveModel <- function(allPars){
 #' @export
 #' @seealso \code{\link{b.calc}}
 r0.calc <- function(params,NH,NM){
-    pars <- params[9:length(params)]
+    pars <- params[10:length(params)]
     muM <- 1/pars[1]
     sigmaM <- 1/pars[2]
 
@@ -137,7 +140,7 @@ r0.calc <- function(params,NH,NM){
 #' @export
 #' @seealso \code{\link{r0.calc}}
 b.calc <- function(params,NH,NM,R0){
-    pars <- params[9:length(params)]
+    pars <- params[10:length(params)]
     muM <- 1/pars[1]
     sigmaM <- 1/pars[2]
 
@@ -191,8 +194,9 @@ setupParsLong <- function(){
     mu_N <- 35
     sd_N <- 2
     probMicro <- 1
-    seeding <- 5
-    pars <- c("sampFreq"=sampFreq,"sampPropn"=sampPropn,"mu_I"=mu_I,"sd_I"=sd_I,"mu_N"=mu_N,"sd_N"=sd_N,"probMicro"=probMicro,"seeding"=seeding,pars)
+    burnin <- 3
+    epiStart <- 5
+    pars <- c("sampFreq"=sampFreq,"sampPropn"=sampPropn,"mu_I"=mu_I,"sd_I"=sd_I,"mu_N"=mu_N,"sd_N"=sd_N,"probMicro"=probMicro,"burnin"=burnin,"epiStart"=epiStart,pars)
     return(pars)   
 }
 
@@ -226,7 +230,7 @@ setupListPars <- function(duration=10){
     R_A = 0
     R_F = 0
 
-    y0 <- c(S_M, E_M,I_M,S_C,S_A,S_F,E_C,E_A,E_F,I_C,I_A,I_F,R_C,R_A,R_F, 0, 0, 0,0)
+    y0 <- c(S_M, E_M,I_M,S_C,S_A,S_F,E_C,E_A,E_F,I_C,I_A,I_F,R_C,R_A,R_F)
     ts <- 0:(360*duration) / 360
     
     return(list(ts,y0,unname(pars)))

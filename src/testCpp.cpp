@@ -88,18 +88,28 @@ double likelihood_threshold(NumericMatrix dat, NumericMatrix alphas, NumericVect
 //' @export
 //' @useDynLib zikaProj 
 //[[Rcpp::export]]
-NumericVector calculate_alphas(NumericMatrix y, double probMicro, double sampFreq){
-  int i = 0 + sampFreq;
+NumericVector calculate_alphas(NumericMatrix y, double probMicro, int sampFreq){
+  int i = 0;
   int index = 0;
-  NumericVector alphas(y.nrow()/sampFreq);
-  NumericVector tmpPropn(sampFreq);
-  while(i < y.nrow()){
-    for(int j =0;j <= sampFreq;++j){
-      tmpPropn[j] = y(i-j,0)/(y(i-j,0)+y(i-j,1)+y(i-j,2)+y(i-j,3));
+  int size = y.nrow()/sampFreq;
+  double tmp = 0;
+  int j = 0;
+  //Rcpp::Rcout << size << std::endl;
+  NumericVector alphas(size);
+  while(i <= y.nrow() && index < alphas.size()){
+    tmp = 0;
+    j = 0;
+    while(j < sampFreq && i <= y.nrow()){
+      tmp += y(i,0)/(y(i,0)+y(i,1)+y(i,2)+y(i,3));
+      j++;
+      i++;
     }
-    alphas[index++] = probMicro*Rcpp::mean(tmpPropn);
-    i += sampFreq;
+    alphas[index] = probMicro*tmp/j;
+    index++;
+    //    if(j > 0) alphas[index++] = probMicro*tmp/j;
   }
+  // if(index < (alphas.size())) Rcpp::Rcout << "Error - invalid index" << std::endl;
+  //Rcpp::Rcout << index << std::endl;
   return(alphas);
 }
 
