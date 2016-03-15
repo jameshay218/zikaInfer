@@ -46,3 +46,27 @@ pars1[17] <- 77
 
 y1 <- run_metropolis_MCMC(pars1,iterations,unname(as.matrix(pernambuco_dat)),pars[[1]],pars[[2]],paramTable,0.44,500,1,0,adaptive,"realdat",500,TRUE,threshold)
   
+p <- NULL
+alphas <- cbind(alphas,1-alphas)
+for(i in 1:nrow(alphas)){
+  p[i] <- alphas[i,1]*pnorm(threshold,mus[1],sds[1],1,0) + alphas[i,2]*pnorm(threshold,mus[2],sds[2],1,0)
+}
+
+testing <- seq(0,2,by=1/120)
+tmp <- NULL
+tmp1 <- NULL
+tmpAlphas <- NULL
+ys <- NULL
+for(i in 1:length(testing)){
+  pars1 <- pars[[3]]
+  pars1[9] <- testing[i]
+  ys[[i]] <- y <- solveModel(list(pars[[1]],pars[[2]],pars1))
+  tmpAlphas[[i]] <- alphas <- calculate_alphas_buckets(as.matrix(unname(y[,c("times","If","Sf","Ef","Rf")])),0.2,as.matrix(unname(pernambuco_dat[,c("start","end")])))
+  #tmp[[i]] <- (pars[[1]],pars[[2]],pars1,pernambuco_dat,32)
+  tmp[[i]] <- p_test(as.matrix(unname(pernambuco_dat[,c("microCeph","births")])),unname(cbind(alphas,1-alphas)),c(28,40),c(1.2,1.2),32)
+  tmp1[i] <- posterior(pars[[1]],pars[[2]],pars1,pernambuco_dat,32)
+}
+tmp <- NULL
+for(i in 1:length(tmpAlphas)){
+  tmp[i] <- likelihood_threshold(unname(as.matrix(pernambuco_dat[,c("microCeph","births")])),unname(cbind(tmpAlphas[[i]],1-tmpAlphas[[i]])),c(28,40),c(1.2,1.1844),32)
+}

@@ -91,7 +91,9 @@ proposalfunction <- function(param,param_table,index){
 #' @return a single value for the posterior
 #' @export
 #' @useDynLib zikaProj
-posterior <- function(ts, y0s, pars, dat, threshold=NULL){
+posterior <- function(t_pars, y0s, pars, dat, threshold=NULL){
+    y <- solveModel(list(t_pars,y0s,pars))
+
     sampFreq <- pars[1]
     sampPropn <- pars[2]
     mu_I <- pars[3]
@@ -99,29 +101,35 @@ posterior <- function(ts, y0s, pars, dat, threshold=NULL){
     mu_N <- pars[5]
     sd_N <- pars[6]
     probMicro <- pars[7]
-    burnin <- pars[8]
-    epiStart <- pars[9]
-    I0 <- y0s[11]
-    y0s[11] <- 0
-    pars1 <- pars[10:length(pars)]
-    ts1 <- ts[ts < epiStart]
-    ts2 <- ts[ts >= epiStart]
     
-    y1 <- ode(y0s,ts1,func="derivs",parms=pars1,dllname="zikaProj",initfunc="initmod",maxsteps=100000,hmax=1e-4,nout=0)
-    y0s2 <- y1[nrow(y1),2:ncol(y1)]
-    
-    y0s2[11] <- I0
-    y0s2[5] <- y0s2[5] - I0
-    
-    y <- ode(y0s2,ts2,func="derivs",parms=pars1,dllname="zikaProj",initfunc="initmod",maxsteps=100000,hmax=1e-4,nout=0)
-
-    y <- rbind(y1[y1[,1] > burnin,],y)
-    
-    colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf")
-
-    alphas <- calculate_alphas(as.matrix(unname(y[,c("If","Sf","Ef","Rf")])),probMicro,sampFreq)
-    if(!is.null(threshold)) lik <- likelihood_threshold(dat,unname(cbind(alphas,1-alphas)),c(mu_I,mu_N),c(sd_I,sd_N),threshold)
-    else lik <- likelihood(dat,unname(cbind(1-alphas,alphas)),c(mu_N,mu_I),c(sd_N,sd_I))
+    if(!is.null(threshold)){
+        alphas <- calculate_alphas_buckets(
+            as.matrix(unname(y[,c("times","If","Sf","Ef","Rf")])),
+            probMicro,
+            as.matrix(unname(dat[,c("start","end")]))
+        )
+        
+        lik <- likelihood_threshold(
+            as.matrix(unname(dat[,c("microCeph","births")])),
+            unname(cbind(alphas,1-alphas)),
+            c(mu_I,mu_N),
+            c(sd_I,sd_N),
+            threshold
+        )
+        if(length(alphas) != nrow(dat)) print("WOW")
+    }
+    else{
+        alphas <- calculate_alphas(
+            as.matrix(unname(y[,c("If","Sf","Ef","Rf")])),
+            probMicro,
+            sampFreq)
+        lik <- likelihood(
+            dat,
+            unname(cbind(1-alphas,alphas)),
+            c(mu_N,mu_I),
+            c(sd_N,sd_I)
+        )
+    }
     return(lik)
 }
 
@@ -147,7 +155,7 @@ posterior <- function(ts, y0s, pars, dat, threshold=NULL){
 #' @export
 #' @seealso \code{\link{posterior}}, \code{\link{proposalfunction}}
 #' @useDynLib zikaProj
-run_metropolis_MCMC <- function(startvalue, iterations=1000, data, ts, y0s, param_table, popt=0.44, opt_freq=50, thin=1, burnin=100,adaptive_period=1,filename, save_block = 500, VERBOSE=FALSE,threshold=NULL){
+run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, param_table, popt=0.44, opt_freq=50, thin=1, burnin=100,adaptive_period=1,filename, save_block = 500, VERBOSE=FALSE,threshold=NULL){
     TUNING_ERROR<- 0.1
 
     if(opt_freq ==0 && VERBOSE){ print("Not running adaptive MCMC - opt_freq set to 0")}
@@ -179,7 +187,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, ts, y0s, para
     # Create array to store values
     empty_values <- values <- sample <- numeric(save_block)
 
-    probab <- posterior(ts, y0s, startvalue, data,threshold)
+    probab <- posterior(t_pars, y0s, startvalue, data,threshold)
 
     # Set up initial csv file
     tmp_table <- array(dim=c(1,length(chain_colnames)))
@@ -203,7 +211,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, ts, y0s, para
         #print(proposal)
         #proposal <- current_params
         #proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"upper_bounds"],param_transform_table[j,"lower_bounds"],param_transform_table[j,"steps"])
-        newprobab <- posterior(ts, y0s, proposal, data,threshold)
+        newprobab <- posterior(t_pars, y0s, proposal, data,threshold)
 
                                         #print(newprobab)
                                         # Calculate log difference in posteriors and accept/reject

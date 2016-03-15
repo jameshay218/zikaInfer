@@ -42,7 +42,7 @@ likelihood <- function(dat, alphas, mus, sds) {
 #' Calculate likelihood for threshold data
 #'
 #' Given a matrix of threshold data (ie. microcephaly or not) for different sampling times, gives a log likelihood with the given parameter values
-#' @param dat the matrix of data. 2 columns for counts of positive and negative, and N rows for each sampling time
+#' @param dat the matrix of data. 2 columns for counts of positive and total births, and N rows for each sampling time
 #' @param alphas matrix of of alphas. 2 columns (1 for both distributions) with number of rows matching number of rows in dat
 #' @param mus vector of mus for the 2 distributions 
 #' @param sds vector of sds for the 2 distributions
@@ -52,6 +52,10 @@ likelihood <- function(dat, alphas, mus, sds) {
 #' @useDynLib zikaProj 
 likelihood_threshold <- function(dat, alphas, mus, sds, threshold) {
     .Call('zikaProj_likelihood_threshold', PACKAGE = 'zikaProj', dat, alphas, mus, sds, threshold)
+}
+
+p_test <- function(dat, alphas, mus, sds, threshold) {
+    .Call('zikaProj_p_test', PACKAGE = 'zikaProj', dat, alphas, mus, sds, threshold)
 }
 
 #' Converts to linear scale
@@ -64,6 +68,18 @@ likelihood_threshold <- function(dat, alphas, mus, sds, threshold) {
 #' @useDynLib zikaProj 
 calculate_alphas <- function(y, probMicro, sampFreq) {
     .Call('zikaProj_calculate_alphas', PACKAGE = 'zikaProj', y, probMicro, sampFreq)
+}
+
+#' Calculates alphas for given time bucket sizes
+#'
+#' @param y the matrix of pregnant adult counts. First column should be times
+#' @param probMicro probability of developing microcephaly given infection
+#' @param times matrix of times to create alphas over. First column is start of bucket, last column is end of bucket
+#' @return the vector of alphas
+#' @export
+#' @useDynLib zikaProj 
+calculate_alphas_buckets <- function(y, probMicro, times) {
+    .Call('zikaProj_calculate_alphas_buckets', PACKAGE = 'zikaProj', y, probMicro, times)
 }
 
 scaletuning2 <- function(step, popt, pcur) {

@@ -6,58 +6,43 @@
 #' @export
 #' @useDynLib zikaProj
 zika.sim <- function(allPars){
-  ts <- allPars[[1]]
-  y0s <- allPars[[2]]
-  pars <- allPars[[3]]
-  sampFreq <- pars[1]
-  sampPropn <- pars[2]
-  mu_I <- pars[3]
-  sd_I <- pars[4]
-  mu_N <- pars[5]
-  sd_N <- pars[6]
-  probMicro <- pars[7]
-  burnin <- pars[8]
-  epiStart <- pars[9]
-  I0 <- y0s[11]
-  y0s[11] <- 0
-  
-  pars <- allPars[[3]][10:length(allPars[[3]])]
-  ts1 <- ts[ts < epiStart]
-  ts2 <- ts[ts >= epiStart]
+      # Get length and time step for ODE solver
+    y <- solveModel(allPars)
+    y <- as.data.frame(y)
+    y0s <- allPars[[2]]
+    pars <- allPars[[3]]
+    sampFreq <- pars[1]
+    sampPropn <- pars[2]
+    mu_I <- pars[3]
+    sd_I <- pars[4]
+    mu_N <- pars[5]
+    sd_N <- pars[6]
+    probMicro <- pars[7]
+ 
+    daysPerYear <- nrow(y)/max(y$times)
+    birthsPerYear <- sum(y0s[4:6])/pars[3]
+    birthsPerDay <- ceiling(birthsPerYear/daysPerYear)
+    
+    alphas_I<- calculate_alphas(as.matrix(unname(y[,c("If","Sf","Ef","Rf")])),probMicro,sampFreq)
+    alphas_N <- 1 - alphas_I
+    N <- sampPropn*birthsPerDay*sampFreq
 
-  y1 <- ode(y0s,ts1,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,hmax=1e-3,nout=0)
-  y0s2 <- y1[nrow(y1),2:ncol(y1)]
-  y0s2[11] <- I0
-  y0s2[5] <- y0s2[5] - I0
-  y <- ode(y0s2,ts2,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,hmax=1e-3,nout=0)
-  y <- rbind(y1[y1[,1] > burnin,],y)
-  
-  y <- as.data.frame(y)
-  colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf")
+    i <- 1 + sampFreq
+    index <- 1
+    all <- NULL
+    while(index <= nrow(y)/sampFreq){
 
-  daysPerYear <- nrow(y)/max(y$times)
-  birthsPerYear <- sum(y0s[4:6])/pars[3]
-  birthsPerDay <- ceiling(birthsPerYear/daysPerYear)
-
-  alphas_I<- calculate_alphas(as.matrix(unname(y[,c("If","Sf","Ef","Rf")])),probMicro,sampFreq)
-  alphas_N <- 1 - alphas_I
-  N <- sampPropn*birthsPerDay*sampFreq
-
-  i <- 1 + sampFreq
-  index <- 1
-  all <- NULL
-  while(index <= nrow(y)/sampFreq){
-      N <- sampPropn*(birthsPerDay*sampFreq)
-      components <- sample(1:2,c(alphas_I[index],alphas_N[index]),size=N,replace=TRUE)
-      mus <- c(mu_I,mu_N)
-      sds <- c(sd_I,sd_N)
+        N <- sampPropn*(birthsPerDay*sampFreq)
+        components <- sample(1:2,c(alphas_I[index],alphas_N[index]),size=N,replace=TRUE)
+        mus <- c(mu_I,mu_N)
+        sds <- c(sd_I,sd_N)
       
       distribution <- round(rnorm(n=N,mean=mus[components],sd=sds[components]),digits=1)
       all[[index]] <- distribution
       index <- index + 1
       i <- i + sampFreq
   }
-  return(as.matrix(rbind.fill(lapply(all,function(x) as.data.frame(t(x))))))
+  return(as.matrix(rbind.fill(lapply(all,function(x) {as.data.frame(t(x))}))))
 }
 
 #' Solve ODE model
@@ -67,7 +52,10 @@ zika.sim <- function(allPars){
 #' @return a data frame of the solved ODE model
 #' @export
 solveModel <- function(allPars){
-    ts <- allPars[[1]]
+    t_pars <- allPars[[1]]
+    time_length<- t_pars[1]
+    time_by <- t_pars[2]
+    
     y0s <- allPars[[2]]
     pars <- allPars[[3]]
     sampFreq <- pars[1]
@@ -83,16 +71,40 @@ solveModel <- function(allPars){
     y0s[11] <- 0
     
     pars <- allPars[[3]][10:length(allPars[[3]])]
-    ts1 <- ts[ts < epiStart]
-    ts2 <- ts[ts >= epiStart]
 
-    y1 <- ode(y0s,ts1,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,hmax=1e-3,nout=0)
-    y0s2 <- y1[nrow(y1),2:ncol(y1)]
+                                        # Get length and time step for ODE solver
+    
+                                        # Create time series for ode solver
+    ts1 <- seq(0, burnin+epiStart,by=time_by)
+    ts2 <- seq(epiStart, time_length,by=time_by)
+    ts2 <- ts2 - epiStart
+
+                                        # Solve ODEs from 0 to epiStart, via burnin
+    y1 <- ode(y0s,ts1,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",hmax=1e-4,nout=0)
+    colnames(y1) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf")
+    
+                                        # Get final population sizes as start for next part
+    if(epiStart > 0){
+        y1 <- y1[y1[,"times"] >= burnin,]
+        y1[,"times"] <- y1[,"times"]- burnin
+        y0s2 <- y1[nrow(y1),2:ncol(y1)]
+    }
+    else {
+        y0s2 <- y0s
+    }
+
+                                        # Restore I0 to positive value
     y0s2[11] <- I0
     y0s2[5] <- y0s2[5] - I0
-    y <- ode(y0s2,ts2,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",maxsteps=100000,hmax=1e-3,nout=0)
-    y <- rbind(y1[y1[,1] > burnin,],y)
-    y <- as.data.frame(y)
+
+    y <- ode(y0s2,ts2,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",hmax=1e-4,nout=0)
+    y[,1] <- y[,1] + epiStart
+    
+    if(epiStart > 0){
+        y <- rbind(y1,y)
+    }
+    
+    #y <- as.data.frame(y)
     colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf")
     return(y)
     
@@ -208,12 +220,10 @@ setupParsLong <- function(){
 #' @export
 #' @seealso \code{\link{setupParsLong}}
 #' @useDynLib zikaProj
-setupListPars <- function(duration=10){
+setupListPars <- function(duration=10, N_H = 1000000,N_M = 20000000){
     pars <- setupParsLong()
     D_C <- pars["D_C"]
     L <- pars["L_H"]
-    N_M <- 3000000
-    N_H <- 1000000
     S_M = 1*(N_M)
     E_M = 0
     I_M = 0
@@ -231,7 +241,7 @@ setupListPars <- function(duration=10){
     R_F = 0
 
     y0 <- c(S_M, E_M,I_M,S_C,S_A,S_F,E_C,E_A,E_F,I_C,I_A,I_F,R_C,R_A,R_F)
-    ts <- 0:(360*duration) / 360
+    ts <- c(duration,1/365)
     
     return(list(ts,y0,unname(pars)))
 }

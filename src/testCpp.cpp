@@ -59,7 +59,7 @@ double likelihood(NumericMatrix dat, NumericMatrix alphas, NumericVector mus, Nu
 //' Calculate likelihood for threshold data
 //'
 //' Given a matrix of threshold data (ie. microcephaly or not) for different sampling times, gives a log likelihood with the given parameter values
-//' @param dat the matrix of data. 2 columns for counts of positive and negative, and N rows for each sampling time
+//' @param dat the matrix of data. 2 columns for counts of positive and total births, and N rows for each sampling time
 //' @param alphas matrix of of alphas. 2 columns (1 for both distributions) with number of rows matching number of rows in dat
 //' @param mus vector of mus for the 2 distributions 
 //' @param sds vector of sds for the 2 distributions
@@ -71,11 +71,24 @@ double likelihood(NumericMatrix dat, NumericMatrix alphas, NumericVector mus, Nu
 double likelihood_threshold(NumericMatrix dat, NumericMatrix alphas, NumericVector mus, NumericVector sds, double threshold){
   double lnlik = 0;
   double p = 0;
-  for(int i =0; i <dat.nrow(); ++i){
+  for(int i =0; i < alphas.nrow(); ++i){
     p = alphas(i,0)*R::pnorm(threshold,mus[0],sds[0],1,0) + alphas(i,1)*R::pnorm(threshold,mus[1],sds[1],1,0);
+    //Rcpp::Rcout << "Proportion: " << dat(i,0)/dat(i,1) << "   P: " << p << "   Likelihood: " << R::dbinom(dat(i,0),dat(i,1),p,1) << std::endl;
     lnlik += R::dbinom(dat(i,0),dat(i,1),p,1);
   }
   return(lnlik);
+}
+
+//[[Rcpp::export]]
+NumericVector p_test(NumericMatrix dat, NumericMatrix alphas, NumericVector mus, NumericVector sds, double threshold){
+  double lnlik = 0;
+  double p = 0;
+  NumericVector ps(dat.nrow());
+  for(int i =0; i < alphas.nrow(); ++i){
+    p = alphas(i,0)*R::pnorm(threshold,mus[0],sds[0],1,0) + alphas(i,1)*R::pnorm(threshold,mus[1],sds[1],1,0);
+    ps[i] = p;
+  }
+  return(ps);
 }
 
 
@@ -96,10 +109,10 @@ NumericVector calculate_alphas(NumericMatrix y, double probMicro, int sampFreq){
   int j = 0;
   //Rcpp::Rcout << size << std::endl;
   NumericVector alphas(size);
-  while(i <= y.nrow() && index < alphas.size()){
+  while(i < y.nrow() && index < alphas.size()){
     tmp = 0;
     j = 0;
-    while(j < sampFreq && i <= y.nrow()){
+    while(j < sampFreq && i < y.nrow()){
       tmp += y(i,0)/(y(i,0)+y(i,1)+y(i,2)+y(i,3));
       j++;
       i++;
@@ -112,6 +125,59 @@ NumericVector calculate_alphas(NumericMatrix y, double probMicro, int sampFreq){
   //Rcpp::Rcout << index << std::endl;
   return(alphas);
 }
+
+
+
+//' Calculates alphas for given time bucket sizes
+//'
+//' @param y the matrix of pregnant adult counts. First column should be times
+//' @param probMicro probability of developing microcephaly given infection
+//' @param times matrix of times to create alphas over. First column is start of bucket, last column is end of bucket
+//' @return the vector of alphas
+//' @export
+//' @useDynLib zikaProj 
+//[[Rcpp::export]]
+NumericVector calculate_alphas_buckets(NumericMatrix y, double probMicro, NumericMatrix times){
+  int i = 0;
+  int index = 0;
+  double start = 0;
+  double end = 0;
+  double tmp = 0;
+  int j = 0;
+  NumericVector alphas(times.nrow());
+
+  // Get to start of y matrix that has relevant information
+  while(y(i,0) < start) i++;
+
+  // Go through all of the y matrix
+  while(i < y.nrow() && index < alphas.size()){
+    tmp = 0;
+    j = 0;
+
+    // Get upper and lower bounds of time
+    start = times(index,0);
+    end = times(index,1);
+    Rcpp::Rcout << start << " " << end << std::endl;
+
+    // Increase y index until at start of bucket
+    while(y(i,0) < start) i++;
+
+    // Go through y until end of bucket, storing incidence over this time
+    while(y(i,0) < end && i < y.nrow()){
+      tmp += y(i,1)/(y(i,1)+y(i,2)+y(i,3)+y(i,4));
+      j++;
+      i++;
+    }
+
+    // Take average incidence over this time to be alpha for this bucket
+    alphas[index] = probMicro*tmp/j;
+    Rcpp::Rcout << alphas[index] << std::endl;
+    // Increase index of bucket/alpha
+    index++;
+  }
+  return(alphas);
+}
+
 
 //[[Rcpp::export]]
 double scaletuning2(double step, double popt, double pcur){
