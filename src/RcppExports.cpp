@@ -60,6 +60,46 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// likelihood_prob
+double likelihood_prob(NumericMatrix dat, NumericVector alphas);
+RcppExport SEXP zikaProj_likelihood_prob(SEXP datSEXP, SEXP alphasSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericMatrix >::type dat(datSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type alphas(alphasSEXP);
+    __result = Rcpp::wrap(likelihood_prob(dat, alphas));
+    return __result;
+END_RCPP
+}
+// calculate_alphas_prob_buckets
+NumericVector calculate_alphas_prob_buckets(NumericMatrix y, double probMicro, double baselineProb, NumericMatrix times);
+RcppExport SEXP zikaProj_calculate_alphas_prob_buckets(SEXP ySEXP, SEXP probMicroSEXP, SEXP baselineProbSEXP, SEXP timesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericMatrix >::type y(ySEXP);
+    Rcpp::traits::input_parameter< double >::type probMicro(probMicroSEXP);
+    Rcpp::traits::input_parameter< double >::type baselineProb(baselineProbSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type times(timesSEXP);
+    __result = Rcpp::wrap(calculate_alphas_prob_buckets(y, probMicro, baselineProb, times));
+    return __result;
+END_RCPP
+}
+// calculate_alphas_prob_sampfreq
+NumericVector calculate_alphas_prob_sampfreq(NumericMatrix y, double probMicro, double baselineProb, int sampFreq);
+RcppExport SEXP zikaProj_calculate_alphas_prob_sampfreq(SEXP ySEXP, SEXP probMicroSEXP, SEXP baselineProbSEXP, SEXP sampFreqSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericMatrix >::type y(ySEXP);
+    Rcpp::traits::input_parameter< double >::type probMicro(probMicroSEXP);
+    Rcpp::traits::input_parameter< double >::type baselineProb(baselineProbSEXP);
+    Rcpp::traits::input_parameter< int >::type sampFreq(sampFreqSEXP);
+    __result = Rcpp::wrap(calculate_alphas_prob_sampfreq(y, probMicro, baselineProb, sampFreq));
+    return __result;
+END_RCPP
+}
 // p_test
 NumericVector p_test(NumericMatrix dat, NumericMatrix alphas, NumericVector mus, NumericVector sds, double threshold);
 RcppExport SEXP zikaProj_p_test(SEXP datSEXP, SEXP alphasSEXP, SEXP musSEXP, SEXP sdsSEXP, SEXP thresholdSEXP) {

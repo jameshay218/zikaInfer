@@ -7,11 +7,11 @@
 setupParTable <- function(pars){
     use_log <- rep(0,length(pars))
     lower_bounds <- rep(0,length(pars))
-    upper_bounds <- c(7,1,60,10,60,10,1,100,100,1,100,100,1,1,1,1,200,1,1,10)
+    upper_bounds <- c(7,1,60,10,60,10,1,1,100,100,1,100,100,1,1,1,1,200,1,1,10)
     steps <- rep(0.1,length(pars))
     log_proposal <- rep(0,length(pars))
-    fixed <- c(1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1)
-    names <- c("sampFreq","sampPropn","muI","sdI","muN","sdN","probMicro","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","P_HM","P_MH","constSeed")
+    fixed <- c(1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1)
+    names <- c("sampFreq","sampPropn","muI","sdI","muN","sdN","probMicro","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","P_HM","P_MH","constSeed")
     paramTable <- cbind("use_log"=use_log,"lower_bounds"=lower_bounds,"upper_bounds"=upper_bounds,"steps"=steps,"log_proposal"=log_proposal,"fixed"=fixed)
     paramTable <- as.data.frame(paramTable)
     paramTable <- cbind(names, paramTable)
@@ -91,49 +91,69 @@ proposalfunction <- function(param,param_table,index){
 #' @return a single value for the posterior
 #' @export
 #' @useDynLib zikaProj
-posterior <- function(t_pars, y0s, pars, dat, threshold=NULL){
+posterior <- function(t_pars, y0s, pars, dat, threshold=NULL, times=NULL){
+    
     y <- solveModel(list(t_pars,y0s,pars))
 
-    sampFreq <- pars[1]
-    sampPropn <- pars[2]
-    mu_I <- pars[3]
-    sd_I <- pars[4]
-    mu_N <- pars[5]
-    sd_N <- pars[6]
-    probMicro <- pars[7]
-    
+    sampFreq <- pars["sampFreq"]
+    sampPropn <- pars["sampPropn"]
+    mu_I <- pars["mu_I"]
+    sd_I <- pars["sd_I"]
+    mu_N <- pars["mu_N"]
+    sd_N <- pars["sd_N"]
+    probMicro <- pars["probMicro"]
+    baselineProb <- pars["baselineProb"]
+
     if(!is.null(threshold)){
-        alphas <- calculate_alphas_buckets(
-            as.matrix(unname(y[,c("times","If","Sf","Ef","Rf")])),
-            probMicro,
-            as.matrix(unname(dat[,c("start","end")]))
-        )
-        
-        lik <- likelihood_threshold(
-            as.matrix(unname(dat[,c("microCeph","births")])),
-            unname(cbind(alphas,1-alphas)),
-            c(mu_I,mu_N),
-            c(sd_I,sd_N),
-            threshold
-        )
-        if(length(alphas) != nrow(dat)) print("WOW")
+        if(!is.null(times)){
+            alphas <- calculate_alphas_buckets(
+                as.matrix(unname(y[,c("times","I_F","S_F","E_F","R_F")])),
+                probMicro,
+                times)
+            lik <- likelihood_threshold(
+                as.matrix(unname(dat[,c("microCeph","births")])),
+                unname(cbind(alphas,1-alphas)),
+                c(mu_I,mu_N),
+                c(sd_I,sd_N),
+                threshold)
+        } else {
+            alphas <- calculate_alphas(
+                as.matrix(unname(y[,c("I_F","S_F","E_F","R_F")])),
+                probMicro,
+                sampFreq)
+            lik <- likelihood(
+                as.matrix(unname(dat)),
+                unname(cbind(alphas,1-alphas)),
+                c(mu_I,mu_N),
+                c(sd_I,sd_N)
+            )
+        }
     }
     else{
-        alphas <- calculate_alphas(
-            as.matrix(unname(y[,c("If","Sf","Ef","Rf")])),
-            probMicro,
-            sampFreq)
-        lik <- likelihood(
-            dat,
-            unname(cbind(1-alphas,alphas)),
-            c(mu_N,mu_I),
-            c(sd_N,sd_I)
+        if(!is.null(times)){
+            alphas <- calculate_alphas_prob_buckets(
+                as.matrix(unname(y[,c("times","I_F","S_F","E_F","R_F")])),
+                probMicro,
+                baselineProb,
+                times
+            )
+        } else {
+            alphas <- calculate_alphas_prob_sampfreq(
+                as.matrix(unname(y[,c("I_F","S_F","E_F","R_F")])),
+                probMicro,
+                baselineProb,
+                sampFreq)
+        }
+        lik <- likelihood_prob(
+            as.matrix(unname(dat[,c("microCeph","births")])),
+            alphas
         )
+        
     }
-    return(lik)
-}
+        return(lik)
+    }
 
-#' Adaptive Metropolis-within-Gibbs Random Walk Algorithm.
+    #' Adaptive Metropolis-within-Gibbs Random Walk Algorithm.
 #'
 #' The Adaptive Metropolis-within-Gibbs algorithm. Given a starting point and the necessary MCMC parameters as set out below, performs a random-walk of the posterior space to produce an MCMC chain that can be used to generate MCMC density and iteration plots. The algorithm undergoes an adaptive period, where it changes the step size of the random walk for each parameter to approach the desired acceptance rate, popt. After this, a burn in period is established, and the algorithm then uses \code{\link{proposalfunction}} to explore the parameter space, recording the value and posterior value at each step. The MCMC chain is saved in blocks as a .csv file at the location given by filename.
 #' @param startvalue a vector of parameter values used as the starting point for the MCMC chain. MUST be valid parameters for the model function
@@ -155,7 +175,7 @@ posterior <- function(t_pars, y0s, pars, dat, threshold=NULL){
 #' @export
 #' @seealso \code{\link{posterior}}, \code{\link{proposalfunction}}
 #' @useDynLib zikaProj
-run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, param_table, popt=0.44, opt_freq=50, thin=1, burnin=100,adaptive_period=1,filename, save_block = 500, VERBOSE=FALSE,threshold=NULL){
+run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, param_table, popt=0.44, opt_freq=50, thin=1, burnin=100,adaptive_period=1,filename, save_block = 500, VERBOSE=FALSE,threshold=NULL, buckets=NULL){
     TUNING_ERROR<- 0.1
 
     if(opt_freq ==0 && VERBOSE){ print("Not running adaptive MCMC - opt_freq set to 0")}
@@ -187,7 +207,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
     # Create array to store values
     empty_values <- values <- sample <- numeric(save_block)
 
-    probab <- posterior(t_pars, y0s, startvalue, data,threshold)
+    probab <- posterior(t_pars, y0s, startvalue, data,threshold, buckets)
 
     # Set up initial csv file
     tmp_table <- array(dim=c(1,length(chain_colnames)))
@@ -208,11 +228,11 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
      #   for(j in non_fixed_params){
                                         # Propose new parameters and calculate posterior
         proposal <- proposalfunction(current_params,param_transform_table,j)
+#        print(proposal)
         #print(proposal)
         #proposal <- current_params
         #proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"upper_bounds"],param_transform_table[j,"lower_bounds"],param_transform_table[j,"steps"])
-        newprobab <- posterior(t_pars, y0s, proposal, data,threshold)
-
+        newprobab <- posterior(t_pars, y0s, proposal, data,threshold,buckets)
                                         #print(newprobab)
                                         # Calculate log difference in posteriors and accept/reject
         difflike <- newprobab - probab

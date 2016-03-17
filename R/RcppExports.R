@@ -54,6 +54,44 @@ likelihood_threshold <- function(dat, alphas, mus, sds, threshold) {
     .Call('zikaProj_likelihood_threshold', PACKAGE = 'zikaProj', dat, alphas, mus, sds, threshold)
 }
 
+#' Calculate likelihood for probability data
+#'
+#' Given a matrix of threshold data (ie. microcephaly or not) for different sampling times, gives a log likelihood with the given parameter values
+#' @param dat the matrix of data. 2 columns for counts of positive and total births, and N rows for each sampling time
+#' @param alphas vector of probability of giving birth to an infant with microcephaly over time
+#' @return a single log likelihood
+#' @export
+#' @useDynLib zikaProj 
+likelihood_prob <- function(dat, alphas) {
+    .Call('zikaProj_likelihood_prob', PACKAGE = 'zikaProj', dat, alphas)
+}
+
+#' Calculates probabilities of microcephaly over time for given time bucket sizes
+#'
+#' @param y the matrix of pregnant adult counts. First column should be times
+#' @param probMicro probability of developing microcephaly given infection
+#' @param baselineProb the baseline probability of giving birth to an infant with microcephaly
+#' @param times matrix of times to create alphas over. First column is start of bucket, last column is end of bucket
+#' @return the vector of alphas
+#' @export
+#' @useDynLib zikaProj 
+calculate_alphas_prob_buckets <- function(y, probMicro, baselineProb, times) {
+    .Call('zikaProj_calculate_alphas_prob_buckets', PACKAGE = 'zikaProj', y, probMicro, baselineProb, times)
+}
+
+#' Calculates probability of microcephaly over time with regular sampling intervals
+#'
+#' @param y the matrix of pregnant adult counts. First column should be times
+#' @param probMicro probability of developing microcephaly given infection
+#' @param baselineProb the baseline probability of giving birth to an infant with microcephaly
+#' @param sampFreq the frequency of sampling
+#' @return the value converted to a linear scale
+#' @export
+#' @useDynLib zikaProj 
+calculate_alphas_prob_sampfreq <- function(y, probMicro, baselineProb, sampFreq) {
+    .Call('zikaProj_calculate_alphas_prob_sampfreq', PACKAGE = 'zikaProj', y, probMicro, baselineProb, sampFreq)
+}
+
 p_test <- function(dat, alphas, mus, sds, threshold) {
     .Call('zikaProj_p_test', PACKAGE = 'zikaProj', dat, alphas, mus, sds, threshold)
 }

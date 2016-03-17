@@ -5,44 +5,64 @@
 #' @return a matrix of simulated head circumferences over time.
 #' @export
 #' @useDynLib zikaProj
-zika.sim <- function(allPars){
-      # Get length and time step for ODE solver
+zika.sim <- function(allPars,headMeasurements=TRUE,buckets=NULL){
+    ## Get length and time step for ODE solver
     y <- solveModel(allPars)
     y <- as.data.frame(y)
     y0s <- allPars[[2]]
     pars <- allPars[[3]]
-    sampFreq <- pars[1]
-    sampPropn <- pars[2]
-    mu_I <- pars[3]
-    sd_I <- pars[4]
-    mu_N <- pars[5]
-    sd_N <- pars[6]
-    probMicro <- pars[7]
+    
+    sampFreq <- pars["sampFreq"]
+    sampPropn <- pars["sampPropn"]
+    mu_I <- pars["mu_I"]
+    sd_I <- pars["sd_I"]
+    mu_N <- pars["mu_N"]
+    sd_N <- pars["sd_N"]
+    probMicro <- pars["probMicro"]
+    baselineProb <- pars["baselineProb"]
+    lifeExpectancy <- pars["L_H"]
  
     daysPerYear <- nrow(y)/max(y$times)
-    birthsPerYear <- sum(y0s[4:6])/pars[3]
+    birthsPerYear <- sum(y0s[4:6])/lifeExpectancy
     birthsPerDay <- ceiling(birthsPerYear/daysPerYear)
-    
-    alphas_I<- calculate_alphas(as.matrix(unname(y[,c("If","Sf","Ef","Rf")])),probMicro,sampFreq)
-    alphas_N <- 1 - alphas_I
+    if(headMeasurements){
+        if(!is.null(buckets)){
+            alphas_I<- calculate_alphas_buckets(as.matrix(unname(y[,c("times","I_F","S_F","E_F","R_F")])),probMicro,buckets)
+        }
+        else {
+            alphas_I<- calculate_alphas(as.matrix(unname(y[,c("I_F","S_F","E_F","R_F")])),probMicro,sampFreq)
+        }
+        alphas_N <- 1 - alphas_I
+    }
+    else {
+        if(!is.null(buckets)){
+            alphas_I <- calculate_alphas_prob_buckets(as.matrix(unname(y[,c("times","I_F","S_F","E_F","R_F")])),probMicro, baselineProb, buckets)
+        }
+        else {
+            alphas_I <- calculate_alphas_prob_sampfreq(as.matrix(unname(y[,c("I_F","S_F","E_F","R_F")])),probMicro, baselineProb, sampFreq)
+        }
+    }
     N <- sampPropn*birthsPerDay*sampFreq
-
-    i <- 1 + sampFreq
     index <- 1
     all <- NULL
-    while(index <= nrow(y)/sampFreq){
+    while(index <= length(alphas_I)){
+        if(!is.null(buckets)) N <- sampPropn*(birthsPerYear*(buckets[index,"end"]-buckets[index,"start"]))
+        else N <- sampPropn*(birthsPerDay*sampFreq)
 
-        N <- sampPropn*(birthsPerDay*sampFreq)
-        components <- sample(1:2,c(alphas_I[index],alphas_N[index]),size=N,replace=TRUE)
-        mus <- c(mu_I,mu_N)
-        sds <- c(sd_I,sd_N)
-      
-      distribution <- round(rnorm(n=N,mean=mus[components],sd=sds[components]),digits=1)
-      all[[index]] <- distribution
-      index <- index + 1
-      i <- i + sampFreq
-  }
-  return(as.matrix(rbind.fill(lapply(all,function(x) {as.data.frame(t(x))}))))
+        if(headMeasurements){
+            components <- sample(1:2,c(alphas_I[index],alphas_N[index]),size=N,replace=TRUE)
+            mus <- c(mu_I,mu_N)
+            sds <- c(sd_I,sd_N)
+            
+            distribution <- round(rnorm(n=N,mean=mus[components],sd=sds[components]),digits=1)
+            all[[index]] <- distribution
+        }
+        else all[[index]] <- rbind(ceiling(alphas_I[index]*N), ceiling(N-(alphas_I[index]*N)))
+        index <- index + 1
+    }
+    tmp <- as.matrix(rbind.fill(lapply(all,function(x) {as.data.frame(t(x))})))
+    if(!headMeasurements | !is.null(buckets)) colnames(tmp) <- c("microCeph","births")
+    return(tmp)
 }
 
 #' Solve ODE model
@@ -52,60 +72,60 @@ zika.sim <- function(allPars){
 #' @return a data frame of the solved ODE model
 #' @export
 solveModel <- function(allPars){
+    ## First set of pars is time parameters
     t_pars <- allPars[[1]]
+    ## Run time of model
     time_length<- t_pars[1]
+    ## Step size
     time_by <- t_pars[2]
-    
-    y0s <- allPars[[2]]
-    pars <- allPars[[3]]
-    sampFreq <- pars[1]
-    sampPropn <- pars[2]
-    mu_I <- pars[3]
-    sd_I <- pars[4]
-    mu_N <- pars[5]
-    sd_N <- pars[6]
-    probMicro <- pars[7]
-    burnin <- pars[8]
-    epiStart <- pars[9]
-    I0 <- y0s[11]
-    y0s[11] <- 0
-    
-    pars <- allPars[[3]][10:length(allPars[[3]])]
 
-                                        # Get length and time step for ODE solver
-    
-                                        # Create time series for ode solver
+    ## Second set of pars is starting population sizes
+    y0s <- allPars[[2]]
+
+    ## Third set of pars is model parameters
+    pars <- allPars[[3]]
+
+    ## Burn in and delayed epidemic start
+    burnin <- pars["burnin"]
+    epiStart <- pars["epiStart"]
+
+    ## Temporarily remove initial seeding  for burn in period
+    I0 <- y0s["I_A"]
+    y0s[11] <- 0
+    y0s[5] <- y0s["S_A"] + I0
+
+    ## Package ODE pars
+    pars <- pars[c("L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","p_HM","p_MH","constSeed")]
+
+    ## Create time series for ode solver
     ts1 <- seq(0, burnin+epiStart,by=time_by)
     ts2 <- seq(epiStart, time_length,by=time_by)
-    ts2 <- ts2 - epiStart
+    #ts2 <- ts2 - epiStart
 
-                                        # Solve ODEs from 0 to epiStart, via burnin
+    ## Solve ODEs from 0 to epiStart, via burnin
     y1 <- ode(y0s,ts1,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",hmax=1e-4,nout=0)
-    colnames(y1) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf")
-    
-                                        # Get final population sizes as start for next part
-    if(epiStart > 0){
+    colnames(y1) <- c("times","S_M","E_M","I_M","S_C","S_A","S_F","E_C","E_A","E_F","I_C","I_A","I_F","R_C","R_A","R_F")
+    ## Get final population sizes as start for next part
+    ## If epidemic start was delayed, use end of burn in. If not, just use original starting values.
+    y0s2 <- y1[nrow(y1),2:ncol(y1)]
+    if(burnin > 0){
         y1 <- y1[y1[,"times"] >= burnin,]
-        y1[,"times"] <- y1[,"times"]- burnin
-        y0s2 <- y1[nrow(y1),2:ncol(y1)]
-    }
-    else {
-        y0s2 <- y0s
+        if(epiStart > 0) y1[,"times"] <- y1[,"times"]- burnin
     }
 
-                                        # Restore I0 to positive value
-    y0s2[11] <- I0
-    y0s2[5] <- y0s2[5] - I0
+    ## Restore I0 to positive value
+    y0s2["I_A"] <- I0
+    y0s2["S_A"] <- y0s2["S_A"] - I0
 
     y <- ode(y0s2,ts2,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",hmax=1e-4,nout=0)
-    y[,1] <- y[,1] + epiStart
+
     
     if(epiStart > 0){
         y <- rbind(y1,y)
     }
     
     #y <- as.data.frame(y)
-    colnames(y) <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf")
+    colnames(y) <- c("times","S_M","E_M","I_M","S_C","S_A","S_F","E_C","E_A","E_F","I_C","I_A","I_F","R_C","R_A","R_F")
     return(y)
     
 }
@@ -121,16 +141,15 @@ solveModel <- function(allPars){
 #' @export
 #' @seealso \code{\link{b.calc}}
 r0.calc <- function(params,NH,NM){
-    pars <- params[10:length(params)]
-    muM <- 1/pars[1]
-    sigmaM <- 1/pars[2]
+    muM <- 1/params["L_M"]
+    sigmaM <- 1/params["D_EM"]
 
-    muH <- 1/pars[3]
-    gammaH <- 1/pars[7]
+    muH <- 1/params["L_H"]
+    gammaH <- 1/params["D_IH"]
 
-    b <- pars[8]
-    pHM <- pars[9]
-    pMH <- pars[10]
+    b <- params["b"]
+    pHM <- params["p_HM"]
+    pMH <- params["p_MH"]
     
         
     #'    first <- (b * pHM * NM)/((gammaH + muH)*NH)
@@ -138,7 +157,7 @@ r0.calc <- function(params,NH,NM){
 
     #' R0 <- first*second
     R0 <- (b^2*pHM*pMH*NM*sigmaM)/((sigmaM+muM)*muM*(gammaH+muH)*NH)
-    return(R0)
+    return(unname(R0))
 }
 
 #' Bite rate calculation
@@ -152,18 +171,18 @@ r0.calc <- function(params,NH,NM){
 #' @export
 #' @seealso \code{\link{r0.calc}}
 b.calc <- function(params,NH,NM,R0){
-    pars <- params[10:length(params)]
-    muM <- 1/pars[1]
-    sigmaM <- 1/pars[2]
+    muM <- 1/params["L_M"]
+    sigmaM <- 1/params["D_EM"]
 
-    muH <- 1/pars[3]
-    gammaH <- 1/pars[7]
+    muH <- 1/params["L_H"]
+    gammaH <- 1/params["D_IH"]
 
-    pHM <- pars[9]
-    pMH <- pars[10]
-
+    b <- params["b"]
+    pHM <- params["p_HM"]
+    pMH <- params["p_MH"]
+  
     b <- sqrt(((sigmaM+muM)*muM*(gammaH+muH)*NH)/((pHM * pMH * NM * sigmaM))*R0)
-    return(b)
+    return(unname(b))
     
 }
 
@@ -206,9 +225,10 @@ setupParsLong <- function(){
     mu_N <- 35
     sd_N <- 2
     probMicro <- 1
+    baseline <- 0.00002
     burnin <- 3
     epiStart <- 5
-    pars <- c("sampFreq"=sampFreq,"sampPropn"=sampPropn,"mu_I"=mu_I,"sd_I"=sd_I,"mu_N"=mu_N,"sd_N"=sd_N,"probMicro"=probMicro,"burnin"=burnin,"epiStart"=epiStart,pars)
+    pars <- c("sampFreq"=sampFreq,"sampPropn"=sampPropn,"mu_I"=mu_I,"sd_I"=sd_I,"mu_N"=mu_N,"sd_N"=sd_N,"probMicro"=probMicro,"baselineProb"=baseline,"burnin"=burnin,"epiStart"=epiStart,pars)
     return(pars)   
 }
 
@@ -222,29 +242,33 @@ setupParsLong <- function(){
 #' @useDynLib zikaProj
 setupListPars <- function(duration=10, N_H = 1000000,N_M = 20000000){
     pars <- setupParsLong()
-    D_C <- pars["D_C"]
-    L <- pars["L_H"]
+    D_C <- unname(pars["D_C"])
+    L <- unname(pars["L_H"])
     S_M = 1*(N_M)
     E_M = 0
     I_M = 0
     S_F = 0.001*N_H
     S_C = D_C*N_H/(L+D_C)
-    S_A = (1-0.001-D_C/(L+D_C))*N_H
+    S_A = (1-0.001-D_C/(L+D_C))*N_H - 10
     E_C = 0
     E_A = 0
     E_F = 0
     I_C = 0
-    I_A = 0
+    I_A = 10
     I_F = 0
     R_C = 0
     R_A = 0
     R_F = 0
 
-    y0 <- c(S_M, E_M,I_M,S_C,S_A,S_F,E_C,E_A,E_F,I_C,I_A,I_F,R_C,R_A,R_F)
-    ts <- c(duration,1/365)
+    y0 <- c("S_M"=S_M, "E_M"=E_M,"I_M"=I_M,"S_C"=S_C,"S_A"=S_A,"S_F"=S_F,"E_C"=E_C,"E_A"=E_A,"E_F"=E_F,"I_C"=I_C,"I_A"=I_A,"I_F"=I_F,"R_C"=R_C,"R_A"=R_A,"R_F"=R_F)
+    ts <- c("dur"=duration,"step"=1/365)
     
-    return(list(ts,y0,unname(pars)))
+    return(list(ts,y0,pars))
 }
+
+
+
+
 
 #' Obsolete - the R implementation of the ODE model
 #'

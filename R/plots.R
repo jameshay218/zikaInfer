@@ -10,7 +10,7 @@
 plot_dynamics <- function(y, N_H, N_M, file.name = NULL){
     y <- as.data.frame(y)
     n <- ncol(y)
-    cols <- c("times","Sm","Em","Im","Sc","Sa","Sf","Ec","Ea","Ef","Ic","Ia","If","Rc","Ra","Rf")
+    cols <- c("times","S_M","E_M","I_M","S_C","S_A","S_F","E_C","E_A","E_F","I_C","I_A","I_F","R_C","R_A","R_F")
     y <- y[,1:length(cols)]
     colnames(y) <- cols
 
@@ -18,24 +18,24 @@ plot_dynamics <- function(y, N_H, N_M, file.name = NULL){
         png(file.name)
     }
     par(mfrow=c(2,2))
-    plot(y$Sm~y$times,col="green",ylim=c(0,N_M),type='l',main="Mosquito Dynamics",xlab="Time",ylab="Incidence")
-    lines(y$Em~y$times,col="red")
-    lines(y$Im~y$times,col="blue")
+    plot(y$S_M~y$times,col="green",ylim=c(0,N_M),type='l',main="Mosquito Dynamics",xlab="Time",ylab="Incidence")
+    lines(y$E_M~y$times,col="red")
+    lines(y$I_M~y$times,col="blue")
 
-    plot(y$Sc~y$times,col="green",ylim=c(0,0.3*N_H),type='l',main="Children Dynamics",xlab="Time",ylab="Incidence")
-    lines(y$Ec~y$times,col="red")
-    lines(y$Ic~y$times,col="blue")
-    lines(y$Rc~y$times,col="purple")
+    plot(y$S_C~y$times,col="green",ylim=c(0,0.3*N_H),type='l',main="Children Dynamics",xlab="Time",ylab="Incidence")
+    lines(y$E_C~y$times,col="red")
+    lines(y$I_C~y$times,col="blue")
+    lines(y$R_C~y$times,col="purple")
 
-    plot(y$Sa~y$times,col="green",ylim=c(0,0.8*N_H),type='l',main="Adult Dynamics",xlab="Time",ylab="Incidence")
-    lines(y$Ea~y$times,col="red")
-    lines(y$Ia~y$times,col="blue")
-    lines(y$Ra~y$times,col="purple")
+    plot(y$S_A~y$times,col="green",ylim=c(0,0.8*N_H),type='l',main="Adult Dynamics",xlab="Time",ylab="Incidence")
+    lines(y$E_A~y$times,col="red")
+    lines(y$I_A~y$times,col="blue")
+    lines(y$R_A~y$times,col="purple")
 
-    plot(y$Sf~y$times,col="green",ylim=c(0,0.004*N_H),type='l',main="First Trimester Dynamics",xlab="Time",ylab="Incidence")
-    lines(y$Ef~y$times,col="red")
-    lines(y$If~y$times,col="blue")
-    lines(y$Rf~y$times,col="purple")
+    plot(y$S_F~y$times,col="green",ylim=c(0,0.004*N_H),type='l',main="First Trimester Dynamics",xlab="Time",ylab="Incidence")
+    lines(y$E_F~y$times,col="red")
+    lines(y$I_F~y$times,col="blue")
+    lines(y$R_F~y$times,col="purple")
     if(!is.null(file.name)){
         dev.off()
     }

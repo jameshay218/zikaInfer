@@ -34,7 +34,7 @@ pars[[3]][9] <- 1.25
 
 paramTable <- setupParTable(pars[[3]])
 setwd("~/zikaTmp2")
-iterations <- 5000
+iterations <- 20000
 adaptive <- 5000
 
 pernambuco_dat <- read.csv("~/Dropbox/Zika/Data/pernambuco_dat.csv", header=FALSE)
@@ -44,7 +44,7 @@ pars1[3] <- 25
 pars1[4] <- 4
 pars1[17] <- 77
 
-y1 <- run_metropolis_MCMC(pars1,iterations,unname(as.matrix(pernambuco_dat)),pars[[1]],pars[[2]],paramTable,0.44,500,1,0,adaptive,"realdat",500,TRUE,threshold)
+y1 <- run_metropolis_MCMC(pars1,iterations,greb,pars[[1]],pars[[2]],paramTable,0.44,500,1,0,adaptive,"realdat",500,TRUE,NULL,NULL)
   
 p <- NULL
 alphas <- cbind(alphas,1-alphas)
@@ -52,21 +52,47 @@ for(i in 1:nrow(alphas)){
   p[i] <- alphas[i,1]*pnorm(threshold,mus[1],sds[1],1,0) + alphas[i,2]*pnorm(threshold,mus[2],sds[2],1,0)
 }
 
-testing <- seq(0,2,by=1/120)
+testing <- seq(0,1.5,by=1/120)
 tmp <- NULL
-tmp1 <- NULL
 tmpAlphas <- NULL
-ys <- NULL
 for(i in 1:length(testing)){
   pars1 <- pars[[3]]
   pars1[9] <- testing[i]
-  ys[[i]] <- y <- solveModel(list(pars[[1]],pars[[2]],pars1))
-  tmpAlphas[[i]] <- alphas <- calculate_alphas_buckets(as.matrix(unname(y[,c("times","If","Sf","Ef","Rf")])),0.2,as.matrix(unname(pernambuco_dat[,c("start","end")])))
-  #tmp[[i]] <- (pars[[1]],pars[[2]],pars1,pernambuco_dat,32)
-  tmp[[i]] <- p_test(as.matrix(unname(pernambuco_dat[,c("microCeph","births")])),unname(cbind(alphas,1-alphas)),c(28,40),c(1.2,1.2),32)
-  tmp1[i] <- posterior(pars[[1]],pars[[2]],pars1,pernambuco_dat,32)
+  y <- solveModel(list(pars[[1]],pars[[2]],pars1))
+  tmpAlphas[[i]] <- alphas <- calculate_alphas_buckets(
+    as.matrix(unname(y[,c("times","If","Sf","Ef","Rf")])),
+    pars1[2],
+    as.matrix(unname(dat[,c("start","end")])))
+  tmp[i] <- likelihood_threshold(
+    unname(as.matrix(dat[,c("microCeph","births")])),
+    unname(cbind(alphas,1-alphas)),c(pars1[3],pars1[5]),
+    c(pars1[4],pars1[6]),
+  32)
 }
+
+pars <- setupListPars(duration=2+1/12,N_H=10000000,N_M = 200000000)
+pars[[3]][1] <- 30
+pars[[2]][11] <- 100
+pars[[3]][8] <- 3
+pars[[3]][9] <- 1.4
+pars[[3]][5] <- 35
+pars[[3]][6] <- 1.18
+pars[[3]][7] <- 0.2
+dat <- zika.sim(pars)
+
+testing <- seq(0,200,by=1)
 tmp <- NULL
-for(i in 1:length(tmpAlphas)){
-  tmp[i] <- likelihood_threshold(unname(as.matrix(pernambuco_dat[,c("microCeph","births")])),unname(cbind(tmpAlphas[[i]],1-tmpAlphas[[i]])),c(28,40),c(1.2,1.1844),32)
+countedDat <- cbind(apply(dat,1,function(x) length(which(x < threshold))),apply(dat,1,length))
+countedDat <- as.data.frame(countedDat)
+colnames(countedDat) <- c("microCeph","births")
+countedDat$start <- seq(0,pars[[1]][1]-pars[[3]][1]/365,by=pars[[3]][1]/365)
+countedDat$end <- seq(pars[[3]][1]/365,pars[[1]][1],by=pars[[3]][1]/365)
+
+testing <- seq(0,0.2,by=0.001)
+tmp <- NULL
+for(i in 1:length(testing)){
+print(i)
+ pars1 <- pars[[3]]
+ pars1["baselineProb"] <- testing[i]
+ tmp[i] <- posterior(pars[[1]],pars[[2]],pars1,greb,NULL,NULL)
 }
