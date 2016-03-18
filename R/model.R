@@ -105,13 +105,16 @@ solveModel <- function(allPars){
 
     ## Solve ODEs from 0 to epiStart, via burnin
     y1 <- ode(y0s,ts1,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",hmax=1e-4,nout=0)
-    if(is.null(y1)) return("Error")
+    if(is.null(y1) || nrow(y1) < 0) return("Error")
     colnames(y1) <- c("times","S_M","E_M","I_M","S_C","S_A","S_F","E_C","E_A","E_F","I_C","I_A","I_F","R_C","R_A","R_F")
     ## Get final population sizes as start for next part
     ## If epidemic start was delayed, use end of burn in. If not, just use original starting values.
     y0s2 <- y1[nrow(y1),2:ncol(y1)]
     if(burnin > 0){
-        y1 <- y1[y1[,"times"] >= burnin,]
+        if(!is.null(y1) && nrow(y1) > 1){
+            y1 <- y1[y1[,"times"] >= burnin,]
+        }
+        else return("Error")
         if(epiStart > 0) y1[,"times"] <- y1[,"times"]- burnin
     }
 
