@@ -7,10 +7,10 @@
 setupParTable <- function(pars){
     use_log <- rep(0,length(pars))
     lower_bounds <- rep(0,length(pars))
-    upper_bounds <- c(7,1,60,10,60,10,1,1,100,100,1,100,100,1,1,1,1,200,1,1,10)
+    upper_bounds <- c(30,1,60,10,60,10,1,1,100,100,1,100,100,1,1,1,1,200,1,1,10)
     steps <- rep(0.1,length(pars))
     log_proposal <- rep(0,length(pars))
-    fixed <- c(1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1)
+    fixed <- c(1,1,1,1,1,1,0,0,1,0,1,1,1,1,1,1,1,0,1,1,1)
     names <- c("sampFreq","sampPropn","muI","sdI","muN","sdN","probMicro","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","P_HM","P_MH","constSeed")
     paramTable <- cbind("use_log"=use_log,"lower_bounds"=lower_bounds,"upper_bounds"=upper_bounds,"steps"=steps,"log_proposal"=log_proposal,"fixed"=fixed)
     paramTable <- as.data.frame(paramTable)
@@ -94,7 +94,7 @@ proposalfunction <- function(param,param_table,index){
 posterior <- function(t_pars, y0s, pars, dat, threshold=NULL, times=NULL){
     
     y <- solveModel(list(t_pars,y0s,pars))
-
+    if(y=="Error") return(-Inf)
     sampFreq <- pars["sampFreq"]
     sampPropn <- pars["sampPropn"]
     mu_I <- pars["mu_I"]

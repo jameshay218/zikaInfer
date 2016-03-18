@@ -4,16 +4,16 @@
 \alias{posterior}
 \title{Posterior function for ODE model}
 \usage{
-posterior(ts, y0s, pars, dat, threshold = NULL)
+posterior(t_pars, y0s, pars, dat, threshold = NULL, times = NULL)
 }
 \arguments{
-\item{ts}{time vector over which to solve the ODE model}
-
 \item{y0s}{initial conditions for the ODE model}
 
 \item{pars}{ODE parameters}
 
 \item{dat}{unnamed matrix over which to calculate likelihoods}
+
+\item{ts}{time vector over which to solve the ODE model}
 }
 \value{
 a single value for the posterior

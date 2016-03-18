@@ -4,7 +4,7 @@
 \alias{zika.sim}
 \title{Simulates head circumference data from an SEIR vector borne model}
 \usage{
-zika.sim(allPars)
+zika.sim(allPars, headMeasurements = TRUE, buckets = NULL)
 }
 \arguments{
 \item{allPars}{A list of parameter vectors. First vector should be an array of time points over which to solve the SEIR model. Second vector should be the vector of starting conditions. Third vector should be all of the parameters.}

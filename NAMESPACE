@@ -2,9 +2,13 @@
 
 export(b.calc)
 export(calculate_alphas)
+export(calculate_alphas_buckets)
+export(calculate_alphas_prob_buckets)
+export(calculate_alphas_prob_sampfreq)
 export(createCounts)
 export(fromUnitScale)
 export(likelihood)
+export(likelihood_prob)
 export(likelihood_threshold)
 export(mcmc_diagnostics)
 export(plotDataHeatMap)

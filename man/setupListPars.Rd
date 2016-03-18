@@ -4,7 +4,7 @@
 \alias{setupListPars}
 \title{Default parameter list setup}
 \usage{
-setupListPars(duration = 10)
+setupListPars(duration = 10, N_H = 1e+06, N_M = 2e+07)
 }
 \arguments{
 \item{duration}{Duration in years of the simulation. Defaults to 10 years}

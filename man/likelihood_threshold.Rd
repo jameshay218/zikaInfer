@@ -7,7 +7,7 @@
 likelihood_threshold(dat, alphas, mus, sds, threshold)
 }
 \arguments{
-\item{dat}{the matrix of data. 2 columns for counts of positive and negative, and N rows for each sampling time}
+\item{dat}{the matrix of data. 2 columns for counts of positive and total births, and N rows for each sampling time}
 
 \item{alphas}{matrix of of alphas. 2 columns (1 for both distributions) with number of rows matching number of rows in dat}
 
