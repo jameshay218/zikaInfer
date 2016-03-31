@@ -254,8 +254,9 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
             r0 <- r0.calc(current_params,sum(y0s[4:length(y0s)]),sum(y0s[1:3]))
             chain[no_recorded,1] <- sampno
             chain[no_recorded,2:(ncol(chain)-2)] <- current_params
-            chain[no_recorded,ncol(chain)-1] <- probab
-            chain[no_recorded,ncol(chain)] <- r0
+            chain[no_recorded,ncol(chain)-1] <- r0
+            chain[no_recorded,ncol(chain)] <- probab
+
             no_recorded <- no_recorded + 1
             
             if(no_recorded > save_block){
