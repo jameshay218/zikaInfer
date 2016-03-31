@@ -192,7 +192,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
 
     # Setup MCMC chain file with correct column names
     mcmc_chain_file <- paste(filename,"_chain.csv",sep="")
-    chain_colnames <- c("sampno",param_table$names,"lnlike")
+    chain_colnames <- c("sampno",param_table$names,"r0","lnlike")
   
     # Arrays to store acceptance rates
     tempaccepted <- tempiter <- reset <- integer(all_param_length)
@@ -213,7 +213,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
     # Set up initial csv file
     tmp_table <- array(dim=c(1,length(chain_colnames)))
     tmp_table <- as.data.frame(tmp_table)
-    tmp_table[1,] <- c(1,startvalue,probab)
+    tmp_table[1,] <- c(1,startvalue,r0.calc(startvalue,sum(y0s[4:length(y0s)]),sum(y0s[1:3])),probab)
     colnames(tmp_table) <- chain_colnames
     
     # Write starting conditions to file
