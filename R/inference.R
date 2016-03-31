@@ -234,7 +234,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
         #proposal <- current_params
         #proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"upper_bounds"],param_transform_table[j,"lower_bounds"],param_transform_table[j,"steps"])
         newprobab <- posterior(t_pars, y0s, proposal, data,threshold,buckets)
-                                        #print(newprobab)
+        print(newprobab)
                                         # Calculate log difference in posteriors and accept/reject
         difflike <- newprobab - probab
         
