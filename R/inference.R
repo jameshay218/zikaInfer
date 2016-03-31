@@ -94,7 +94,7 @@ proposalfunction <- function(param,param_table,index){
 posterior <- function(t_pars, y0s, pars, dat, threshold=NULL, times=NULL){
     
     y <- solveModel(list(t_pars,y0s,pars))
-    if(y=="Error") return(-Inf)
+    if(length(y) <= 1 && y=="Error") return(-Inf)
     sampFreq <- pars["sampFreq"]
     sampPropn <- pars["sampPropn"]
     mu_I <- pars["mu_I"]
@@ -228,13 +228,13 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
      #   for(j in non_fixed_params){
                                         # Propose new parameters and calculate posterior
         proposal <- proposalfunction(current_params,param_transform_table,j)
-        print(proposal)
+        #print(proposal)
 #        print(proposal)
         #print(proposal)
         #proposal <- current_params
         #proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"upper_bounds"],param_transform_table[j,"lower_bounds"],param_transform_table[j,"steps"])
         newprobab <- posterior(t_pars, y0s, proposal, data,threshold,buckets)
-        print(newprobab)
+        #print(newprobab)
                                         # Calculate log difference in posteriors and accept/reject
         difflike <- newprobab - probab
         

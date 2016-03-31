@@ -100,6 +100,7 @@ solveModel <- function(allPars){
     ## Create time series for ode solver
     ts1 <- seq(0, burnin+epiStart,by=time_by)
     ts2 <- seq(epiStart, time_length,by=time_by)
+    if(epiStart < time_by) epiStart <- time_by
     #ts2 <- ts2 - epiStart
     if(length(ts1) < 1 | length(ts2) < 1) return("Error")
 
