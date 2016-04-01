@@ -279,7 +279,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
             }
         }
         
-        if(mvrPars == NULL) tempiter[j] <- tempiter[j] + 1
+        if(is.null(mvrPars)) tempiter[j] <- tempiter[j] + 1
         else tempiter <- tempiter + 1
 
 
