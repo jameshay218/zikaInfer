@@ -257,27 +257,23 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
             print(proposal)
         }
         ## Propose new parameters and calculate posterior
-        newprobab <- posterior(t_pars, y0s, proposal, data,threshold,buckets)
-        ## Calculate log difference in posteriors and accept/reject
-        difflike <- newprobab - probab
-
-        ##proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"upper_bounds"],param_transform_table[j,"lower_bounds"],param_transform_table[j,"steps"])
-        
-        if ((!is.nan(difflike) & !is.infinite(newprobab)) & (runif(1) < exp(difflike) |  difflike > 0)){
-            if(is.null(mvrPars)){
-                if(proposal[j] <= param_transform_table[j,"upper_bounds"] & proposal[j] >= param_transform_table[j,"lower_bounds"]){
-                    current_params <- proposal
-                    probab <- newprobab
+        if(!any(proposal < param_table$lower_bounds | proposal > param_table$upper_bounds)){
+            newprobab <- posterior(t_pars, y0s, proposal, data,threshold,buckets)
+            ## Calculate log difference in posteriors and accept/reject
+            difflike <- newprobab - probab
+            if ((!is.nan(difflike) & !is.infinite(newprobab)) & (runif(1) < exp(difflike) |  difflike > 0)){
+                current_params <- proposal
+                probab <- newprobab
+                if(is.null(mvrPars)){
                     tempaccepted[j] <- tempaccepted[j] + 1
-                }
-            } else {
-                if(!any(proposal < param_table$lower_bounds | proposal > param_table$upper_bounds)){
-                    current_params <- proposal
-                    probab <- newprobab
+                } else {
                     tempaccepted <- tempaccepted + 1
                 }
             }
         }
+
+        ##proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"upper_bounds"],param_transform_table[j,"lower_bounds"],param_transform_table[j,"steps"])
+     
         
         if(is.null(mvrPars)) tempiter[j] <- tempiter[j] + 1
         else tempiter <- tempiter + 1
