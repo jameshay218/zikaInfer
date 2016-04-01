@@ -256,7 +256,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
             proposal <- mvr_proposal(current_params,param_table,scaledCovMat)
         }
         ## Propose new parameters and calculate posterior
-        if(!any(proposal < param_table$lower_bounds | proposal > param_table$upper_bounds)){
+        if(!any(proposal[non_fixed_params]< param_table$lower_bounds[non_fixed_params] | proposal[non_fixed_params] > param_table$upper_bounds[non_fixed_params])){
             newprobab <- posterior(t_pars, y0s, proposal, data,threshold,buckets)
             ## Calculate log difference in posteriors and accept/reject
             difflike <- newprobab - probab
