@@ -211,7 +211,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
     chain_colnames <- c("sampno",param_table$names,"r0","lnlike")
   
     # Arrays to store acceptance rates
-    if(mvrPars == NULL) tempaccepted <- tempiter <- reset <- integer(all_param_length)
+    if(is.null(mvrPars)) tempaccepted <- tempiter <- reset <- integer(all_param_length)
     else {
         tempaccepted <- tempiter <- 0
         covMat <- mvrPars[[1]]
@@ -248,7 +248,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
     sampno <- 2
                                             # Go through chain
     for (i in 1:(iterations+adaptive_period+burnin)){
-        if(mvrPars == NULL) {
+        if(is.null(mvrPars)) {
             ## For each parameter (Gibbs)
             j <- sample(non_fixed_params,1)
             proposal <- proposalfunction(current_params,param_transform_table,j)
@@ -264,7 +264,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
         ##proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"upper_bounds"],param_transform_table[j,"lower_bounds"],param_transform_table[j,"steps"])
         
         if ((!is.nan(difflike) & !is.infinite(newprobab)) & (runif(1) < exp(difflike) |  difflike > 0)){
-            if(mvrPars == NULL){
+            if(is.null(mvrPars)){
                 if(proposal[j] <= param_transform_table[j,"upper_bounds"] & proposal[j] >= param_transform_table[j,"lower_bounds"]){
                     current_params <- proposal
                     probab <- newprobab
@@ -308,7 +308,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
                                         # Note that if opt_freq is 0, then no tuning will take place
         if(opt_freq != 0 & i <= adaptive_period & i%%opt_freq== 0) {
             pcur <- tempaccepted/tempiter
-            if(mvrPars == NULL){
+            if(is.null(mvrPars)){
                 print(pcur[non_fixed_params])
                 tempaccepted <- tempiter <- reset
                 tmp_transform <- param_transform_table[,"steps"]
