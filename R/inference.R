@@ -281,6 +281,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
                                         # If current iteration matches with recording frequency, store in the chain. If we are at the limit of the save block,
                                         # save this block of chain to file and reset chain
         if(sampno %% thin ==0){
+            print(current_params)
             r0 <- r0.calc(current_params,sum(y0s[4:length(y0s)]),sum(y0s[1:3]))
             chain[no_recorded,1] <- sampno
             chain[no_recorded,2:(ncol(chain)-2)] <- current_params
