@@ -323,6 +323,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
                 oldCov <- covMat
                 print(dim(oldCov))
                 print(oldCov)
+                print(head(chain))
                 covMat <- cov(chain[,2:(ncol(chain)-2)])
                 print(dim(covMat))
                 covMat <- (1-w)*oldCov + w*covMat
