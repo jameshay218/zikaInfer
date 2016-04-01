@@ -319,8 +319,12 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
                 param_transform_table[,"steps"] <- tmp_transform
             } else {
                 scale <- scaletuning(scale,popt,pcur)
+                print(scale)
+                print(w)
                 oldCov <- covMat
+                print(dim(oldCov))
                 covMat <- cov(chain[,2:(ncol(chain)-1)])
+                print(dim(covMat))
                 covMat <- (1-w)*oldCov + w*covMat
                 scaledCovMat <- covMat*scale
                 tmpiter <- tmpaccepted <- 0
