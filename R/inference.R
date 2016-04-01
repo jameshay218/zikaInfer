@@ -254,6 +254,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
             
         } else {
             proposal <- mvr_proposal(current_params,param_table,scaledCovMat)
+            print(proposal)
         }
         ## Propose new parameters and calculate posterior
         newprobab <- posterior(t_pars, y0s, proposal, data,threshold,buckets)
