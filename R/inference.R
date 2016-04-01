@@ -254,7 +254,6 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
             
         } else {
             proposal <- mvr_proposal(current_params,param_table,scaledCovMat)
-            print(proposal)
         }
         ## Propose new parameters and calculate posterior
         if(!any(proposal < param_table$lower_bounds | proposal > param_table$upper_bounds)){
@@ -327,6 +326,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
                 print(dim(covMat))
                 covMat <- (1-w)*oldCov + w*covMat
                 scaledCovMat <- covMat*scale
+                print(scaledCovMat)
                 tmpiter <- tmpaccepted <- 0
             }
         }
