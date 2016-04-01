@@ -219,8 +219,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
         scale <- mvrPars[[3]]
         scaledCovMat <- covMat*scale
     }
-        
-    
+    reset <- integer(all_param_length)
     reset[] <- 0
 
     # Create empty chain to store "save_block" iterations at a time
