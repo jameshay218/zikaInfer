@@ -286,16 +286,8 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
             chain[no_recorded,2:(ncol(chain)-2)] <- current_params
             chain[no_recorded,ncol(chain)-1] <- r0
             chain[no_recorded,ncol(chain)] <- probab
-
-            print(chain)
             no_recorded <- no_recorded + 1
-            
-            if(no_recorded > save_block){
-                print(i)
-                write.table(chain[1:(no_recorded-1),],file=mcmc_chain_file,col.names=FALSE,row.names=FALSE,sep=",",append=TRUE)
-                chain <- empty_chain
-                no_recorded <- 1
-            }
+          
         }
         sampno <- sampno + 1
                                         #        }
@@ -333,6 +325,12 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
                 tmpiter <- tmpaccepted <- 0
             }
         }
+        if(no_recorded > save_block){
+            print(i)
+            write.table(chain[1:(no_recorded-1),],file=mcmc_chain_file,col.names=FALSE,row.names=FALSE,sep=",",append=TRUE)
+            chain <- empty_chain
+            no_recorded <- 1
+          }
     }
         
         ## If there are some recorded values left that haven't been saved, then append these to the MCMC chain file. Note
