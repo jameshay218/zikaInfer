@@ -81,6 +81,22 @@ proposalfunction <- function(param,param_table,index){
     rtn
 }
 
+#' Multivariate proposal function
+#'
+#' Given the current parameters, bounds and a covariance matrix, returns a vector for a proposed jump from a multivariate normal distribution
+#' @param current the vector of current parameter values
+#' @param param_table a matrix of flags and bounds that specify how the proposal should be treated. Crucial elements are the 3rd column (lower bound), 4th column (upper bound), 5th column )step size) and 6th column (flag for log proposal)
+#' @param covMat the 2D covariance matrix for all of the parameters
+#' @return a parameter vector of a proposed move. Note that these may fall outside the allowable ranges.
+#' @export
+#' @useDynLib zikaProj
+mvr_proposal <- function(current, param_table, covMat){
+    proposed <- current
+    fixed <- param_table$fixed==0
+    proposed[fixed] <- proposed[fixed] + mvrnorm(n=1,mu=rep(0,length(proposed[fixed])),covMat[fixed,fixed])
+    return(proposed)
+}
+
 #' Posterior function for ODE model
 #'
 #' Given the time vector, initial conditions and ODE parameters, calculates the posterior value for a given data set. Note that no priors are used here.
@@ -175,7 +191,7 @@ posterior <- function(t_pars, y0s, pars, dat, threshold=NULL, times=NULL){
 #' @export
 #' @seealso \code{\link{posterior}}, \code{\link{proposalfunction}}
 #' @useDynLib zikaProj
-run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, param_table, popt=0.44, opt_freq=50, thin=1, burnin=100,adaptive_period=1,filename, save_block = 500, VERBOSE=FALSE,threshold=NULL, buckets=NULL){
+run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, param_table, popt=0.44, opt_freq=50, thin=1, burnin=100,adaptive_period=1,filename, save_block = 500, VERBOSE=FALSE,threshold=NULL, buckets=NULL, mvrPars=NULL){
     TUNING_ERROR<- 0.1
 
     if(opt_freq ==0 && VERBOSE){ print("Not running adaptive MCMC - opt_freq set to 0")}
@@ -195,7 +211,16 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
     chain_colnames <- c("sampno",param_table$names,"r0","lnlike")
   
     # Arrays to store acceptance rates
-    tempaccepted <- tempiter <- reset <- integer(all_param_length)
+    if(mvrPars == NULL) tempaccepted <- tempiter <- reset <- integer(all_param_length)
+    else {
+        tempaccepted <- tempiter <- 0
+        covMat <- mvrPars[[1]]
+        w <- mvrPars[[2]]
+        scale <- mvrPars[[3]]
+        scaledCovMat <- covMat*scale
+    }
+        
+    
     reset[] <- 0
 
     # Create empty chain to store "save_block" iterations at a time
@@ -221,35 +246,45 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
 
     no_recorded <- 1
     sampno <- 2
-    
-                                        # Go through chain
+                                            # Go through chain
     for (i in 1:(iterations+adaptive_period+burnin)){
-                                        # For each parameter (Gibbs)
-        j <- sample(non_fixed_params,1)
-     #   for(j in non_fixed_params){
-                                        # Propose new parameters and calculate posterior
-        proposal <- proposalfunction(current_params,param_transform_table,j)
-        #print(proposal)
-#        print(proposal)
-        #print(proposal)
-        #proposal <- current_params
-        #proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"upper_bounds"],param_transform_table[j,"lower_bounds"],param_transform_table[j,"steps"])
+        if(mvrPars == NULL) {
+            ## For each parameter (Gibbs)
+            j <- sample(non_fixed_params,1)
+            proposal <- proposalfunction(current_params,param_transform_table,j)
+            
+        } else {
+            proposal <- mvr_proposal(current_params,param_table,scaledCovMat)
+        }
+        ## Propose new parameters and calculate posterior
         newprobab <- posterior(t_pars, y0s, proposal, data,threshold,buckets)
-        #print(newprobab)
-                                        # Calculate log difference in posteriors and accept/reject
+        ## Calculate log difference in posteriors and accept/reject
         difflike <- newprobab - probab
+
+        ##proposal[j] <- proposal_function(current_params[j],param_transform_table[j,"upper_bounds"],param_transform_table[j,"lower_bounds"],param_transform_table[j,"steps"])
         
         if ((!is.nan(difflike) & !is.infinite(newprobab)) & (runif(1) < exp(difflike) |  difflike > 0)){
-            if(proposal[j] <= param_transform_table[j,"upper_bounds"] & proposal[j] >= param_transform_table[j,"lower_bounds"]){
-                current_params <- proposal
-                probab <- newprobab
-                tempaccepted[j] <- tempaccepted[j] + 1
+            if(mvrPars == NULL){
+                if(proposal[j] <= param_transform_table[j,"upper_bounds"] & proposal[j] >= param_transform_table[j,"lower_bounds"]){
+                    current_params <- proposal
+                    probab <- newprobab
+                    tempaccepted[j] <- tempaccepted[j] + 1
+                }
+            } else {
+                if(!any(proposal < param_table$lower_bounds | proposal > param_table$upper_bounds)){
+                    current_params <- proposal
+                    probab <- newprobab
+                    tempaccepted <- tempaccepted + 1
+                }
             }
         }
-        tempiter[j] <- tempiter[j] + 1
+        
+        if(mvrPars == NULL) tempiter[j] <- tempiter[j] + 1
+        else tempiter <- tempiter + 1
+
 
                                         # If current iteration matches with recording frequency, store in the chain. If we are at the limit of the save block,
-           # save this block of chain to file and reset chain
+                                        # save this block of chain to file and reset chain
         if(sampno %% thin ==0){
             r0 <- r0.calc(current_params,sum(y0s[4:length(y0s)]),sum(y0s[1:3]))
             chain[no_recorded,1] <- sampno
@@ -273,35 +308,43 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
                                         # Note that if opt_freq is 0, then no tuning will take place
         if(opt_freq != 0 & i <= adaptive_period & i%%opt_freq== 0) {
             pcur <- tempaccepted/tempiter
-            print(pcur[non_fixed_params])
-            tempaccepted <- tempiter <- reset
-            tmp_transform <- param_transform_table[,"steps"]
-            for(x in non_fixed_params){
-                if(pcur[x] < popt - (TUNING_ERROR*popt) | pcur[x] > popt + (TUNING_ERROR*popt)){
-                    tmp_transform[x] <- scaletuning(tmp_transform[x],popt,pcur[x])
-                    #tmp_transform[x] <- scaletuning2(tmp_transform[x],popt,pcur[x])
+            if(mvrPars == NULL){
+                print(pcur[non_fixed_params])
+                tempaccepted <- tempiter <- reset
+                tmp_transform <- param_transform_table[,"steps"]
+                for(x in non_fixed_params){
+                    if(pcur[x] < popt - (TUNING_ERROR*popt) | pcur[x] > popt + (TUNING_ERROR*popt)){
+                        tmp_transform[x] <- scaletuning(tmp_transform[x],popt,pcur[x])
+                                        #tmp_transform[x] <- scaletuning2(tmp_transform[x],popt,pcur[x])
+                    }
+                }
+                print("Step sizes:")
+                print(tmp_transform[non_fixed_params])
+                param_transform_table[,"steps"] <- tmp_transform
+            } else {
+                scale <- scaletuning(scale,popt,pcur)
+                oldCov <- covMat
+                covMat <- cov(chain[,2:(ncol(chain)-1)])
+                covMat <- (1-w)*oldCov + w*covMat
+                scaledCovMat <- covMat*scale
+                tmpiter <- tmpaccepted <- 0
             }
         }
-        print("Step sizes:")
-            print(tmp_transform[non_fixed_params])
-            param_transform_table[,"steps"] <- tmp_transform
-            
+    }
+        
+        ## If there are some recorded values left that haven't been saved, then append these to the MCMC chain file. Note
+        ## that due to the use of cbind, we have to check to make sure that (no_recorded-1) would not result in a single value
+        ## rather than an array
+        if(no_recorded > 2){
+            write.table(chain[1:(no_recorded-1),],file=mcmc_chain_file,row.names=FALSE,col.names=FALSE,sep=",",append=TRUE)
         }
+        
+        if(VERBOSE){
+            print("Final step sizes:")
+            print(param_table$step)
+        }
+        return(mcmc_chain_file)
     }
-
-    # If there are some recorded values left that haven't been saved, then append these to the MCMC chain file. Note
-    # that due to the use of cbind, we have to check to make sure that (no_recorded-1) would not result in a single value
-    # rather than an array
-    if(no_recorded > 2){
-        write.table(chain[1:(no_recorded-1),],file=mcmc_chain_file,row.names=FALSE,col.names=FALSE,sep=",",append=TRUE)
-    }
-    
-    if(VERBOSE){
-        print("Final step sizes:")
-        print(param_table$step)
-    }
-    return(mcmc_chain_file)
-}
 
 #' MCMC diagnostic tests
 #'
