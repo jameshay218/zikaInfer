@@ -2,38 +2,52 @@
 library(ggplot2)
 library(scales)
 library(data.table)
+library(gridExtra)
 
-setwd("~/tmpZika3")
-burnin <- 10000
+setwd("~/tmpZika5")
+burnin <-30000
 paramCols <- c("probMicro","baselineProb","epiStart","r0")
-
+actualDat <- read.csv("~/Dropbox/Zika/Data/allDat.csv")
+correctOrder <- sort(by(actualDat[,"microCeph"],actualDat[,"local"],sum,simplify=TRUE),decreasing=TRUE)
+correctOrder <- as.factor(names(correctOrder))
 files <- list.files(pattern="\\.csv$")
+
 
 allR0 <- NULL
 allEpi <- NULL
 allProb <- NULL
 allBaseline <- NULL
 
-for(file in files){
-    print(file)
-    tmp <- fread(file,data.table=FALSE)
-    tmp <- as.data.frame(tmp[burnin:nrow(tmp),paramCols])
+for(i in 1:length(correctOrder)){
+  if(correctOrder[i]=="saopaulo") next
+    for(j in 1:3){
+      filename <- paste(correctOrder[i],j,"_chain.csv",sep="")
+      print(filename)
+      tmp <- fread(filename,data.table=FALSE)
+      tmp <- as.data.frame(tmp[burnin:nrow(tmp),paramCols])
 
-    tmp <- tmp[sample(seq(1,nrow(tmp),by=1),1000,replace=FALSE),]
-    name <- strsplit(file,"_")
-    name <- name[[1]][1]
-    print(name)
+      tmp <- tmp[sample(seq(1,nrow(tmp),by=1),1000,replace=FALSE),]
+      
+      name <- as.character(correctOrder[i])
+      print(name)
     
-    tmpR0 <- data.frame("value"=tmp$r0,"dat"=name)
-    tmpEpi <- data.frame("value"=tmp$epiStart,"dat"=name)
-    tmpProb <- data.frame("value"=tmp$probMicro,"dat"=name)
-    tmpBase <- data.frame("value"=tmp$baselineProb,"dat"=name)
+      tmpR0 <- data.frame("value"=tmp$r0,"dat"=name,"chain"=j)
+      tmpEpi <- data.frame("value"=tmp$epiStart,"dat"=name,"chain"=j)
+      tmpProb <- data.frame("value"=tmp$probMicro,"dat"=name,"chain"=j)
+      tmpBase <- data.frame("value"=tmp$baselineProb,"dat"=name,"chain"=j)
 
-    allR0 <- rbind(allR0, tmpR0)
-    allEpi <- rbind(allEpiStart, tmpEpi)
-    allProb <- rbind(allProb, tmpProb)
-    allBaseline <- rbind(allBaseline, tmpBase)
+      allR0 <- rbind(allR0, tmpR0)
+      allEpi <- rbind(allEpi, tmpEpi)
+      allProb <- rbind(allProb, tmpProb)
+      allBaseline <- rbind(allBaseline, tmpBase)
+    }
 }
+
+allR0$dat <- factor(allR0$dat,correctOrder)
+allEpi$dat <- factor(allEpi$dat,correctOrder)
+allProb$dat <- factor(allProb$dat,correctOrder)
+allBaseline$dat <- factor(allBaseline$dat,correctOrder)
+
 
 R0plot <- ggplot(allR0,aes(x=value))+
   stat_density(aes(ymax=..density..,ymin=-..density..,fill=dat,color=dat),trim=TRUE,geom="ribbon",position="identity")+
@@ -41,7 +55,7 @@ R0plot <- ggplot(allR0,aes(x=value))+
   facet_grid(~dat)+
   coord_flip()+ 
   ylab("Density") +
-  ggtitle("Bite Rate, b")+
+  ggtitle("R0")+
   xlab("Value")+
   theme(
       strip.text.x=element_text(size=8,angle=90),
@@ -55,3 +69,89 @@ R0plot <- ggplot(allR0,aes(x=value))+
       axis.ticks.x = element_blank(),
       legend.position="none"
   )
+
+
+
+epiplot <- ggplot(allEpi,aes(x=value))+
+  stat_density(aes(ymax=..density..,ymin=-..density..,fill=dat,color=dat),trim=TRUE,geom="ribbon",position="identity")+
+ # scale_x_continuous(limits=c(0,5))+
+  facet_grid(~dat)+
+  coord_flip()+ 
+  ylab("Density") +
+  ggtitle("Epidemic Start Time")+
+  xlab("Value")+
+  theme(
+      strip.text.x=element_text(size=8,angle=90),
+      panel.grid.major = element_blank(),
+      panel.grid.minor=element_blank(),
+      text=element_text(size=16,colour="gray20"),
+      axis.line=element_line(colour="gray20"),
+      axis.line.x = element_blank(),
+      axis.line.y=element_line(colour="gray20"),
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      legend.position="none"
+  )
+
+
+
+baseplot <- ggplot(allBaseline,aes(x=value))+
+  stat_density(aes(ymax=..density..,ymin=-..density..,fill=dat,color=dat),trim=TRUE,geom="ribbon",position="identity")+
+  scale_x_log10()+
+  facet_grid(~dat)+
+  coord_flip()+ 
+  ylab("Density") +
+  ggtitle("Baseline Probability of Microcephaly")+
+  xlab("Value")+
+  theme(
+      strip.text.x=element_text(size=8,angle=90),
+      panel.grid.major = element_blank(),
+      panel.grid.minor=element_blank(),
+      text=element_text(size=16,colour="gray20"),
+      axis.line=element_line(colour="gray20"),
+      axis.line.x = element_blank(),
+      axis.line.y=element_line(colour="gray20"),
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      legend.position="none"
+  )
+
+
+
+probplot <- ggplot(allProb,aes(x=value))+
+  stat_density(aes(ymax=..density..,ymin=-..density..,fill=dat,color=dat),trim=TRUE,geom="ribbon",position="identity")+
+  scale_x_log10(breaks=c(0.00001,0.0001,0.001,0.01,0.1,0.2,0.3,0.4,0.5,1))+
+  facet_grid(~dat)+
+  coord_flip()+ 
+  ylab("Density") +
+  ggtitle("Probability of Microcephaly Given Infection")+
+  xlab("Log Probability")+
+  theme(
+      strip.text.x=element_text(size=8,angle=90),
+      panel.grid.major = element_blank(),
+      panel.grid.minor=element_blank(),
+      text=element_text(size=16,colour="gray20"),
+      axis.line=element_line(colour="gray20"),
+      axis.line.x = element_blank(),
+      axis.line.y=element_line(colour="gray20"),
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      legend.position="none"
+  )
+
+p <- grid.arrange(R0plot, epiplot,baseplot,probplot,ncol=1)
+png("r0.png")
+plot(R0plot)
+dev.off()
+
+png("baseline.png")
+plot(baseplot)
+dev.off()
+
+png("probMicro.png")
+plot(probplot)
+dev.off()
+
+png("epiStart.png")
+plot(epiplot)
+dev.off()
