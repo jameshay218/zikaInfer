@@ -23,7 +23,7 @@ plot_all <- function(){
     tmpDat <- allDat[allDat$local == places[i],]
     filename <- as.character(places[i])
     chains <- NULL
-    for(j in 1:2){
+    for(j in 1:3){
       chains[[j]] <- paste(filename,j,"_chain.csv",sep="")
     }
     start <- seq(tmpDat[1,"start"],(nrow(tmpDat)/12) - 1/12,by=1/12)
@@ -159,13 +159,13 @@ plot_model <- function(chains, data, times, pars, burnin=NULL, runs=100, level=0
     colnames(data) <- c("variable","value")
     data$variable <- data$variable - 1/24
     predictionIntervals$best$variable <- predictionIntervals$best$variable - 1/24
-
+    upperLimit <- max(max(data$value,predictionIntervals$upper$value)) * 1.2
        plot <- ggplot() +
         geom_point(data=data,aes(x=variable,y=value),size=4) +
         geom_line(data=predictionIntervals$best,aes(x=variable,y=value),colour="blue",size=0.8)+
         xlab("Date") +
         ylab("Reported Cases of Microcephaly") +
-        scale_y_continuous(limits=c(0,200),breaks=seq(0,200,by=25))+
+        scale_y_continuous(limits=c(0,upperLimit))+
         ggtitle(title) +
         theme(axis.text.x=element_text(angle=90,hjust=1),panel.grid.minor=element_blank(),
               text=element_text(size=16,colour="gray20"),

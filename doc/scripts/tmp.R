@@ -11,7 +11,7 @@ for(i in 1:3){
 }
 plot(as.mcmc.list(chains))
 
-nchains <- 2
+nchains <- 3
 
 setwd("~/tmpZika5")
 allDat <- read.csv("~/Dropbox/Zika/Data/allDat.csv")

@@ -3,6 +3,7 @@ library(ggplot2)
 library(scales)
 library(data.table)
 library(gridExtra)
+library(gtable)
 
 setwd("~/tmpZika5")
 burnin <-30000
@@ -17,9 +18,9 @@ allR0 <- NULL
 allEpi <- NULL
 allProb <- NULL
 allBaseline <- NULL
+allAttack <- NULL
 
 for(i in 1:length(correctOrder)){
-  if(correctOrder[i]=="saopaulo") next
     for(j in 1:3){
       filename <- paste(correctOrder[i],j,"_chain.csv",sep="")
       print(filename)
@@ -32,11 +33,13 @@ for(i in 1:length(correctOrder)){
       print(name)
     
       tmpR0 <- data.frame("value"=tmp$r0,"dat"=name,"chain"=j)
+      tmpAttack <- data.frame("value"=sapply(tmp$r0, function(x) nleqslv(0.8, zikaProj::simeq, R0=x)$x),"dat"=name,"chain"=j)
       tmpEpi <- data.frame("value"=tmp$epiStart,"dat"=name,"chain"=j)
       tmpProb <- data.frame("value"=tmp$probMicro,"dat"=name,"chain"=j)
       tmpBase <- data.frame("value"=tmp$baselineProb,"dat"=name,"chain"=j)
 
       allR0 <- rbind(allR0, tmpR0)
+      allAttack <- rbind(allAttack, tmpAttack)
       allEpi <- rbind(allEpi, tmpEpi)
       allProb <- rbind(allProb, tmpProb)
       allBaseline <- rbind(allBaseline, tmpBase)
@@ -47,7 +50,7 @@ allR0$dat <- factor(allR0$dat,correctOrder)
 allEpi$dat <- factor(allEpi$dat,correctOrder)
 allProb$dat <- factor(allProb$dat,correctOrder)
 allBaseline$dat <- factor(allBaseline$dat,correctOrder)
-
+allAttack$dat <- factor(allAttack$dat,correctOrder)
 
 R0plot <- ggplot(allR0,aes(x=value))+
   stat_density(aes(ymax=..density..,ymin=-..density..,fill=dat,color=dat),trim=TRUE,geom="ribbon",position="identity")+
@@ -67,9 +70,32 @@ R0plot <- ggplot(allR0,aes(x=value))+
       axis.line.y=element_line(colour="gray20"),
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
+      axis.title.x=element_blank(),
       legend.position="none"
   )
 
+
+attackplot <- ggplot(allAttack,aes(x=value))+
+  stat_density(aes(ymax=..density..,ymin=-..density..,fill=dat,color=dat),trim=TRUE,geom="ribbon",position="identity")+
+  # scale_x_continuous(limits=c(0,5))+
+  facet_grid(~dat)+
+  coord_flip()+ 
+  ylab("Density") +
+  ggtitle("Attack Rate")+
+  xlab("Value")+
+  theme(
+    strip.text.x=element_text(size=8,angle=90),
+    panel.grid.major = element_blank(),
+    panel.grid.minor=element_blank(),
+    text=element_text(size=16,colour="gray20"),
+    axis.line=element_line(colour="gray20"),
+    axis.line.x = element_blank(),
+    axis.line.y=element_line(colour="gray20"),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x=element_blank(),
+    legend.position="none"
+  )
 
 
 epiplot <- ggplot(allEpi,aes(x=value))+
@@ -90,6 +116,7 @@ epiplot <- ggplot(allEpi,aes(x=value))+
       axis.line.y=element_line(colour="gray20"),
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
+      axis.title.x=element_blank(),
       legend.position="none"
   )
 
@@ -113,6 +140,7 @@ baseplot <- ggplot(allBaseline,aes(x=value))+
       axis.line.y=element_line(colour="gray20"),
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
+      axis.title.x=element_blank(),
       legend.position="none"
   )
 
@@ -120,7 +148,7 @@ baseplot <- ggplot(allBaseline,aes(x=value))+
 
 probplot <- ggplot(allProb,aes(x=value))+
   stat_density(aes(ymax=..density..,ymin=-..density..,fill=dat,color=dat),trim=TRUE,geom="ribbon",position="identity")+
-  scale_x_log10(breaks=c(0.00001,0.0001,0.001,0.01,0.1,0.2,0.3,0.4,0.5,1))+
+  scale_x_log10(breaks=c(0.00001,0.0001,0.001,0.01,0.1,0.2,0.5,1))+
   facet_grid(~dat)+
   coord_flip()+ 
   ylab("Density") +
@@ -136,6 +164,7 @@ probplot <- ggplot(allProb,aes(x=value))+
       axis.line.y=element_line(colour="gray20"),
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
+      axis.title.x=element_blank(),
       legend.position="none"
   )
 
@@ -155,3 +184,23 @@ dev.off()
 png("epiStart.png")
 plot(epiplot)
 dev.off()
+
+# Convert the plot to a grob
+p1 <- attackplot
+gt <- ggplotGrob(p1)
+
+# Get the positions of the panels in the layout: t = top, l = left, ...
+panels <-c(subset(gt$layout, name == "panel", select = t:r))
+
+# Add a row below the x-axis tick mark labels,
+# the same height as the strip
+gt = gtable_add_rows(gt, gt$height[min(panels$t)-1], max(panels$b) + 2)
+
+# Get the strip grob
+stripGrob = gtable_filter(gt, "strip-top")
+
+# Insert the strip grob into the new row
+gt = gtable_add_grob(gt, stripGrob, t = max(panels$b) + 3, l = min(panels$l), r = max(panels$r))
+
+# remove the old strip
+gt = gt[-(min(panels$t)-1), ]
