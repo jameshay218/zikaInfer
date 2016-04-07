@@ -8,7 +8,7 @@ library(gtable)
 setwd("~/tmpZika5")
 burnin <-30000
 paramCols <- c("probMicro","baselineProb","epiStart","r0")
-actualDat <- read.csv("~/Dropbox/Zika/Data/allDat.csv")
+actualDat <- read.csv("~/Dropbox/Zika/Data/allDat07.04.16.csv")
 correctOrder <- sort(by(actualDat[,"microCeph"],actualDat[,"local"],sum,simplify=TRUE),decreasing=TRUE)
 correctOrder <- as.factor(names(correctOrder))
 files <- list.files(pattern="\\.csv$")
@@ -22,7 +22,7 @@ allAttack <- NULL
 
 for(i in 1:length(correctOrder)){
     for(j in 1:3){
-      filename <- paste(correctOrder[i],j,"_chain.csv",sep="")
+      filename <- paste(correctOrder[i],"_",j,"_chain.csv",sep="")
       print(filename)
       tmp <- fread(filename,data.table=FALSE)
       tmp <- as.data.frame(tmp[burnin:nrow(tmp),paramCols])

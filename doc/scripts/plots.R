@@ -1,6 +1,6 @@
 plot_all <- function(){
   densityM <- 3
-  allDat <- read.csv("~/Dropbox/Zika/Data/allDat.csv")
+  allDat <- read.csv("~/Dropbox/Zika/Data/allDat07.04.16.csv")
   
   xlabels <- NULL
   xlab <- c("01","02","03","04","05","06","07","08","09","10","11","12")
@@ -36,7 +36,7 @@ plot_all <- function(){
     filename <- as.character(places[i])
     chains <- NULL
     for(j in 1:3){
-      chains[[j]] <- paste(filename,j,"_chain.csv",sep="")
+      chains[[j]] <- paste(filename,"_",j,"_chain.csv",sep="")
     }
     start <- seq(0,(nrow(tmpDat)/12) - 1/12,by=1/12)
     end <- seq(1/12,nrow(tmpDat)/12,by=1/12)

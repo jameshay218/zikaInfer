@@ -1,7 +1,7 @@
 # Which place to check
 index <- 4
 
-allDat <- read.csv("~/Dropbox/Zika/Data/allDat.csv")
+allDat <- read.csv("~/Dropbox/Zika/Data/allDat07/04.16.csv")
 places <- unique(allDat$local)
 correctOrder <- sort(by(actualDat[,"microCeph"],actualDat[,"local"],sum,simplify=TRUE),decreasing=TRUE)
 correctOrder <- as.factor(names(correctOrder))
@@ -24,7 +24,7 @@ pars[[3]]["constSeed"] <- 0
 filename <- as.character(correctOrder[index])
 chains <- NULL
 for(j in 1:3){
-  tmp <- fread(paste(filename,j,"_chain.csv",sep=""),data.table=FALSE)
+  tmp <- fread(paste(filename,"_",j,"_chain.csv",sep=""),data.table=FALSE)
   chains <- rbind(tmp,chains)
 }
 
