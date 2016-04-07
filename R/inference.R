@@ -318,9 +318,9 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
             } else {
                 print(paste("Pcur: ",pcur,sep=""))
                 scale <- scaletuning(scale,popt,pcur)
-                #print(paste("New scale: ",scale,sep=""))
+                print(paste("New scale: ",scale,sep=""))
                 oldCov <- covMat
-                covMat <- cov(chain[1:opt_freq,2:(ncol(chain)-2)])
+                covMat <- cov(chain[,2:(ncol(chain)-2)])
                 #covMat <- cov(chain[1:i,non_fixed_params+1])
 
                 covMat <- (1-w)*oldCov + w*covMat
