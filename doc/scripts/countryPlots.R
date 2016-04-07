@@ -185,22 +185,45 @@ png("epiStart.png")
 plot(epiplot)
 dev.off()
 
-# Convert the plot to a grob
-p1 <- attackplot
-gt <- ggplotGrob(p1)
+png("attackRate.png")
+plot(attackplot)
+dev.off()
 
-# Get the positions of the panels in the layout: t = top, l = left, ...
-panels <-c(subset(gt$layout, name == "panel", select = t:r))
+plots <- list(attackplot, R0plot, epiplot, probplot)
+newPlots <- NULL
+index <- 1
+for(p1 in plots){
+  # Convert the plot to a grob
+  gt <- ggplotGrob(p1)
+  
+  # Get the positions of the panels in the layout: t = top, l = left, ...
+  panels <-c(subset(gt$layout, name == "panel", select = t:r))
 
-# Add a row below the x-axis tick mark labels,
-# the same height as the strip
-gt = gtable_add_rows(gt, gt$height[min(panels$t)-1], max(panels$b) + 2)
+  # Add a row below the x-axis tick mark labels,
+  # the same height as the strip
+  gt = gtable_add_rows(gt, gt$height[min(panels$t)-1], max(panels$b) + 2)
+ 
+  # Get the strip grob
+  stripGrob = gtable_filter(gt, "strip-top")
 
-# Get the strip grob
-stripGrob = gtable_filter(gt, "strip-top")
+  
+  # Insert the strip grob into the new row
+  gt = gtable_add_grob(gt, stripGrob, t = max(panels$b) + 3, l = min(panels$l), r = max(panels$r))
 
-# Insert the strip grob into the new row
-gt = gtable_add_grob(gt, stripGrob, t = max(panels$b) + 3, l = min(panels$l), r = max(panels$r))
+  # remove the old strip
+  
+ 
+  gt = gt[-(min(panels$t)-1), ]
 
-# remove the old strip
-gt = gt[-(min(panels$t)-1), ]
+  newPlots[[index]] <- gt
+  index <- index + 1
+}
+
+filenames <- c("attackPlot.png","R0plot.png","epiPlot.png","probPlot.png")
+index <- 1
+for(p1 in newPlots){
+  png(filenames[index])
+  plot(p1)
+  dev.off()
+  index <- index + 1
+}

@@ -43,3 +43,4 @@ for(i in 1:length(places)){
 setwd("~/Dropbox/Zika/results4")
 finalStats <- do.call("rbind",allStats)
 write.csv(finalStats,"finalstats2.csv")
+

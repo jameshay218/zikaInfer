@@ -1,4 +1,5 @@
 plot_all <- function(){
+  densityM <- 3
   allDat <- read.csv("~/Dropbox/Zika/Data/allDat.csv")
   
   xlabels <- NULL
@@ -13,7 +14,6 @@ plot_all <- function(){
   
   correctOrder <- sort(by(allDat[,"microCeph"],allDat[,"local"],sum,simplify=TRUE),decreasing=TRUE)
   correctOrder <- as.factor(names(correctOrder))
-  places <- unique(allDat$local)
   places <- correctOrder
   adaptive <- 30000
   p <- NULL
@@ -21,16 +21,27 @@ plot_all <- function(){
   for(i in 1:length(places)){
     print(places[i])
     tmpDat <- allDat[allDat$local == places[i],]
+    N_H <- tmpDat[1,"NH"]
+    L_H <- tmpDat[1,"LH"]
+ 
+    pars <- setupListPars(duration=end[length(end)], N_H = N_H, N_M = N_H*densityM)  
+    pars[[1]][1] <- 4
+    pars[[3]]["sampFreq"] <- 30
+    pars[[3]]["probMicro"] <- 0.2
+    pars[[3]]["baselineProb"] <- 0.01
+    pars[[3]]["epiStart"] <- 1.2
+    pars[[3]]["L_H"] <- L_H
+    pars[[3]]["constSeed"] <- 0
+    
     filename <- as.character(places[i])
     chains <- NULL
     for(j in 1:3){
       chains[[j]] <- paste(filename,j,"_chain.csv",sep="")
     }
-    start <- seq(tmpDat[1,"start"],(nrow(tmpDat)/12) - 1/12,by=1/12)
+    start <- seq(0,(nrow(tmpDat)/12) - 1/12,by=1/12)
     end <- seq(1/12,nrow(tmpDat)/12,by=1/12)
     buckets <- cbind(start,end)
     tmpDat <- tmpDat[,c("microCeph","births")]
-    tmpDat[,2] <- tmpDat[,2] - tmpDat[,1]
     p[[i]] <- plot_model(chains,tmpDat,buckets,pars,adaptive,100,0.95,0,c(0,500),filename,xlabels)
   }
   ps <- do.call("grid.arrange",c(p,ncol=2))
@@ -181,3 +192,61 @@ plot_model <- function(chains, data, times, pars, burnin=NULL, runs=100, level=0
        if(!is.null(xlabels)) plot <- plot + scale_x_continuous(labels=xlabels,breaks=seq(0,25/12,by=1/12))
     return(plot)
 }
+
+
+plot_line_dat <- function(pars, tmpDat, title=""){
+  xlabels <- NULL
+  xlab <- c("01","02","03","04","05","06","07","08","09","10","11","12")
+  for(i in xlab){
+    xlabels <- c(xlabels,paste(i,"/2014",sep=""))
+  }
+  for(i in xlab){
+    xlabels <- c(xlabels,paste(i,"/2015",sep=""))
+  }
+  xlabels <- c(xlabels,"01/2016","02/2016")
+  start <- seq(0,(nrow(tmpDat)/12) - 1/12,by=1/12)
+  end <- seq(1/12,nrow(tmpDat)/12,by=1/12)
+  times <- cbind(start,end)
+  
+  probMicro <- pars[[3]]["probMicro"]
+  baselineProb <- pars[[3]]["baselineProb"]
+  
+  ## Solve model with these parameters
+  y <- solveModel(pars)
+  ## Calculate probability of microcephaly for these data
+
+  tmpAlpha <- calculate_alphas_prob_buckets(
+    as.matrix(unname(y[,c("times","I_F","S_F","E_F","R_F")])),
+    probMicro,
+    baselineProb,
+    times
+  )
+  
+  numberMicro <- tmpDat[,2]*tmpAlpha
+  modelDat <- data.frame("variable"=times[,2],"value"=numberMicro)
+  modelDat$variable <- modelDat$variable - 1/24
+  data <- as.data.frame(cbind(buckets[,2],tmpDat[,1]))
+  colnames(data) <- c("variable","value")
+  data$variable <- data$variable - 1/24
+  upperLimit <- max(max(data$value,modelDat$value)) * 1.2
+  plot <- ggplot() +
+    geom_point(data=data,aes(x=variable,y=value),size=4) +
+    geom_line(data=modelDat,aes(x=variable,y=value),colour="blue",size=0.8)+
+    xlab("Date") +
+    ylab("Reported Cases of Microcephaly") +
+    scale_y_continuous(limits=c(0,upperLimit))+
+    ggtitle(title) +
+    theme(axis.text.x=element_text(angle=90,hjust=1),panel.grid.minor=element_blank(),
+          text=element_text(size=16,colour="gray20"),
+          plot.title=element_text(size=28),
+          legend.text=element_text(size=14,colour="gray20"),
+          panel.grid.minor = element_blank(),
+          axis.line=element_line(colour="gray20"),
+          axis.line.x = element_line(colour = "gray20"),
+          axis.line.y=element_line(colour="gray20"),
+          axis.text.x=element_text(colour="gray20"),
+          axis.text.y=element_text(colour="gray20",size=14))
+  return(plot)
+  
+}
+
