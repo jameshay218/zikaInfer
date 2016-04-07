@@ -93,8 +93,9 @@ proposalfunction <- function(param,param_table,index){
 mvr_proposal <- function(current, param_table, covMat){
     proposed <- current
     fixed <- param_table$fixed==0
-    #proposed[fixed] <- proposed[fixed] + mvrnorm(n=1,mu=rep(0,length(proposed[fixed])),covMat[fixed,fixed])
-    proposed[fixed] <- mvrnorm(n=1,mu=proposed[fixed],covMat[fixed,fixed])
+    proposed[fixed] <- proposed[fixed] + mvrnorm(n=1,mu=rep(0,length(proposed[fixed])),covMat[fixed,fixed])
+    #proposed[fixed] <- proposed[fixed] + mvrnorm(n=1,mu=rep(0,length(proposed[fixed])),covMat)
+    #proposed[fixed] <- mvrnorm(n=1,mu=proposed[fixed],covMat)
     return(proposed)
 }
 
@@ -216,12 +217,13 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
     else {
         tempaccepted <- tempiter <- 0
         covMat <- mvrPars[[1]]
+        #covMat <- covMat[non_fixed_params,non_fixed_params]
         w <- mvrPars[[2]]
-        #scale <- mvrPars[[3]]
-        epsilon <- mvrPars[[3]]
-        scale <- (2.38)^2/non_fixed_params_length
+        scale <- mvrPars[[3]]
+        #epsilon <- mvrPars[[3]]
+        #scale <- (2.38)^2/non_fixed_params_length
         scaledCovMat <- covMat*scale
-        scaledCovMat <- scaledCovMat + epsilon*diag(nrow(scaledCovMat))
+        #scaledCovMat <- scaledCovMat + epsilon*diag(nrow(scaledCovMat))
     }
     reset <- integer(all_param_length)
     reset[] <- 0
@@ -315,13 +317,15 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
                 param_transform_table[,"steps"] <- tmp_transform
             } else {
                 print(paste("Pcur: ",pcur,sep=""))
-                #scale <- scaletuning(scale,popt,pcur)
+                scale <- scaletuning(scale,popt,pcur)
                 #print(paste("New scale: ",scale,sep=""))
                 oldCov <- covMat
-                covMat <- cov(chain[,2:(ncol(chain)-2)])
-                #covMat <- (1-w)*oldCov + w*covMat
-                #scaledCovMat <- covMat*scale
-                scaledCovMat <- covMat*(2.38)^2/non_fixed_params_length + epsilon*diag(nrow(covMat))
+                covMat <- cov(chain[1:i,2:(ncol(chain)-2)])
+                #covMat <- cov(chain[1:i,non_fixed_params+1])
+
+                covMat <- (1-w)*oldCov + w*covMat
+                scaledCovMat <- covMat*scale
+                #scaledCovMat <- covMat*(2.38)^2/non_fixed_params_length + epsilon*diag(nrow(covMat))
                 tmpiter <- tmpaccepted <- 0
             }
         }
