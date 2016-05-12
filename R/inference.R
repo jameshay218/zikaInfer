@@ -7,11 +7,11 @@
 setupParTable <- function(pars){
     use_log <- rep(0,length(pars))
     lower_bounds <- rep(0,length(pars))
-    upper_bounds <- c(30,1,60,10,60,10,1,1,100,100,1,100,100,1,1,1,1,200,1,1,10)
+    upper_bounds <- c(30,1,60,10,60,10,1,1,100,100,1,100,100,1,1,1,1,200,1,1,10,100,100,100)
     steps <- rep(0.1,length(pars))
     log_proposal <- rep(0,length(pars))
-    fixed <- c(1,1,1,1,1,1,0,0,1,0,1,1,1,1,1,1,1,0,1,1,1)
-    names <- c("sampFreq","sampPropn","mu_I","sd_I","mu_N","sd_N","probMicro","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","p_HM","p_MH","constSeed")
+    fixed <- c(1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,0,1,1,1,0,0,0)
+    names <- c("sampFreq","sampPropn","mu_I","sd_I","mu_N","sd_N","probMicro","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","p_HM","p_MH","constSeed","shape","rate","scale")
     paramTable <- cbind("use_log"=use_log,"lower_bounds"=lower_bounds,"upper_bounds"=upper_bounds,"steps"=steps,"log_proposal"=log_proposal,"fixed"=fixed)
     paramTable <- as.data.frame(paramTable)
     paramTable <- cbind(names, paramTable)
@@ -99,6 +99,8 @@ mvr_proposal <- function(current, param_table, covMat){
     return(proposed)
 }
 
+
+
 #' Posterior function for ODE model
 #'
 #' Given the time vector, initial conditions and ODE parameters, calculates the posterior value for a given data set. Note that no priors are used here.
@@ -170,6 +172,37 @@ posterior <- function(t_pars, y0s, pars, dat, threshold=NULL, times=NULL){
     }
         return(lik)
     }
+
+#' Posterior function for the simple SEIR model
+#'
+#' Given the time vector, initial conditions ODE parameters and a matrix of microcephaly data, calculates the posterior value for a given data set. Note that no priors are used here.
+#' @param ts time vector over which to solve the ODE model
+#' @param y0s initial conditions for the ODE model
+#' @param pars ODE parameters
+#' @param dat unnamed matrix over which to calculate likelihoods
+#' @return a single value for the posterior
+#' @export
+#' @useDynLib zikaProj
+posterior_simple <- function(t_pars, y0s, pars, dat){
+  y <- solveModelSimple(list(t_pars,y0s,pars))
+  if(length(y) <= 1 && y=="Error"){
+    print("Wow")
+    return(-Inf)
+  }
+  NH <- sum(y0s[c("S_H","E_H","I_H","R_H")])
+  b <- pars["b"]
+  pHM <- pars["p_HM"]
+  tstep <- pars["tstep"]
+  bp <- pars["baselineProb"]
+  shape <- pars["shape"]
+  rate <- pars["rate"]
+  scale <- pars["scale"]
+  
+  probs <- dgamma(0:39,shape,rate)*scale
+  probs[probs > 1] <- 1
+  lik <- likelihood_probM_all(dat[,1],dat[,2],y[,"I_M"], probs, NH, b, pHM, bp, tstep)
+  return(lik)
+}
 
     #' Adaptive Metropolis-within-Gibbs Random Walk Algorithm.
 #'

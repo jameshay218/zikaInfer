@@ -128,3 +128,35 @@ proposal_function <- function(current, lower, upper, step) {
     .Call('zikaProj_proposal_function', PACKAGE = 'zikaProj', current, lower, upper, step)
 }
 
+generate_foi <- function(IM, NH, b, pMH, tstep) {
+    .Call('zikaProj_generate_foi', PACKAGE = 'zikaProj', IM, NH, b, pMH, tstep)
+}
+
+generate_riskS <- function(foi, tstep) {
+    .Call('zikaProj_generate_riskS', PACKAGE = 'zikaProj', foi, tstep)
+}
+
+generate_riskI <- function(foi, riskS, tstep) {
+    .Call('zikaProj_generate_riskI', PACKAGE = 'zikaProj', foi, riskS, tstep)
+}
+
+generate_probM_aux <- function(riskI, probM, bp) {
+    .Call('zikaProj_generate_probM_aux', PACKAGE = 'zikaProj', riskI, probM, bp)
+}
+
+generate_probM <- function(IM, probM, NH, b, pMH, bp, tstep) {
+    .Call('zikaProj_generate_probM', PACKAGE = 'zikaProj', IM, probM, NH, b, pMH, bp, tstep)
+}
+
+likelihood_probM <- function(microBirths, allBirths, probM) {
+    .Call('zikaProj_likelihood_probM', PACKAGE = 'zikaProj', microBirths, allBirths, probM)
+}
+
+likelihood_probM_all <- function(microBirths, allBirths, IM, probM, NH, b, pHM, bp, tstep) {
+    .Call('zikaProj_likelihood_probM_all', PACKAGE = 'zikaProj', microBirths, allBirths, IM, probM, NH, b, pHM, bp, tstep)
+}
+
+average_buckets <- function(a, buckets) {
+    .Call('zikaProj_average_buckets', PACKAGE = 'zikaProj', a, buckets)
+}
+

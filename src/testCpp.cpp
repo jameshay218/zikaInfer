@@ -97,6 +97,7 @@ double likelihood_prob(NumericMatrix dat, NumericVector alphas){
   return(lnlik);
 }
 
+
 //' Calculates probabilities of microcephaly over time for given time bucket sizes
 //'
 //' @param y the matrix of pregnant adult counts. First column should be times
@@ -309,4 +310,102 @@ double proposal_function(double current, double lower, double upper, double step
   new1 = fromUnitScale(new1,lower,upper);
   
   return(new1);
+}
+
+//[[Rcpp::export]]
+NumericVector generate_foi(NumericVector IM, double NH, double b, double pMH, double tstep){
+  NumericVector foi(IM.size()/tstep);
+  int max = foi.size();
+  int index = 0;
+  double tmp;
+  for(int i = 0; i < max; ++i){
+    tmp = 0;
+    for(int j = 0; j < tstep; ++j){
+      tmp += IM[index++]*b*pMH/NH;
+    }
+    foi[i] = tmp/tstep;
+  }
+  return(foi);
+}
+//[[Rcpp::export]]
+NumericVector generate_riskS(NumericVector foi, double tstep){
+  NumericVector riskS(foi.size());
+  int max = riskS.size();
+  riskS[0] = exp(-foi[0]*tstep);
+  for(int i = 1; i < max; ++i){
+    riskS[i] = riskS[i-1]*exp(-foi[i]*tstep);
+  }
+  return(riskS);
+}
+
+//[[Rcpp::export]]
+NumericVector generate_riskI(NumericVector foi, NumericVector riskS, double tstep){
+  NumericVector riskI(foi.size());
+  int max = riskI.size();
+  riskI[0] = 1-exp(-foi[0]*tstep);
+  for(int i = 1; i < max; ++i){
+    riskI[i] = riskS[i-1]*(1-exp(-foi[i]*tstep));
+  }
+  return(riskI);
+}
+
+//[[Rcpp::export]]
+NumericVector generate_probM_aux(NumericVector riskI, NumericVector probM, double bp){
+  NumericVector allProbs(riskI.size());
+  double tmp = 0;
+  int max = riskI.size();
+  int testDay = 0;
+  int minDay = 0;
+  int wow = 0;
+  int week = 0;
+  for(int i = 0; i < max; ++i){
+    tmp = 0;
+    testDay = i;
+    minDay = testDay-probM.size();
+    if(minDay < 0) minDay = 0;
+    week = 0;
+    for(int j = minDay; j < testDay; ++j){
+      tmp += riskI[j]*probM[j-(testDay-probM.size())];
+    }
+    allProbs[i] = 1 - (1-tmp)*(1-bp);
+  }
+  return(allProbs);
+}
+
+//[[Rcpp::export]]
+NumericVector generate_probM(NumericVector IM, NumericVector probM, double NH, double b, double pMH, double bp, double tstep){
+  NumericVector foi = generate_foi(IM, NH, b, pMH, tstep);
+  NumericVector riskS = generate_riskS(foi, tstep);
+  NumericVector riskI = generate_riskI(foi, riskS, tstep);
+  return(generate_probM_aux(riskI, probM, bp));
+}
+
+//[[Rcpp::export]]
+double likelihood_probM(NumericVector microBirths, NumericVector allBirths, NumericVector probM){
+  double lnlik = 0;
+  int max = probM.length();
+  for(int i = 0; i < max; ++i){
+    lnlik += R::dbinom(microBirths[i],allBirths[i],probM[i],1);
+  }
+  return(lnlik);
+}
+
+//[[Rcpp::export]]
+double likelihood_probM_all(NumericVector microBirths, NumericVector allBirths, NumericVector IM, NumericVector probM, double NH, double b, double pHM, double bp, double tstep){
+  NumericVector allP = generate_probM(IM, probM, NH, b, pHM, bp, tstep);
+  return(likelihood_probM(microBirths, allBirths, allP));
+}
+
+//[[Rcpp::export]]
+NumericVector average_buckets(NumericVector a, NumericVector buckets){
+  NumericVector results(buckets.size());
+  int index = 0;
+  for(int i = 0; i < buckets.size(); ++i){
+    results[i] = 0;
+    for(int j = 0; j < buckets[i]; ++j){
+      results[i] += a[index++];
+    }
+    results[i] = results[i]/(double)buckets[i];
+  }
+  return(results);
 }

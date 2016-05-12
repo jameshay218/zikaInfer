@@ -168,3 +168,117 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// generate_foi
+NumericVector generate_foi(NumericVector IM, double NH, double b, double pMH, double tstep);
+RcppExport SEXP zikaProj_generate_foi(SEXP IMSEXP, SEXP NHSEXP, SEXP bSEXP, SEXP pMHSEXP, SEXP tstepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type IM(IMSEXP);
+    Rcpp::traits::input_parameter< double >::type NH(NHSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< double >::type pMH(pMHSEXP);
+    Rcpp::traits::input_parameter< double >::type tstep(tstepSEXP);
+    __result = Rcpp::wrap(generate_foi(IM, NH, b, pMH, tstep));
+    return __result;
+END_RCPP
+}
+// generate_riskS
+NumericVector generate_riskS(NumericVector foi, double tstep);
+RcppExport SEXP zikaProj_generate_riskS(SEXP foiSEXP, SEXP tstepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type foi(foiSEXP);
+    Rcpp::traits::input_parameter< double >::type tstep(tstepSEXP);
+    __result = Rcpp::wrap(generate_riskS(foi, tstep));
+    return __result;
+END_RCPP
+}
+// generate_riskI
+NumericVector generate_riskI(NumericVector foi, NumericVector riskS, double tstep);
+RcppExport SEXP zikaProj_generate_riskI(SEXP foiSEXP, SEXP riskSSEXP, SEXP tstepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type foi(foiSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type riskS(riskSSEXP);
+    Rcpp::traits::input_parameter< double >::type tstep(tstepSEXP);
+    __result = Rcpp::wrap(generate_riskI(foi, riskS, tstep));
+    return __result;
+END_RCPP
+}
+// generate_probM_aux
+NumericVector generate_probM_aux(NumericVector riskI, NumericVector probM, double bp);
+RcppExport SEXP zikaProj_generate_probM_aux(SEXP riskISEXP, SEXP probMSEXP, SEXP bpSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type riskI(riskISEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type probM(probMSEXP);
+    Rcpp::traits::input_parameter< double >::type bp(bpSEXP);
+    __result = Rcpp::wrap(generate_probM_aux(riskI, probM, bp));
+    return __result;
+END_RCPP
+}
+// generate_probM
+NumericVector generate_probM(NumericVector IM, NumericVector probM, double NH, double b, double pMH, double bp, double tstep);
+RcppExport SEXP zikaProj_generate_probM(SEXP IMSEXP, SEXP probMSEXP, SEXP NHSEXP, SEXP bSEXP, SEXP pMHSEXP, SEXP bpSEXP, SEXP tstepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type IM(IMSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type probM(probMSEXP);
+    Rcpp::traits::input_parameter< double >::type NH(NHSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< double >::type pMH(pMHSEXP);
+    Rcpp::traits::input_parameter< double >::type bp(bpSEXP);
+    Rcpp::traits::input_parameter< double >::type tstep(tstepSEXP);
+    __result = Rcpp::wrap(generate_probM(IM, probM, NH, b, pMH, bp, tstep));
+    return __result;
+END_RCPP
+}
+// likelihood_probM
+double likelihood_probM(NumericVector microBirths, NumericVector allBirths, NumericVector probM);
+RcppExport SEXP zikaProj_likelihood_probM(SEXP microBirthsSEXP, SEXP allBirthsSEXP, SEXP probMSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type microBirths(microBirthsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type allBirths(allBirthsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type probM(probMSEXP);
+    __result = Rcpp::wrap(likelihood_probM(microBirths, allBirths, probM));
+    return __result;
+END_RCPP
+}
+// likelihood_probM_all
+double likelihood_probM_all(NumericVector microBirths, NumericVector allBirths, NumericVector IM, NumericVector probM, double NH, double b, double pHM, double bp, double tstep);
+RcppExport SEXP zikaProj_likelihood_probM_all(SEXP microBirthsSEXP, SEXP allBirthsSEXP, SEXP IMSEXP, SEXP probMSEXP, SEXP NHSEXP, SEXP bSEXP, SEXP pHMSEXP, SEXP bpSEXP, SEXP tstepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type microBirths(microBirthsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type allBirths(allBirthsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type IM(IMSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type probM(probMSEXP);
+    Rcpp::traits::input_parameter< double >::type NH(NHSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< double >::type pHM(pHMSEXP);
+    Rcpp::traits::input_parameter< double >::type bp(bpSEXP);
+    Rcpp::traits::input_parameter< double >::type tstep(tstepSEXP);
+    __result = Rcpp::wrap(likelihood_probM_all(microBirths, allBirths, IM, probM, NH, b, pHM, bp, tstep));
+    return __result;
+END_RCPP
+}
+// average_buckets
+NumericVector average_buckets(NumericVector a, NumericVector buckets);
+RcppExport SEXP zikaProj_average_buckets(SEXP aSEXP, SEXP bucketsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type a(aSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type buckets(bucketsSEXP);
+    __result = Rcpp::wrap(average_buckets(a, buckets));
+    return __result;
+END_RCPP
+}
