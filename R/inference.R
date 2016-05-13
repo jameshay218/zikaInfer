@@ -4,18 +4,42 @@
 #' @param pars the vector of parameters that would be used for the ODE model
 #' @return a matrix of needed settings for the MCMC algorithm. For each parameter, gives a name, lower and upper bounds, boolean for log scale, initial step sizes, log proposal and whether or not the parameter should be fixed.
 #' @export
-setupParTable <- function(pars){
-    use_log <- rep(0,length(pars))
-    lower_bounds <- rep(0,length(pars))
-    upper_bounds <- c(30,1,60,10,60,10,1,1,100,100,1,100,100,1,1,1,1,200,1,1,10,100,100,100)
-    steps <- rep(0.1,length(pars))
-    log_proposal <- rep(0,length(pars))
-    fixed <- c(1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,0,1,1,1,0,0,0)
-    names <- c("sampFreq","sampPropn","mu_I","sd_I","mu_N","sd_N","probMicro","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","p_HM","p_MH","constSeed","shape","rate","scale")
-    paramTable <- cbind("use_log"=use_log,"lower_bounds"=lower_bounds,"upper_bounds"=upper_bounds,"steps"=steps,"log_proposal"=log_proposal,"fixed"=fixed)
+setupParTable <- function(version=1){
+    names <- c("sampFreq","sampPropn","mu_I","sd_I","mu_N","sd_N","probMicro","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","p_HM","p_MH","constSeed","shape","rate","scale","tstep")    
+    paramTable <- matrix(0, ncol=7, nrow=length(names))
     paramTable <- as.data.frame(paramTable)
-    paramTable <- cbind(names, paramTable)
+    colnames(paramTable) <- c("names", "use_log", "lower_bounds","upper_bounds","steps","log_proposal","fixed")
+    paramTable[,"names"] <- names
     paramTable$names <- as.character(paramTable$names)
+    
+
+    paramTable[paramTable[,"names"]=="sampFreq",2:ncol(paramTable)] <- c(0,0,30,0.1,0,1)
+    paramTable[paramTable[,"names"]=="sampPropn",2:ncol(paramTable)] <- c(0,0,1,0.1,0,1)
+    paramTable[paramTable[,"names"]=="mu_I",2:ncol(paramTable)] <- c(0,0,60,0.1,0,1)
+    paramTable[paramTable[,"names"]=="sd_I",2:ncol(paramTable)] <- c(0,0,10,0.1,0,1)
+    paramTable[paramTable[,"names"]=="mu_N",2:ncol(paramTable)] <- c(0,0,60,0.1,0,1)
+    paramTable[paramTable[,"names"]=="sd_N",2:ncol(paramTable)] <- c(0,0,10,0.1,0,1)
+    paramTable[paramTable[,"names"]=="probMicro",2:ncol(paramTable)] <- c(0,0,1,0.1,0,1)
+    paramTable[paramTable[,"names"]=="baselineProb",2:ncol(paramTable)] <- c(0,0,1,0.1,0,0)
+    paramTable[paramTable[,"names"]=="burnin",2:ncol(paramTable)] <- c(0,0,1000,0.1,0,1)
+    paramTable[paramTable[,"names"]=="epiStart",2:ncol(paramTable)] <- c(0,0,1000,0.1,0,0)
+    paramTable[paramTable[,"names"]=="L_M",2:ncol(paramTable)] <- c(0,0,100,0.1,0,1)
+    paramTable[paramTable[,"names"]=="D_EM",2:ncol(paramTable)] <- c(0,0,100,0.1,0,1)
+    paramTable[paramTable[,"names"]=="L_H",2:ncol(paramTable)] <- c(0,0,200*365,0.1,0,1)
+    paramTable[paramTable[,"names"]=="D_C",2:ncol(paramTable)] <- c(0,0,25*365,0.1,0,1)
+    paramTable[paramTable[,"names"]=="D_F",2:ncol(paramTable)] <- c(0,0,365,0.1,0,1)
+    paramTable[paramTable[,"names"]=="D_EH",2:ncol(paramTable)] <- c(0,0,100,0.1,0,1)
+    paramTable[paramTable[,"names"]=="D_IH",2:ncol(paramTable)] <- c(0,0,100,0.1,0,1)
+    paramTable[paramTable[,"names"]=="b",2:ncol(paramTable)] <- c(0,0,100,0.1,0,0)
+    paramTable[paramTable[,"names"]=="p_HM",2:ncol(paramTable)] <- c(0,0,1,0.1,0,1)
+    paramTable[paramTable[,"names"]=="p_MH",2:ncol(paramTable)] <- c(0,0,1,0.1,0,1)
+    paramTable[paramTable[,"names"]=="constSeed",2:ncol(paramTable)] <- c(0,0,100,0.1,0,1)
+    paramTable[paramTable[,"names"]=="shape",2:ncol(paramTable)] <- c(0,0,100,0.1,0,0)
+    paramTable[paramTable[,"names"]=="rate",2:ncol(paramTable)] <- c(0,0,100,0.1,0,0)
+    paramTable[paramTable[,"names"]=="scale",2:ncol(paramTable)] <- c(0,0,100,0.1,0,0)
+    paramTable[paramTable[,"names"]=="tstep",2:ncol(paramTable)] <- c(0,0,100,0.1,0,1)
+    
+    paramTable <- paramTable[paramTable[,"names"] %in% names(setupParsLong(version)),]
     return(paramTable)
 
 }
@@ -99,20 +123,19 @@ mvr_proposal <- function(current, param_table, covMat){
     return(proposed)
 }
 
-
-
-#' Posterior function for ODE model
+#' Posterior function for complex ODE model
 #'
 #' Given the time vector, initial conditions and ODE parameters, calculates the posterior value for a given data set. Note that no priors are used here.
 #' @param ts time vector over which to solve the ODE model
 #' @param y0s initial conditions for the ODE model
 #' @param pars ODE parameters
 #' @param dat unnamed matrix over which to calculate likelihoods
+#' @param threshold optional paramter. If not null, should be the threshold for microcephaly diagnosis
+#' @param times optional parameter. If not null, then this should be a matrix of times over which data is recorded
 #' @return a single value for the posterior
 #' @export
 #' @useDynLib zikaProj
-posterior <- function(t_pars, y0s, pars, dat, threshold=NULL, times=NULL){
-    
+posterior_complex <- function(t_pars, y0s, pars, dat, threshold=NULL, times=NULL){
     y <- solveModel(list(t_pars,y0s,pars))
     if(length(y) <= 1 && y=="Error") return(-Inf)
     sampFreq <- pars["sampFreq"]
@@ -170,8 +193,26 @@ posterior <- function(t_pars, y0s, pars, dat, threshold=NULL, times=NULL){
         )
         
     }
-        return(lik)
-    }
+    return(lik)
+}
+
+#' Posterior function for ODE model
+#'
+#' Given the time vector, initial conditions and ODE parameters, calculates the posterior value for a given data set. Note that no priors are used here.
+#' @param ts time vector over which to solve the ODE model
+#' @param y0s initial conditions for the ODE model
+#' @param pars ODE parameters
+#' @param dat unnamed matrix over which to calculate likelihoods
+#' @param version optional parameter to specify which model we are solving. If 1, this is the simple SEIR model
+#' @param threshold optional paramter. If not null, should be the threshold for microcephaly diagnosis
+#' @param times optional parameter. If not null, then this should be a matrix of times over which data is recorded
+#' @return a single value for the posterior
+#' @export
+#' @useDynLib zikaProj
+posterior <- function(t_pars, y0s, pars, dat, version = 1, threshold=NULL, times=NULL){
+    if(version==1) return(posterior_simple_buckets(t_pars,y0s,pars,dat))
+    return(posterior_complex(t_pars, y0s, pars, dat, threshold, times))
+}
 
 #' Posterior function for the simple SEIR model
 #'
@@ -204,6 +245,47 @@ posterior_simple <- function(t_pars, y0s, pars, dat){
   return(lik)
 }
 
+#' Posterior function for the simple SEIR model with bucketed data
+#'
+#' Given the time vector, initial conditions ODE parameters and a matrix of microcephaly data, calculates the posterior value for a given data set. Note that no priors are used here.
+#' @param ts time vector over which to solve the ODE model
+#' @param y0s initial conditions for the ODE model
+#' @param pars ODE parameters
+#' @param dat unnamed matrix over which to calculate likelihoods
+#' @return a single value for the posterior
+#' @export
+#' @useDynLib zikaProj
+posterior_simple_buckets <- function(t_pars, y0s, pars, dat){
+  y <- solveModelSimple(list(t_pars,y0s,pars))
+  y <- y[y[,"times"] >= min(dat[,"startDay"]) & y[,"times"] <= max(dat[,"endDay"]),]
+
+  buckets <- dat[,"buckets"]
+  microDat <- dat[,"microCeph"]
+  births <- dat[,"births"]
+  if(length(y) <= 1 && y=="Error"){
+    print("Wow")
+    return(-Inf)
+  }
+  NH <- sum(y0s[c("S_H","E_H","I_H","R_H")])
+  b <- pars["b"]
+  pMH <- pars["p_MH"]
+  tstep <- pars["tstep"]
+  bp <- pars["baselineProb"]
+  shape <- pars["shape"]
+  rate <- pars["rate"]
+  scale <- pars["scale"]
+  
+  probs <- dgamma(0:39,shape,rate)*scale
+  probs[probs > 1] <- 1
+  probs <- rep(probs,each=tstep)
+  probM <- generate_probM(y[,"I_M"],probs, NH, b, pMH, bp, 1)
+  probM <- average_buckets(probM, buckets)
+  lik <- likelihood_probM(microDat, births, probM)
+  return(lik)
+}
+
+
+
     #' Adaptive Metropolis-within-Gibbs Random Walk Algorithm.
 #'
 #' The Adaptive Metropolis-within-Gibbs algorithm. Given a starting point and the necessary MCMC parameters as set out below, performs a random-walk of the posterior space to produce an MCMC chain that can be used to generate MCMC density and iteration plots. The algorithm undergoes an adaptive period, where it changes the step size of the random walk for each parameter to approach the desired acceptance rate, popt. After this, a burn in period is established, and the algorithm then uses \code{\link{proposalfunction}} to explore the parameter space, recording the value and posterior value at each step. The MCMC chain is saved in blocks as a .csv file at the location given by filename.
@@ -226,26 +308,26 @@ posterior_simple <- function(t_pars, y0s, pars, dat){
 #' @export
 #' @seealso \code{\link{posterior}}, \code{\link{proposalfunction}}
 #' @useDynLib zikaProj
-run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, param_table, popt=0.44, opt_freq=50, thin=1, burnin=100,adaptive_period=1,filename, save_block = 500, VERBOSE=FALSE,threshold=NULL, buckets=NULL, mvrPars=NULL){
+run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, N_H, N_M, version = 1, param_table, popt=0.44, opt_freq=50, thin=1, burnin=100,adaptive_period=1,filename, save_block = 500, VERBOSE=FALSE,threshold=NULL, buckets=NULL, mvrPars=NULL){
     TUNING_ERROR<- 0.1
 
     if(opt_freq ==0 && VERBOSE){ print("Not running adaptive MCMC - opt_freq set to 0")}
     else if(VERBOSE){ print("Adaptive MCMC - will adapt step size during specified burnin period")}
 
-    # Set up quicker tables
-    # Turns the data frame table into a matrix that can allow faster indexing
+    ## Set up quicker tables
+    ## Turns the data frame table into a matrix that can allow faster indexing
     param_transform_table <- as.matrix(param_table[,c("use_log","lower_bounds","upper_bounds","steps","log_proposal")])
     
-                                        # Get those parameters which should be optimised
+    ## Get those parameters which should be optimised
     non_fixed_params <- which(param_table$fixed==0)
     non_fixed_params_length <- length(non_fixed_params)
     all_param_length <- length(startvalue)
 
-    # Setup MCMC chain file with correct column names
+    ## Setup MCMC chain file with correct column names
     mcmc_chain_file <- paste(filename,"_chain.csv",sep="")
     chain_colnames <- c("sampno",param_table$names,"r0","lnlike")
-  
-    # Arrays to store acceptance rates
+    
+    ## Arrays to store acceptance rates
     if(is.null(mvrPars)) tempaccepted <- tempiter <- reset <- integer(all_param_length)
     else {
         tempaccepted <- tempiter <- 0
@@ -271,12 +353,11 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
     # Create array to store values
     empty_values <- values <- sample <- numeric(save_block)
 
-    probab <- posterior(t_pars, y0s, startvalue, data,threshold, buckets)
-
-    # Set up initial csv file
+    probab <- posterior(t_pars, y0s, startvalue, data,version, threshold, buckets)
+                                           # Set up initial csv file
     tmp_table <- array(dim=c(1,length(chain_colnames)))
     tmp_table <- as.data.frame(tmp_table)
-    tmp_table[1,] <- c(1,startvalue,r0.calc(startvalue,sum(y0s[4:length(y0s)]),sum(y0s[1:3])),probab)
+    tmp_table[1,] <- c(1,startvalue,r0.calc(startvalue,N_H,N_M),probab)
     colnames(tmp_table) <- chain_colnames
     
     # Write starting conditions to file
@@ -296,7 +377,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
         }
         ## Propose new parameters and calculate posterior
         if(!any(proposal[non_fixed_params]< param_table$lower_bounds[non_fixed_params] | proposal[non_fixed_params] > param_table$upper_bounds[non_fixed_params])){
-            newprobab <- posterior(t_pars, y0s, proposal, data,threshold,buckets)
+            newprobab <- posterior(t_pars, y0s, proposal, data,version, threshold,buckets)
             ## Calculate log difference in posteriors and accept/reject
             difflike <- newprobab - probab
             if ((!is.nan(difflike) & !is.infinite(newprobab)) & (runif(1) < exp(difflike) |  difflike > 0)){
@@ -320,7 +401,7 @@ run_metropolis_MCMC <- function(startvalue, iterations=1000, data, t_pars, y0s, 
                                         # If current iteration matches with recording frequency, store in the chain. If we are at the limit of the save block,
                                         # save this block of chain to file and reset chain
         if(sampno %% thin ==0){
-            r0 <- r0.calc(current_params,sum(y0s[4:length(y0s)]),sum(y0s[1:3]))
+            r0 <- r0.calc(current_params,N_H,N_M)
             chain[no_recorded,1] <- sampno
             chain[no_recorded,2:(ncol(chain)-2)] <- current_params
             chain[no_recorded,ncol(chain)-1] <- r0

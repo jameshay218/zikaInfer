@@ -4,12 +4,12 @@
 \alias{setupParsODE}
 \title{Defaults ODE parameters}
 \usage{
-setupParsODE()
+setupParsODE(version = 1)
 }
 \value{
 vector of named parameter values
 }
 \description{
-Generates the default vector of parameters for the ODE model
+Generates the default vector of parameters for the ODE model. Can specify which version of the model to use. Passing 1 gives the simple model with no age classes, otherwise gives the parameters for the model with age classes.
 }
 

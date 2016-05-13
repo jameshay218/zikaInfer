@@ -4,7 +4,7 @@
 \alias{setupParTable}
 \title{MCMC parameter setup}
 \usage{
-setupParTable(pars)
+setupParTable(version = 1)
 }
 \arguments{
 \item{pars}{the vector of parameters that would be used for the ODE model}

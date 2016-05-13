@@ -4,7 +4,8 @@
 \alias{setupListPars}
 \title{Default parameter list setup}
 \usage{
-setupListPars(duration = 10, N_H = 1e+06, N_M = 2e+07)
+setupListPars(duration = 2 * 365, N_H = 1e+06, N_M = 3 * N_H,
+  version = 1)
 }
 \arguments{
 \item{duration}{Duration in years of the simulation. Defaults to 10 years}
@@ -13,7 +14,7 @@ setupListPars(duration = 10, N_H = 1e+06, N_M = 2e+07)
 list of times, initial conditions, and ODE parameters
 }
 \description{
-Sets up the default list of parameters and initial conditions to be used by \code{\link{zika.sim}}
+Sets up the default list of parameters and initial conditions to be used by \code{\link{zika.sim}}. Can specify which version of the model to use. Passing 1 gives the simple model with no age classes, otherwise gives the parameters for the model with age classes.
 }
 \seealso{
 \code{\link{setupParsLong}}

@@ -4,13 +4,13 @@
 \alias{setupParsLong}
 \title{Default simulation parameters}
 \usage{
-setupParsLong()
+setupParsLong(version = 1)
 }
 \value{
 vector of names parameter values
 }
 \description{
-Generates the default vector of parameters for the simulation
+Generates the default vector of parameters for the simulation. Can specify which version of the model to use. Passing 1 gives the simple model with no age classes, 2 gives the parameters for the model with age classes. 3 gives the parameters for the age class model with parameters for head circumference distributions.
 }
 \seealso{
 \code{\link{setupParsODE}}
