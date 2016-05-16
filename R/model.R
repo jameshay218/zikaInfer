@@ -273,6 +273,8 @@ generate_microceph_dat <- function(t_pars, y0s, pars, births){
     y <- solveModelSimple(list(t_pars,y0s,pars))
     ## Generate weekly microcephaly probabilities
     probs <- dgamma(0:39, pars["shape"],pars["rate"])*pars["scale"]
+    
+    probs <- c(rep(pars["shape"],13),rep(pars["rate"],13),rep(pars["scale"],14))
     probs[probs > 1] <- 1
     
     ## Repeat each week so that we have risk for each day
