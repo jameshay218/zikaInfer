@@ -280,7 +280,7 @@ generate_microceph_dat <- function(t_pars, y0s, pars, births){
     shape <- gammaMean*rate
     #probs <- dgamma(0:39, pars["shape"],pars["rate"])*pars["scale"]
     
-    probs <- dgamma(0:39,shape,rate)*scale
+    probs <- dgamma(0:39,shape,rate)*pars["scale"]
 
     #probs <- c(rep(pars["shape"],13),rep(pars["rate"],13),rep(pars["scale"],14))
     probs[probs > 1] <- 1
