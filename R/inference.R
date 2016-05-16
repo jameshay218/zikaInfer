@@ -275,7 +275,8 @@ posterior_simple_buckets <- function(t_pars, y0s, pars, dat){
   rate <- pars["rate"]
   scale <- pars["scale"]
   
-  probs <- dgamma(0:39,shape,rate)*scale
+  #probs <- dgamma(0:39,shape,rate)*scale
+  probs <- c(rep(shape,13),rep(rate,13),rep(scale,14))
   probs[probs > 1] <- 1
   probs <- rep(probs,each=tstep)
   probM <- generate_probM(y[,"I_M"],probs, NH, b, pMH, bp, 1)
