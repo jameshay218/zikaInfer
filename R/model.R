@@ -273,8 +273,8 @@ generate_microceph_dat <- function(t_pars, y0s, pars, births){
     y <- solveModelSimple(list(t_pars,y0s,pars))
     ## Generate weekly microcephaly probabilities
 
-    gammaMean <- pars["shape"]
-    gammaVar <- pars["rate"]
+    gammaMean <- pars["mean"]
+    gammaVar <- pars["var"]
     
     rate <- gammaMean/gammaVar
     shape <- gammaMean*rate
@@ -343,13 +343,13 @@ setupParsLong <- function(version = 1){
     baseline <- 0.00002
     burnin <- 3
     epiStart <- 5
-    shape <- 25
-    rate <- 3
+    shape <- 12
+    rate <- 10
     scale <- 1
     tstep <- 7
-    if(version==1) pars <- c("baselineProb"=baseline,"burnin"=burnin,"epiStart"=epiStart,pars,"shape"=shape,"rate"=rate,"scale"=scale, "tstep"=tstep)
-    else if(version==2) pars <- c("probMicro"=probMicro,"baselineProb"=baseline,"burnin"=burnin,"epiStart"=epiStart,pars,"shape"=shape,"rate"=rate,"scale"=scale,"tstep"=tstep)
-    else pars <- c("sampFreq"=sampFreq,"sampPropn"=sampPropn,"mu_I"=mu_I,"sd_I"=sd_I,"mu_N"=mu_N,"sd_N"=sd_N,"probMicro"=probMicro,"baselineProb"=baseline,"burnin"=burnin,"epiStart"=epiStart,pars,"shape"=shape,"rate"=rate,"scale"=scale,"tstep"=tstep)
+    if(version==1) pars <- c("baselineProb"=baseline,"burnin"=burnin,"epiStart"=epiStart,pars,"mean"=shape,"var"=rate,"scale"=scale, "tstep"=tstep)
+    else if(version==2) pars <- c("probMicro"=probMicro,"baselineProb"=baseline,"burnin"=burnin,"epiStart"=epiStart,pars,"mean"=shape,"var"=rate,"scale"=scale,"tstep"=tstep)
+    else pars <- c("sampFreq"=sampFreq,"sampPropn"=sampPropn,"mu_I"=mu_I,"sd_I"=sd_I,"mu_N"=mu_N,"sd_N"=sd_N,"probMicro"=probMicro,"baselineProb"=baseline,"burnin"=burnin,"epiStart"=epiStart,pars,"mean"=shape,"var"=rate,"scale"=scale,"tstep"=tstep)
     return(pars)   
 }
 

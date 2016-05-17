@@ -5,7 +5,7 @@
 #' @return a matrix of needed settings for the MCMC algorithm. For each parameter, gives a name, lower and upper bounds, boolean for log scale, initial step sizes, log proposal and whether or not the parameter should be fixed.
 #' @export
 setupParTable <- function(version=1){
-    names <- c("sampFreq","sampPropn","mu_I","sd_I","mu_N","sd_N","probMicro","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","p_HM","p_MH","constSeed","shape","rate","scale","tstep")    
+    names <- c("sampFreq","sampPropn","mu_I","sd_I","mu_N","sd_N","probMicro","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","p_HM","p_MH","constSeed","mean","var","scale","tstep")    
     paramTable <- matrix(0, ncol=7, nrow=length(names))
     paramTable <- as.data.frame(paramTable)
     colnames(paramTable) <- c("names", "use_log", "lower_bounds","upper_bounds","steps","log_proposal","fixed")
@@ -34,8 +34,8 @@ setupParTable <- function(version=1){
     paramTable[paramTable[,"names"]=="p_HM",2:ncol(paramTable)] <- c(0,0,1,0.1,0,1)
     paramTable[paramTable[,"names"]=="p_MH",2:ncol(paramTable)] <- c(0,0,1,0.1,0,1)
     paramTable[paramTable[,"names"]=="constSeed",2:ncol(paramTable)] <- c(0,0,100,0.1,0,1)
-    paramTable[paramTable[,"names"]=="shape",2:ncol(paramTable)] <- c(0,0,100,0.1,0,0)
-    paramTable[paramTable[,"names"]=="rate",2:ncol(paramTable)] <- c(0,0,100,0.1,0,0)
+    paramTable[paramTable[,"names"]=="mean",2:ncol(paramTable)] <- c(0,0,100,0.1,0,0)
+    paramTable[paramTable[,"names"]=="var",2:ncol(paramTable)] <- c(0,0,100,0.1,0,0)
     paramTable[paramTable[,"names"]=="scale",2:ncol(paramTable)] <- c(0,0,100,0.1,0,0)
     paramTable[paramTable[,"names"]=="tstep",2:ncol(paramTable)] <- c(0,0,100,0.1,0,1)
     
@@ -271,13 +271,11 @@ posterior_simple_buckets <- function(t_pars, y0s, pars, dat){
   pMH <- pars["p_MH"]
   tstep <- pars["tstep"]
   bp <- pars["baselineProb"]
-  shape <- pars["shape"]
-  rate <- pars["rate"]
   scale <- pars["scale"]
   
   
-  gammaMean <- pars["shape"]
-  gammaVar <- pars["rate"]
+  gammaMean <- pars["mean"]
+  gammaVar <- pars["var"]
  
   rate <- gammaMean/gammaVar
   shape <- gammaMean*rate
