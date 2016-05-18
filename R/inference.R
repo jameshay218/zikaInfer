@@ -300,9 +300,11 @@ posterior_simple_buckets <- function(t_pars, y0s, pars, dat, incDat = NULL){
       probM <- average_buckets(probM, buckets)
       lik <- likelihood_probM(microDat, births, probM)
   }
- # lik <- lik + priors(pars)
+  #lik <- lik + priors(pars)
 #lik <- lik + dnorm(peakTime,355,10,1)
- # lik <- lik + dunif(peakTime, 470,480,1)
+  #print(peakTime)
+  lik <- lik + dunif(peakTime, 450,550,1)
+  #lik <- lik + dnorm(peakTime,500,100,1)
 
   if(!is.null(incDat)) lik <- lik + incidence_likelihood(y[,"I_H"]/rowSums(y[,c("I_H","S_H","E_H","R_H")]),incDat)
 
