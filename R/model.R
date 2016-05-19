@@ -188,6 +188,27 @@ b.calc <- function(params,NH,NM,R0){
     
 }
 
+#' Generates y0s
+#'
+#' Generates initial values for the simple SEIR model given population size and mosquito density
+#' @param N_H human population size
+#' @param density number of mosquitoes per person
+#' @return a vector of initial population sizes
+#' @export
+#' @useDynLib
+generate_y0s <- function(N_H, density){
+    N_M <- N_H*density
+    S_M = 1*(N_M)
+    E_M = 0
+    I_M = 0
+
+    S_H = N_H - 10
+    E_H = 0
+    I_H = 10
+    R_H = 0
+    return(c("S_M" = S_M, "E_M"=E_M,"I_M"=I_M, "S_H"=S_H, "E_H"=E_H,"I_H"=I_H,"R_H"=R_H))
+}
+
 #' Generate microceph curve
 #'
 #' Generates the microcephaly risk curve from model parameters
@@ -344,6 +365,7 @@ setupParsODE <- function(version=1){
     offset <- 0
 
     if(version==1) pars <- c("L_M"=L_M,"L_H"=L,"D_EM"=D_EM,"D_EH"=D_EH,"D_IH"=D_IH,"b"=b,"p_HM"=p_HM,"p_MH"=p_MH,"constSeed"=offset)
+    else if(version==3) pars <- c("L_M"=L_M,"D_EM"=D_EM,"D_EH"=D_EH,"D_IH"=D_IH,"b"=b,"p_HM"=p_HM,"p_MH"=p_MH,"constSeed"=offset)
     else pars <- c("L_M"=L_M,"D_EM"=D_EM,"L_H"=L,"D_C"=D_C,"D_F"=D_F,"D_EH"=D_EH,"D_IH"=D_IH,"b"=b,"p_HM"=p_HM,"p_MH"=p_MH,"constSeed"=offset)
     return(pars)
 }
@@ -373,6 +395,7 @@ setupParsLong <- function(version = 1){
     tstep <- 7
     if(version==1) pars <- c("baselineProb"=baseline,"burnin"=burnin,"epiStart"=epiStart,pars,"mean"=shape,"var"=rate,"scale"=scale, "tstep"=tstep)
     else if(version==2) pars <- c("probMicro"=probMicro,"baselineProb"=baseline,"burnin"=burnin,"epiStart"=epiStart,pars,"mean"=shape,"var"=rate,"scale"=scale,"tstep"=tstep)
+    else if(version==3) pars <- c("burnin"=burnin,"baselineProb"=baseline,pars,"mean"=shape,"var"=rate,"scale"=scale, "tstep"=tstep)
     else pars <- c("sampFreq"=sampFreq,"sampPropn"=sampPropn,"mu_I"=mu_I,"sd_I"=sd_I,"mu_N"=mu_N,"sd_N"=sd_N,"probMicro"=probMicro,"baselineProb"=baseline,"burnin"=burnin,"epiStart"=epiStart,pars,"mean"=shape,"var"=rate,"scale"=scale,"tstep"=tstep)
     return(pars)   
 }
@@ -411,11 +434,58 @@ setupListPars <- function(duration=2*365, N_H = 1000000,N_M = 3*N_H, version=1){
     R_A = 0
     R_F = 0
     
-    if(version==1) y0 <- c("S_M" = S_M, "E_M"=E_M,"I_M"=I_M, "S_H"=S_H, "E_H"=E_H,"I_H"=I_H,"R_H"=R_H)
+    if(version==1 | version==3) y0 <- c("S_M" = S_M, "E_M"=E_M,"I_M"=I_M, "S_H"=S_H, "E_H"=E_H,"I_H"=I_H,"R_H"=R_H)
     else y0 <- c("S_M"=S_M, "E_M"=E_M,"I_M"=I_M,"S_C"=S_C,"S_A"=S_A,"S_F"=S_F,"E_C"=E_C,"E_A"=E_A,"E_F"=E_F,"I_C"=I_C,"I_A"=I_A,"I_F"=I_F,"R_C"=R_C,"R_A"=R_A,"R_F"=R_F)
     ts <- c("dur"=duration,"step"=1)
     
     return(list(ts,y0,pars))
+}
+
+#' @export
+generate_multiple_data <- function(t_pars, paramTable,allBirths,weeks=FALSE){
+
+    length <- t_pars["dur"]/365
+
+    if(!weeks) buckets <- rep(getDaysPerMonth(),length)
+    else buckets <- rep(7, 365/7 * length)
+    
+    places <- unique(paramTable$local)
+    places <- places[places!="all"]
+    
+    gammaMean <- paramTable[paramTable$names=="mean","values"]
+    gammaVar <- paramTable[paramTable$names=="var","values"]
+    
+    rate <- gammaMean/gammaVar
+    shape <- gammaMean*rate
+    #probs <- dgamma(0:39, pars["shape"],pars["rate"])*pars["scale"]
+    
+    probs <- dgamma(0:39,shape,rate)*paramTable[paramTable$names=="scale","values"]
+
+    #probs <- c(rep(pars["shape"],13),rep(pars["rate"],13),rep(pars["scale"],14))
+    probs[probs > 1] <- 1
+    
+    ## Repeat each week so that we have risk for each day
+    probs <- rep(probs, each=7)
+    
+    overallDat <- NULL    
+    for(place in places){
+        pars <- paramTable$values[paramTable$local== "all" | paramTable$local==place]
+        names(pars) <- paramTable$names[paramTable$local== "all" | paramTable$local==place]
+
+        N_H <- pars["N_H"]
+        y0s <- generate_y0s(as.numeric(N_H), as.numeric(pars["density"]))
+        y <- solveModelSimple(list(t_pars, y0s, pars))
+        probM <- generate_probM(y[,"I_M"],probs, N_H, pars["b"], pars["p_MH"], pars["baselineProb"], 1)
+        probM <- average_buckets(probM, buckets)
+        births <- as.integer(N_H/(pars["L_H"])/12)
+        microDat <- as.integer(probM*births)
+        allDat <- data.frame("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"microCeph"=microDat,"births"=rep(births,length(buckets)),"local"=place)
+        overallDat <- rbind(overallDat,allDat)
+    }
+  
+#    overallDat[,c("startDay","endDay","buckets","microCeph","births")] <- sapply(overallDat[,c("startDay","endDay","buckets","microCeph","births")],as.numeric)
+ #   overallDat$local <- as.character(overallDat$local)
+    return(overallDat)    
 }
 
 
