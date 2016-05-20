@@ -137,6 +137,7 @@ posterior_complex_buckets <- function(t_pars, values, names, local, startDays, e
 }
 
 #' @export
+#' @useDynLib zikaProj
 posterior_apply <- function(place, t_pars, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals,incDat = NULL, allPriors = NULL, peakTimes=NULL){
     indices <- data_locals == place | data_locals == "all"
     indices_pars <- local == place | local == "all"
