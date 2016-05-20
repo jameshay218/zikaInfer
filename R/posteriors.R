@@ -128,7 +128,10 @@ posterior_complex_buckets <- function(t_pars, values, names, local, startDays, e
         tmpIncDat <- tmpPriors <- tmpPeaks <- NULL
         if(!is.null(incDat)) tmpIncDat <- incDat[incDat[,"local"] == place,]
         if(!is.null(priors)) tmpPriors <- allPriors[allPriors[,"local"] == place,]
-        if(!is.null(peakTimes)) tmpPeaks <- peakTimes[peakTimes[,"local"] == place,]
+        if(!is.null(peakTimes)){
+            tmpPeaks <- as.numeric(peakTimes[peakTimes[,"local"] == place,c("start","end")])
+            names(tmpPeaks) <- c("start","end")
+        }
         
         lik <- lik + posterior_simple_buckets(t_pars, tmpY0s, tmpPars, tmpStart, tmpEnd, tmpBuckets, tmpMicro, tmpBirths, tmpIncDat, tmpPriors, tmpPeaks)
     }
@@ -160,7 +163,10 @@ posterior_apply <- function(place, t_pars, values, names, local, startDays, endD
     tmpIncDat <- tmpPriors <- tmpPeaks <- NULL
     if(!is.null(incDat)) tmpIncDat <- incDat[incDat[,"local"] == place,]
     if(!is.null(priors)) tmpPriors <- allPriors[allPriors[,"local"] == place,]
-    if(!is.null(peakTimes)) tmpPeaks <- peakTimes[peakTimes[,"local"] == place,]
+    if(!is.null(peakTimes)){
+        tmpPeaks <- as.numeric(peakTimes[peakTimes[,"local"] == place,])
+        print(tmpPeaks)
+    }
     
     lik <- posterior_simple_buckets(t_pars, tmpY0s, tmpPars, tmpStart, tmpEnd, tmpBuckets, tmpMicro, tmpBirths, tmpIncDat, tmpPriors, tmpPeaks)
     return(lik)

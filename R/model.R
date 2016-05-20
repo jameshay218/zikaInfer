@@ -45,7 +45,7 @@ solveModel <- function(t_pars,y0s, pars){
     ts2 <- seq(epiStart, time_length,by=time_by)
     y <- ode(y0s2,ts2,func="derivs",parms=pars,dllname="zikaProj",initfunc="initmod",hmax=1e-4,nout=0)
     if(is.null(y)) return("Error")
-    
+
     if(epiStart > 0){
         y <- rbind(y1,y)
     }
@@ -102,7 +102,7 @@ b.calc <- function(params,NH,NM,R0){
     b <- params["b"]
     pHM <- params["p_HM"]
     pMH <- params["p_MH"]
-  
+    
     b <- sqrt(((sigmaM+muM)*muM*(gammaH+muH)*NH)/((pHM * pMH * NM * sigmaM))*R0)
     return(unname(b))
     
@@ -158,48 +158,48 @@ generate_micro_curve <- function(pars){
 #' @export
 #' @seealso \code{\link{solveModel}}
 solveModelSimple <- function(t_pars, y0s, pars){
-  ## Run time of model
-  time_length <- t_pars[1]
-  ## Step size
-  time_by <- t_pars[2]
-  
-  ## Burn in and delayed epidemic start
-  burnin <- pars["burnin"]
-  epiStart <- pars["epiStart"]
-  
-  ## Package ODE pars
-  pars <- pars[c("L_M","L_H","D_EM","D_EH","D_IH","b","p_HM","p_MH","constSeed")]
-  ## Temporarily remove initial seeding  for burn in period
-  I0 <- y0s["I_H"]
-  y0s["I_H"] <- 0
-  y0s["S_H"] <- y0s["S_H"] + I0
-  
-  ## Create time series for ode solver
-  if(burnin+epiStart > time_by){
-    ts1 <- seq(0, burnin+epiStart,by=time_by)
-    y1 <- ode(y0s,ts1,func="simpleSEIR",parms=pars,dllname="zikaProj",initfunc="initmodSEIR",nout=0)
-    if(is.null(y1) || nrow(y1) < 1) return("Error")
+    ## Run time of model
+    time_length <- t_pars[1]
+    ## Step size
+    time_by <- t_pars[2]
     
-    colnames(y1) <- c("times","S_M","E_M","I_M","S_H","E_H","I_H","R_H")
-    y0s2 <- y1[nrow(y1),2:ncol(y1)]
-    y1[,"times"] <- y1[,"times"] - burnin
-    y1 <- y1[y1[,"times"] >= 0,]
+    ## Burn in and delayed epidemic start
+    burnin <- pars["burnin"]
+    epiStart <- pars["epiStart"]
     
-  } else {
-    y0s2 <- y0s
-  }
-  
-  ## Restore I0 to positive value
-  y0s2["I_H"] <- I0
-  y0s2["S_H"] <- y0s2["S_H"] - I0
-  
-  ts2 <- seq(epiStart, time_length,by=time_by)
- 
-  y <- ode(y0s2,ts2,func="simpleSEIR",parms=pars,dllname="zikaProj",initfunc="initmodSEIR",nout=0)
-  if(is.null(y)) return("Error")
-  if(epiStart > 0) y <- rbind(y1,y)
-  colnames(y) <- c("times","S_M","E_M","I_M","S_H","E_H","I_H","R_H")
-  return(y)
+    ## Package ODE pars
+    pars <- pars[c("L_M","L_H","D_EM","D_EH","D_IH","b","p_HM","p_MH","constSeed")]
+    ## Temporarily remove initial seeding  for burn in period
+    I0 <- y0s["I_H"]
+    y0s["I_H"] <- 0
+    y0s["S_H"] <- y0s["S_H"] + I0
+    y1 <- NULL
+    ## Create time series for ode solver
+    if(burnin+epiStart > time_by){
+        ts1 <- seq(0, burnin+epiStart,by=time_by)
+        y1 <- ode(y0s,ts1,func="simpleSEIR",parms=pars,dllname="zikaProj",initfunc="initmodSEIR",nout=0)
+        if(is.null(y1) || nrow(y1) < 1) return("Error")
+        
+        colnames(y1) <- c("times","S_M","E_M","I_M","S_H","E_H","I_H","R_H")
+        y0s2 <- y1[nrow(y1),2:ncol(y1)]
+        y1[,"times"] <- y1[,"times"] - burnin
+        y1 <- y1[y1[,"times"] >= 0,]
+        
+    } else {
+        y0s2 <- y0s
+    }
+    
+    ## Restore I0 to positive value
+    y0s2["I_H"] <- I0
+    y0s2["S_H"] <- y0s2["S_H"] - I0
+    
+    ts2 <- seq(epiStart, time_length,by=time_by)
+    
+    y <- ode(y0s2,ts2,func="simpleSEIR",parms=pars,dllname="zikaProj",initfunc="initmodSEIR",nout=0)
+    if(is.null(y)) return("Error")
+    if(epiStart+burnin > time_by & !is.null(y1)) y <- rbind(y1,y)
+    colnames(y) <- c("times","S_M","E_M","I_M","S_H","E_H","I_H","R_H")
+    return(y)
 }
 
 #' Get days per month of the year
@@ -382,10 +382,11 @@ generate_multiple_data <- function(t_pars, paramTable,allBirths,weeks=FALSE){
     for(place in places){
         pars <- paramTable$values[paramTable$local== "all" | paramTable$local==place]
         names(pars) <- paramTable$names[paramTable$local== "all" | paramTable$local==place]
-        print(pars)
         N_H <- pars["N_H"]
         y0s <- generate_y0s(as.numeric(N_H), as.numeric(pars["density"]))
         y <- solveModelSimple(t_pars, y0s, pars)
+        peakTime <- y[which.max(y[,"I_H"]),"times"]
+        print(peakTime)
         probM <- generate_probM(y[,"I_M"],probs, N_H, pars["b"], pars["p_MH"], pars["baselineProb"], 1)
         probM <- average_buckets(probM, buckets)
         births <- as.integer(N_H/(pars["L_H"])/12)
