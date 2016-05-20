@@ -136,6 +136,15 @@ posterior_complex_buckets <- function(t_pars, values, names, local, startDays, e
     return(lik)
 }
 
+#' Oh wow
+#'
+#' Given the time vector, initial conditions ODE parameters and a matrix of microcephaly data, calculates the posterior value for a given data set.
+#' @param ts time vector over which to solve the ODE model
+#' @param y0s initial conditions for the ODE model
+#' @param pars ODE parameters
+#' @param dat unnamed matrix over which to calculate likelihoods
+#' @param 
+#' @return a single value for the posterior
 #' @export
 #' @useDynLib zikaProj
 posterior_apply <- function(place, t_pars, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals,incDat = NULL, allPriors = NULL, peakTimes=NULL){
