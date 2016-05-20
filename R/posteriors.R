@@ -106,7 +106,6 @@ posterior_simple_buckets <- function(t_pars, y0s, pars, startDays, endDays, buck
 #' @param y0s initial conditions for the ODE model
 #' @param pars ODE parameters
 #' @param dat unnamed matrix over which to calculate likelihoods
-#' @param 
 #' @return a single value for the posterior
 #' @export
 #' @useDynLib zikaProj
@@ -143,7 +142,6 @@ posterior_complex_buckets <- function(t_pars, values, names, local, startDays, e
 #' @param y0s initial conditions for the ODE model
 #' @param pars ODE parameters
 #' @param dat unnamed matrix over which to calculate likelihoods
-#' @param 
 #' @return a single value for the posterior
 #' @export
 #' @useDynLib zikaProj

@@ -4,7 +4,7 @@
 \alias{solveModel}
 \title{Solve ODE model}
 \usage{
-solveModel(allPars)
+solveModel(t_pars, y0s, pars)
 }
 \arguments{
 \item{allPars}{the list of parameters needed for the ODE model}

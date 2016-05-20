@@ -4,7 +4,7 @@
 \alias{generate_microceph_dat}
 \title{Solve simple SEIR model}
 \usage{
-generate_microceph_dat(t_pars, y0s, pars, births)
+generate_microceph_dat(t_pars, y0s, pars, births, weeks = FALSE)
 }
 \arguments{
 \item{allPars}{the list of parameters needed for the ODE model}

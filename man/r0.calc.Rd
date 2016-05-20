@@ -21,8 +21,5 @@ Calculates the R0 of the SEIR model given a vector of parameters and human/mosqu
 }
 \seealso{
 \code{\link{b.calc}}
-   first <- (b * pHM * NM)/((gammaH + muH)*NH)
- second <- (sigmaM/(sigmaM+muM))*(b * pMH )/muM
-R0 <- first*second
 }
 

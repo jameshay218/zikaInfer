@@ -4,14 +4,14 @@
 \alias{mvr_proposal}
 \title{Multivariate proposal function}
 \usage{
-mvr_proposal(current, param_table, covMat)
+mvr_proposal(values, fixed, covMat)
 }
 \arguments{
+\item{covMat}{the 2D covariance matrix for all of the parameters}
+
 \item{current}{the vector of current parameter values}
 
 \item{param_table}{a matrix of flags and bounds that specify how the proposal should be treated. Crucial elements are the 3rd column (lower bound), 4th column (upper bound), 5th column )step size) and 6th column (flag for log proposal)}
-
-\item{covMat}{the 2D covariance matrix for all of the parameters}
 }
 \value{
 a parameter vector of a proposed move. Note that these may fall outside the allowable ranges.

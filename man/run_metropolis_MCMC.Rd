@@ -4,14 +4,13 @@
 \alias{run_metropolis_MCMC}
 \title{Adaptive Metropolis-within-Gibbs Random Walk Algorithm.}
 \usage{
-run_metropolis_MCMC(startvalue, iterations = 1000, data, t_pars, y0s, N_H,
-  N_M, version = 1, param_table, popt = 0.44, opt_freq = 50, thin = 1,
+run_metropolis_MCMC(iterations = 1000, data, t_pars, y0s, N_H, N_M,
+  version = 1, param_table, popt = 0.44, opt_freq = 50, thin = 1,
   burnin = 100, adaptive_period = 1, filename, save_block = 500,
-  VERBOSE = FALSE, threshold = NULL, buckets = NULL, mvrPars = NULL)
+  threshold = NULL, buckets = NULL, mvrPars = NULL, incDat = NULL,
+  allPriors = NULL, peakTimes = NULL, VERBOSE = FALSE)
 }
 \arguments{
-\item{startvalue}{a vector of parameter values used as the starting point for the MCMC chain. MUST be valid parameters for the model function}
-
 \item{iterations}{number of iterations to run the MCMC chain for. Note that each parameter is moved once independently for each iteration. Defaults to 1000}
 
 \item{data}{the data against which the likelihood is calculated}
@@ -35,6 +34,8 @@ run_metropolis_MCMC(startvalue, iterations = 1000, data, t_pars, y0s, N_H,
 \item{save_block}{the number of iterations that R will keep in memory before writing to .csv. Defaults to 500}
 
 \item{VERBOSE}{boolean flag for additional output. Defaults to FALSE}
+
+\item{startvalue}{a vector of parameter values used as the starting point for the MCMC chain. MUST be valid parameters for the model function}
 
 \item{ts}{vector of times to solve the ODE model over}
 

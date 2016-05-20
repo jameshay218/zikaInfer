@@ -4,7 +4,7 @@
 \alias{solveModelSimple}
 \title{Solve simple SEIR model}
 \usage{
-solveModelSimple(allPars)
+solveModelSimple(t_pars, y0s, pars)
 }
 \arguments{
 \item{allPars}{the list of parameters needed for the ODE model}
