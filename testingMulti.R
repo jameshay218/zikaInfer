@@ -3,7 +3,7 @@ parTab <- setupParTable(version=3,realDat=realDat)
 
 places <- c("all","pernambuco","bahia","saopaulo")
 
-testDatPars <- c(2.000000e-04, 0.000000e+00, 1.400000e+01, 4.000000e+00, 4.000000e+00, 
+testDatPars <- c(2.000000e-05, 0.000000e+00, 1.400000e+01, 4.000000e+00, 4.000000e+00, 
                  5.000000e+00, 2.500000e-01, 5.000000e-01, 5.000000e-01, 0.000000e+00, 1.200000e+01,
                  1.000000e+01, 1.000000e+00, 7.000000e+00, 7.430000e+01, 9.277727e+06, 4.100000e+00,
                  2.500000e+01, 7.310000e+01, 1.512637e+07, 3.200000e+00, 5.000000e+00, 7.890000e+01,
@@ -21,7 +21,7 @@ parTab$values <- testDatPars
 testDat <- generate_multiple_data(pars[[1]],parTab,NULL)
 parTab$values <- tmpVal
 adaptive_period <- 50000
-burnin <- 0
+burnin <- 10000
 
 places <- places[places != "all"]
 
@@ -70,6 +70,7 @@ omg <- run_metropolis_MCMC(
   N_M=30000,
   version=3,
   param_table=parTab,
+  popt=0.234,
   opt_freq=1000,
   thin=1,
   burnin=burnin,

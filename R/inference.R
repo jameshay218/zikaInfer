@@ -208,7 +208,12 @@ run_metropolis_MCMC <- function(iterations=1000,
         
         ## Update step sizes based on acceptance rate
         ## Note that if opt_freq is 0, then no tuning will take place
-        if(opt_freq != 0 & i <= adaptive_period & i%%opt_freq== 0) {
+        if(i < burnin & i%%opt_freq == 0){
+            pcur <- tempaccepted/tempiter
+            print(paste("Pcur: ",pcur[non_fixed_params],sep=""))
+        }
+            
+        if(opt_freq != 0 & i > burnin & i <= adaptive_period & i%%opt_freq== 0) {
             pcur <- tempaccepted/tempiter
             if(is.null(mvrPars)){
                 print(pcur[non_fixed_params])

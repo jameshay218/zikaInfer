@@ -92,7 +92,10 @@ posterior_simple_buckets <- function(t_pars, y0s, pars, startDays, endDays, buck
     lik <- likelihood_probM(microCeph, births, probM)
     
     if(!is.null(allPriors)) lik <- lik + priors(allPriors)
-    if(!is.null(actualPeakTime)) lik <- lik + dunif(peakTime, actualPeakTime["start"],actualPeakTime["end"],1)
+    if(!is.null(actualPeakTime)){
+        lik <- lik + log(dunif(peakTime, actualPeakTime["start"],actualPeakTime["end"]) +0.0001)
+        #lik <- lik <-  dnorm(peakTime, mean(c(actualPeakTime["start"],actualPeakTime["end"])), 10,1)
+    }
     if(!is.null(incDat)) lik <- lik + incidence_likelihood(y[,"I_H"]/rowSums(y[,c("I_H","S_H","E_H","R_H")]),incDat)
 
     return(lik)
