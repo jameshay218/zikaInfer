@@ -97,7 +97,7 @@ run_metropolis_MCMC <- function(iterations=1000,
                                 buckets=NULL,
                                 mvrPars=NULL,
                                 incDat=NULL,
-                                allPriors=NULL,
+                                allPriors=FALSE,
                                 peakTimes=NULL,
                                 VERBOSE=FALSE
                                 ){
@@ -213,7 +213,7 @@ run_metropolis_MCMC <- function(iterations=1000,
             print(paste("Pcur: ",pcur[non_fixed_params],sep=""))
         }
             
-        if(opt_freq != 0 & i > burnin & i <= adaptive_period & i%%opt_freq== 0) {
+        if(opt_freq != 0 & i > burnin & i <= (adaptive_period+burnin) & i%%opt_freq== 0) {
             pcur <- tempaccepted/tempiter
             if(is.null(mvrPars)){
                 print(pcur[non_fixed_params])
