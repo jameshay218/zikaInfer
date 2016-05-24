@@ -168,7 +168,7 @@ posterior_complex_buckets <- function(t_pars, values, names, local, startDays, e
             tmpPeaks <- as.numeric(peakTimes[peakTimes[,"local"] == place,c("start","end")])
             names(tmpPeaks) <- c("start","end")
         }
-        lik <- lik + posterior_simple_buckets(t_pars, tmpY0s, tmpPars, tmpStart, tmpEnd, tmpBuckets, tmpMicro, tmpBirths, tmpIncDat, tmpPriors, tmpPeaks)
+        lik <- lik + posterior_simple_buckets(t_pars, tmpY0s, tmpPars, tmpStart, tmpEnd, tmpBuckets, tmpMicro, tmpBirths, tmpIncDat, allPriors, tmpPeaks)
     }
     return(lik)
 }
