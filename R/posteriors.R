@@ -164,7 +164,6 @@ posterior_complex_buckets <- function(t_pars, values, names, local, startDays, e
         
         tmpIncDat <- tmpPriors <- tmpPeaks <- NULL
         if(!is.null(incDat)) tmpIncDat <- incDat[incDat[,"local"] == place,]
-        if(!is.null(priors)) tmpPriors <- allPriors[allPriors[,"local"] == place,]
         if(!is.null(peakTimes)){
             tmpPeaks <- as.numeric(peakTimes[peakTimes[,"local"] == place,c("start","end")])
             names(tmpPeaks) <- c("start","end")
