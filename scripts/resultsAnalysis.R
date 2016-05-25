@@ -27,6 +27,7 @@ for(i in samples){
 
 
 tmp <- plot_best_pars(chain,realDat,parTab,pars[[1]],"bahia",1,1000)
+lol <- tmp
 tmp1 <- tmp[[2]]
 tmp2 <- tmp[[3]]
 probs <- tmp[[4]]

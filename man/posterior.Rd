@@ -6,27 +6,48 @@
 \usage{
 posterior(t_pars, y0s, values, names, local, startDays, endDays, buckets,
   microCeph, births, data_locals, version = 1, threshold = NULL,
-  times = NULL, incDat = NULL, allPriors = NULL, actualPeakTimes = NULL)
+  times = NULL, incDat = NULL, allPriors = FALSE,
+  actualPeakTimes = NULL)
 }
 \arguments{
 \item{y0s}{initial conditions for the ODE model}
 
-\item{version}{optional parameter to specify which model we are solving. If 1, this is the simple SEIR model}
+\item{values}{ODE parameters}
 
-\item{threshold}{optional paramter. If not null, should be the threshold for microcephaly diagnosis}
+\item{names}{names for the ODE parameters}
 
-\item{times}{optional parameter. If not null, then this should be a matrix of times over which data is recorded}
+\item{local}{names of all the states that are being considered}
+
+\item{startDays}{vector of the start day for each bucket of data}
+
+\item{endDays}{vector of the end day for each bucket of data}
+
+\item{buckets}{bucket sizes}
+
+\item{microCeph}{vector of microcephaly incidence for each bucket}
+
+\item{births}{vector of total briths for each bucket}
+
+\item{data_locals}{corresponding vector of state names for the microcephaly data}
+
+\item{version}{which version of the model is being used. 1 is for the simple single state SEIR, 3 is for the multi-state version. 2 is for an outdated version of the model.}
+
+\item{threshold}{Defaults to NULL. Used for an outdated version of the model.}
+
+\item{times}{defaults to NULL. Used for an outdated version of the model.}
+
+\item{incDat}{defaults to NULL. If provided, uses the incidence data to improve parameter estimates.}
+
+\item{allPriors}{defaults to NULL. Arguments for parameter priors, if desired.}
+
+\item{actualPeakTimes}{defaults to NULL. Data frame of priors belief on incidence peak times. Provide a row for each state and three columns - the name of the state, the lower bound and the upper bound on peak time. Puts a uniform prior on this range.}
 
 \item{ts}{time vector over which to solve the ODE model}
-
-\item{pars}{ODE parameters}
-
-\item{dat}{unnamed matrix over which to calculate likelihoods}
 }
 \value{
 a single value for the posterior
 }
 \description{
-Given the time vector, initial conditions and ODE parameters, calculates the posterior value for a given data set. Note that no priors are used here.
+Given the time vector, initial conditions and ODE parameters, calculates the posterior value for a given data set. Note that no priors are used here. It seems like a lot of parameters, but these are basically the vectorised versions of the data frames provided by \code{\link{setupParTable}} and \code{\link{generate_microceph_dat}}
 }
 

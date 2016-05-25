@@ -8,7 +8,7 @@ run_metropolis_MCMC(iterations = 1000, data, t_pars, y0s, N_H, N_M,
   version = 1, param_table, popt = 0.44, opt_freq = 50, thin = 1,
   burnin = 100, adaptive_period = 1, filename, save_block = 500,
   threshold = NULL, buckets = NULL, mvrPars = NULL, incDat = NULL,
-  allPriors = NULL, peakTimes = NULL, VERBOSE = FALSE)
+  allPriors = FALSE, peakTimes = NULL, VERBOSE = FALSE)
 }
 \arguments{
 \item{iterations}{number of iterations to run the MCMC chain for. Note that each parameter is moved once independently for each iteration. Defaults to 1000}

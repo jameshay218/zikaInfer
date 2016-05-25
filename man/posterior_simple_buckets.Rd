@@ -2,10 +2,10 @@
 % Please edit documentation in R/posteriors.R
 \name{posterior_simple_buckets}
 \alias{posterior_simple_buckets}
-\title{Posterior function for the simple SEIR model with bucketed data}
+\title{Posterior function for the simple SEIR model with bucketed data for a single state}
 \usage{
 posterior_simple_buckets(t_pars, y0s, pars, startDays, endDays, buckets,
-  microCeph, births, incDat = NULL, allPriors = NULL,
+  microCeph, births, incDat = NULL, allPriors = FALSE,
   actualPeakTime = NULL)
 }
 \arguments{
@@ -13,9 +13,23 @@ posterior_simple_buckets(t_pars, y0s, pars, startDays, endDays, buckets,
 
 \item{pars}{ODE parameters}
 
+\item{startDays}{vector of the start day for each bucket of data}
+
+\item{endDays}{vector of the end day for each bucket of data}
+
+\item{buckets}{bucket sizes}
+
+\item{microCeph}{vector of microcephaly incidence for each bucket}
+
+\item{births}{vector of total briths for each bucket}
+
+\item{incDat}{defaults to NULL. If provided, uses the incidence data to improve parameter estimates.}
+
+\item{allPriors}{defaults to FALSE. Arguments for parameter priors, if desired.}
+
 \item{ts}{time vector over which to solve the ODE model}
 
-\item{dat}{unnamed matrix over which to calculate likelihoods}
+\item{actualPeakTimes}{defaults to NULL. Data frame of priors belief on incidence peak times. Provide a row for each state and three columns - the name of the state, the lower bound and the upper bound on peak time. Puts a uniform prior on this range.}
 }
 \value{
 a single value for the posterior

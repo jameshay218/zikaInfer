@@ -1,16 +1,16 @@
+#devtools::install_github("jameshay218/zikaProj")
 library(zikaProj)
 library(devtools)
 library(deSolve)
 library(MASS)
 library(ggplot2)
+library(deSolve)
 
 setwd("~/Documents/zikaProj")
-load_all()
-
 
 realDat <- read.csv("~/Dropbox/Zika/Data/allDat20.04.16.csv")
 parTab <- setupParTable(version=3,realDat=realDat)
-
+pars <- setupListPars(duration = 1500,N_H = 9000000,N_M=27000000,version=3)
 #places <- c("all","pernambuco","bahia","saopaulo")
 
 states_with_data <- c(
@@ -34,7 +34,7 @@ states_with_data <- c(
                       "espiritosanto",
                       "tocantins")
 
-states_with_data <- c("all","pernambuco","bahia")
+states_with_data <- c("all","pernambuco","bahia","riodejaneiro")
 
 #parTab <- parTab[parTab$local %in% places,]
 parTab <- parTab[parTab$local %in% states_with_data,]
@@ -62,17 +62,19 @@ peakTimes <- data.frame("start"=450,"end"=560,"local"=as.character(unique(realDa
 peakTimes$local <- as.character(peakTimes$local)
 realDat <- realDat[,colnames(testDat)]
 parTab[parTab$names=="L_H","values"] <- parTab[parTab$names=="L_H","values"]*365
-parTab[parTab$names=="epiStart","values"] <- 360
+parTab[parTab$names=="epiStart","values"] <- 250
 parTab[parTab$names=="epiStart","lower_bounds"] <- 100
 parTab[parTab$names=="epiStart","upper_bounds"] <- 400
 parTab[parTab$names=="density","lower_bounds"] <- 1.61
-parTab[parTab$names=="density","values"] <- 8
+parTab[parTab$names=="density","values"] <- 3.5
 
 parTab[parTab$names=="mean","fixed"] <- 0
+parTab[parTab$names=="mean","values"] <- 18
+parTab[parTab$names=="scale","values"] <- 0.15
 parTab[parTab$names=="var","fixed"] <- 0
 parTab[parTab$names=="var","values"] <- 20
 
-setwd("~/Documents/zikaProj/results/intial2")
+setwd("~/Documents/zikaProj/results/initial3")
 
 omg <- run_metropolis_MCMC(
         iterations=50000,
@@ -93,7 +95,7 @@ omg <- run_metropolis_MCMC(
         buckets=NULL,
         mvrPars=NULL,
         incDat=NULL,
-        allPriors=NULL,
+        allPriors=TRUE,
         peakTimes=peakTimes,
         VERBOSE=FALSE
 )
@@ -127,7 +129,7 @@ omg <- run_metropolis_MCMC(
   buckets=NULL,
   mvrPars=mvrPars,
   incDat=NULL,
-  allPriors=NULL,
+  allPriors=TRUE,
   peakTimes=peakTimes,
   VERBOSE=FALSE
 )

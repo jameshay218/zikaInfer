@@ -9,13 +9,33 @@ posterior_complex_buckets(t_pars, values, names, local, startDays, endDays,
   peakTimes = NULL)
 }
 \arguments{
+\item{names}{names for the ODE parameters}
+
+\item{local}{names of all the states that are being considered}
+
+\item{startDays}{vector of the start day for each bucket of data}
+
+\item{endDays}{vector of the end day for each bucket of data}
+
+\item{buckets}{bucket sizes}
+
+\item{microCeph}{vector of microcephaly incidence for each bucket}
+
+\item{births}{vector of total briths for each bucket}
+
+\item{data_locals}{corresponding vector of state names for the microcephaly data}
+
+\item{incDat}{defaults to NULL. If provided, uses the incidence data to improve parameter estimates.}
+
+\item{allPriors}{defaults to NULL. Arguments for parameter priors, if desired.}
+
 \item{ts}{time vector over which to solve the ODE model}
 
 \item{y0s}{initial conditions for the ODE model}
 
 \item{pars}{ODE parameters}
 
-\item{dat}{unnamed matrix over which to calculate likelihoods}
+\item{actualPeakTimes}{defaults to NULL. Data frame of priors belief on incidence peak times. Provide a row for each state and three columns - the name of the state, the lower bound and the upper bound on peak time. Puts a uniform prior on this range.}
 }
 \value{
 a single value for the posterior

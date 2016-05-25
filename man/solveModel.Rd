@@ -7,7 +7,11 @@
 solveModel(t_pars, y0s, pars)
 }
 \arguments{
-\item{allPars}{the list of parameters needed for the ODE model}
+\item{t_pars}{vector of two components - the total run time in days and the time step for the ODE solver}
+
+\item{y0s}{the initial population sizes for the ODE model}
+
+\item{pars}{a named vector with all of the necessary parameters to solve the ODE model. See \code{\link{setupParsODE}}}
 }
 \value{
 a data frame of the solved ODE model

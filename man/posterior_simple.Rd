@@ -11,9 +11,11 @@ posterior_simple(t_pars, y0s, pars, microCeph, births)
 
 \item{pars}{ODE parameters}
 
-\item{ts}{time vector over which to solve the ODE model}
+\item{microCeph}{vector of microcephaly incidence for each bucket}
 
-\item{dat}{unnamed matrix over which to calculate likelihoods}
+\item{births}{vector of total briths for each bucket}
+
+\item{ts}{time vector over which to solve the ODE model}
 }
 \value{
 a single value for the posterior
