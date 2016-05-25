@@ -397,6 +397,7 @@ setupStateParTable <- function(stateDat){
         paramTable[index,] <- c("epiStart",50,place,0,0,600,0.1,0,0)
         index <- index + 1
         paramTable[index,] <- c("propn",1,place,0,0,1,0.1,0,1)
+        index <- index + 1
     }
     return(paramTable)
 }
