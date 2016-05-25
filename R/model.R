@@ -648,13 +648,13 @@ plot_best_pars <- function(chain, dat, parTab, t_pars, local, number, runs=NULL)
 
             tmpDat <- dat[dat$local==local,]
             tmpDat$meanDay <- rowMeans(cbind(tmpDat[,"startDay"],tmpDat[,"endDay"]))
-            if(number >= 1) unfixed_pars <- paste(c("L_H","density","N_H","epiStart"),".",number,sep="")
-            else unfixed_pars <- c("L_H","density","N_H","epiStart")
+            if(number >= 1) unfixed_pars <- paste(c("L_H","density","N_H","epiStart","propn"),".",number,sep="")
+            else unfixed_pars <- c("L_H","density","N_H","epiStart","propn")
             fixed_pars <- parTab[parTab$local=="all","names"]
 
             bestPars <- bestPars[c(unfixed_pars, fixed_pars)]
 
-            names(bestPars)[1:4] <- c("L_H","density","N_H","epiStart")
+            names(bestPars)[1:5] <- c("L_H","density","N_H","epiStart","propn")
             r0s[index] <- r0.calc(bestPars,unname(as.numeric(bestPars["N_H"])), unname(as.numeric(bestPars["N_H"]))*bestPars["density"])
 #            print(r0s[index])
             y0s <- generate_y0s(unname(as.numeric(bestPars["N_H"])), unname(as.numeric(bestPars["density"])))
