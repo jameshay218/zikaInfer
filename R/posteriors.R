@@ -108,7 +108,7 @@ posterior_simple_buckets <- function(t_pars, y0s, pars, startDays, endDays, buck
     
     lik <- 0
 
-    probM <- average_buckets(probM, buckets)
+    probM <- average_buckets(probM, buckets)*pars["propn"]
 
     lik <- likelihood_probM(microCeph, births, probM)
     

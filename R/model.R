@@ -256,7 +256,7 @@ generate_microceph_dat <- function(t_pars, y0s, pars, births, weeks=FALSE){
 
     probM <- average_buckets(probM, buckets)
     
-    microDat <- as.integer(probM*births)
+    microDat <- as.integer(probM*births*pars["propn"])
     allDat <- cbind("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"microCeph"=microDat,"births"=rep(births,length(buckets)))
     
     return(allDat)
@@ -405,11 +405,11 @@ generate_multiple_data <- function(t_pars, paramTable,allBirths,weeks=FALSE){
         y0s <- generate_y0s(as.numeric(N_H), as.numeric(pars["density"]))
         y <- solveModelSimple(t_pars, y0s, pars)
         peakTime <- y[which.max(y[,"I_H"]),"times"]
-        print(peakTime)
+#        print(peakTime)
         probM <- generate_probM(y[,"I_M"],probs, N_H, pars["b"], pars["p_MH"], pars["baselineProb"], 1)
         probM <- average_buckets(probM, buckets)
         births <- as.integer(N_H/(pars["L_H"])/12)
-        microDat <- as.integer(probM*births)
+        microDat <- as.integer(probM*births*pars["propn"])
         allDat <- data.frame("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"microCeph"=microDat,"births"=rep(births,length(buckets)),"local"=place)
         overallDat <- rbind(overallDat,allDat)
     }
@@ -656,7 +656,7 @@ plot_best_pars <- function(chain, dat, parTab, t_pars, local, number, runs=NULL)
 
             names(bestPars)[1:4] <- c("L_H","density","N_H","epiStart")
             r0s[index] <- r0.calc(bestPars,unname(as.numeric(bestPars["N_H"])), unname(as.numeric(bestPars["N_H"]))*bestPars["density"])
-            print(r0s[index])
+#            print(r0s[index])
             y0s <- generate_y0s(unname(as.numeric(bestPars["N_H"])), unname(as.numeric(bestPars["density"])))
 #            print(as.numeric(bestPars["density"]))
             y <- solveModelSimple(t_pars, y0s, bestPars)
@@ -688,7 +688,7 @@ plot_best_pars <- function(chain, dat, parTab, t_pars, local, number, runs=NULL)
             
             probM <- average_buckets(probM, tmpDat[,"buckets"])
 
-            predicted <- probM
+            predicted <- probM*bestPars["propn"]
                                         #    tmpDat[,"microCeph"] <- tmpDat[,"microCeph"]/tmpDat[,"births"]
             y[,"I_H"] <- y[,"I_H"]/rowSums(y[,c("I_H","E_H","S_H","R_H")])
            
@@ -715,13 +715,13 @@ plot_best_pars <- function(chain, dat, parTab, t_pars, local, number, runs=NULL)
         bestPars <- bestPars[c(unfixed_pars, fixed_pars)]
 
         names(bestPars)[1:4] <- c("L_H","density","N_H","epiStart")
-        print(bestPars)
+#        print(bestPars)
        
-        print(r0.calc(bestPars,unname(as.numeric(bestPars["N_H"])), unname(as.numeric(bestPars["N_H"]))*bestPars["density"]))
+#        print(r0.calc(bestPars,unname(as.numeric(bestPars["N_H"])), unname(as.numeric(bestPars["N_H"]))*bestPars["density"]))
         y0s <- generate_y0s(unname(as.numeric(bestPars["N_H"])), unname(as.numeric(bestPars["density"])))
         y <- solveModelSimple(t_pars, y0s, bestPars)
         y <- y[y[,"times"] >= min(dat[,"startDay"]) & y[,"times"] <= max(dat[,"endDay"]),]
-        print(y[which.max(y[,"I_H"]),"times"])
+ #       print(y[which.max(y[,"I_H"]),"times"])
         
         NH <- sum(y0s[c("S_H","E_H","I_H","R_H")])
         b <- bestPars["b"]
@@ -746,7 +746,7 @@ plot_best_pars <- function(chain, dat, parTab, t_pars, local, number, runs=NULL)
 
         probM <- average_buckets(probM, tmpDat[,"buckets"])
 
-        predicted <- probM*tmpDat[,"births"]
+        predicted <- probM*tmpDat[,"births"]*bestPars["propn"]
                                         #    tmpDat[,"microCeph"] <- tmpDat[,"microCeph"]/tmpDat[,"births"]
         y[,"I_H"] <- y[,"I_H"]/rowSums(y[,c("I_H","E_H","S_H","R_H")])
         y <- as.data.frame(y)

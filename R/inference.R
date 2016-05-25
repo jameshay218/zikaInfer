@@ -382,7 +382,7 @@ setupParTable <- function(version=1, realDat=NULL){
 #' @export
 setupStateParTable <- function(stateDat){
     places <- as.character(unique(stateDat$local))
-    paramTable <- matrix(0, ncol=9, nrow=4*length(places))
+    paramTable <- matrix(0, ncol=9, nrow=5*length(places))
     paramTable <- as.data.frame(paramTable)
     colnames(paramTable) <- c("names", "values","local","use_log", "lower_bounds","upper_bounds","steps","log_proposal","fixed")
     index <- 1
@@ -396,6 +396,7 @@ setupStateParTable <- function(stateDat){
         index <- index + 1
         paramTable[index,] <- c("epiStart",50,place,0,0,600,0.1,0,0)
         index <- index + 1
+        paramTable[index,] <- c("propn",1,place,0,0,1,0.1,0,1)
     }
     return(paramTable)
 }
