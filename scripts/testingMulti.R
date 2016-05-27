@@ -34,7 +34,7 @@ states_with_data <- c(
                       "espiritosanto",
                       "tocantins")
 
-states_with_data <- c("all","pernambuco","bahia","riodejaneiro")
+states_with_data <- c("all","pernambuco")#,"bahia","saopaulo")
 
 #parTab <- parTab[parTab$local %in% places,]
 parTab <- parTab[parTab$local %in% states_with_data,]
@@ -74,7 +74,7 @@ parTab[parTab$names=="scale","values"] <- 0.15
 parTab[parTab$names=="var","fixed"] <- 0
 parTab[parTab$names=="var","values"] <- 20
 
-setwd("~/Documents/zikaProj/results/initial3")
+setwd("~/Documents/zikaProj/results/initial4")
 
 omg <- run_metropolis_MCMC(
         iterations=50000,
@@ -110,7 +110,7 @@ mvrPars <- list(covMat,0.8,1)
 parTab$values <- startPars
 
 omg <- run_metropolis_MCMC(
-  iterations=250000,
+  iterations=100000,
   data=realDat,
   t_pars=pars[[1]],
   y0s=NULL,

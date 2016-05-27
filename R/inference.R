@@ -146,11 +146,10 @@ run_metropolis_MCMC <- function(iterations=1000,
     reset <- integer(all_param_length)
     reset[] <- 0
 
+    ## Create empty chain to store every iteration for the adaptive period
+    empty_chain <- chain <- matrix(nrow=opt_freq,ncol=all_param_length+2)
     ## Create empty chain to store "save_block" iterations at a time
-    empty_chain <- chain <- matrix(nrow=save_block,ncol=all_param_length+2)
-    ## Create array to store values
-    empty_values <- values <- sample <- numeric(save_block)
-
+    save_chain <- empty_save_chain <- matrix(nrow=save_block,ncol=all_param_length+2)
     
     probab <- posterior(t_pars, y0s, current_params, par_names, par_labels, startDays, endDays, buckets, microCeph, births, data_locals, version, threshold, buckets, incDat,allPriors, peakTimes)
     ## Set up initial csv file
@@ -195,16 +194,17 @@ run_metropolis_MCMC <- function(iterations=1000,
         if(is.null(mvrPars)) tempiter[j] <- tempiter[j] + 1
         else tempiter <- tempiter + 1
 
-
+       
+        
         ## If current iteration matches with recording frequency, store in the chain. If we are at the limit of the save block,
         ## save this block of chain to file and reset chain
         if(sampno %% thin ==0){
-            chain[no_recorded,1] <- sampno
-            chain[no_recorded,2:(ncol(chain)-1)] <- current_params
-            chain[no_recorded,ncol(chain)] <- probab
+            save_chain[no_recorded,1] <- sampno
+            save_chain[no_recorded,2:(ncol(save_chain)-1)] <- current_params
+            save_chain[no_recorded,ncol(save_chain)] <- probab
             no_recorded <- no_recorded + 1
         }
-        sampno <- sampno + 1
+
         
         ## Update step sizes based on acceptance rate
         ## Note that if opt_freq is 0, then no tuning will take place
@@ -212,53 +212,65 @@ run_metropolis_MCMC <- function(iterations=1000,
             pcur <- tempaccepted/tempiter
             print(paste("Pcur: ",pcur[non_fixed_params],sep=""))
         }
-            
-        if(opt_freq != 0 & i > burnin & i <= (adaptive_period+burnin) & i%%opt_freq== 0) {
-            pcur <- tempaccepted/tempiter
-            if(is.null(mvrPars)){
-                print(pcur[non_fixed_params])
-                tempaccepted <- tempiter <- reset
-                tmp_transform <- steps
-                for(x in non_fixed_params){
-                    if(pcur[x] < popt - (TUNING_ERROR*popt) | pcur[x] > popt + (TUNING_ERROR*popt)){
-                        tmp_transform[x] <- scaletuning(tmp_transform[x],popt,pcur[x])
+        
+        if(opt_freq != 0 & i > burnin & i <= (adaptive_period+burnin)){
+            chain[i,1] <- sampno
+            chain[i,2:(ncol(chain)-1)] <- current_params
+            chain[i,ncol(chain)] <- probab
+            if(i%%opt_freq== 0) {
+                pcur <- tempaccepted/tempiter
+                if(is.null(mvrPars)){
+                    print(pcur[non_fixed_params])
+                    tempaccepted <- tempiter <- reset
+                    tmp_transform <- steps
+                    for(x in non_fixed_params){
+                        if(pcur[x] < popt - (TUNING_ERROR*popt) | pcur[x] > popt + (TUNING_ERROR*popt)){
+                            tmp_transform[x] <- scaletuning(tmp_transform[x],popt,pcur[x])
+                        }
                     }
+                    print("Step sizes:")
+                    print(tmp_transform[non_fixed_params])
+                    steps <- tmp_transform
+                } else {
+                    print(paste("Pcur: ",pcur,sep=""))
+                    scale <- scaletuning(scale,popt,pcur)
+                    print(paste("New scale: ",scale,sep=""))
+                    oldCov <- covMat
+                    covMat <- cov(chain[,2:(ncol(chain)-1)])
+                    print(any(is.na(covMat)))
+                    covMat <- (1-w)*oldCov + w*covMat
+                    scaledCovMat <- covMat*scale
+                    if(any(is.na(covMat))) covMat <- oldCov
+                    tmpiter <- tmpaccepted <- 0
                 }
-                print("Step sizes:")
-                print(tmp_transform[non_fixed_params])
-                steps <- tmp_transform
-            } else {
-                print(paste("Pcur: ",pcur,sep=""))
-                scale <- scaletuning(scale,popt,pcur)
-                print(paste("New scale: ",scale,sep=""))
-                oldCov <- covMat
-                covMat <- cov(chain[,2:(ncol(chain)-1)])
-                covMat <- (1-w)*oldCov + w*covMat
-                scaledCovMat <- covMat*scale
-                tmpiter <- tmpaccepted <- 0
+                chain <- empty_chain
             }
         }
+        
         if(no_recorded > save_block){
             print(i)
-            write.table(chain[1:(no_recorded-1),],file=mcmc_chain_file,col.names=FALSE,row.names=FALSE,sep=",",append=TRUE)
-            chain <- empty_chain
+            write.table(save_chain[1:(no_recorded-1),],file=mcmc_chain_file,col.names=FALSE,row.names=FALSE,sep=",",append=TRUE)
+            save_chain <- empty_save_chain
             no_recorded <- 1
-          }
-    }
-        
-        ## If there are some recorded values left that haven't been saved, then append these to the MCMC chain file. Note
-        ## that due to the use of cbind, we have to check to make sure that (no_recorded-1) would not result in a single value
-        ## rather than an array
-        if(no_recorded > 2){
-            write.table(chain[1:(no_recorded-1),],file=mcmc_chain_file,row.names=FALSE,col.names=FALSE,sep=",",append=TRUE)
         }
+
+        sampno <- sampno + 1
         
-        if(VERBOSE){
-            print("Final step sizes:")
-            print(steps)
-        }
-        return(mcmc_chain_file)
     }
+    
+    ## If there are some recorded values left that haven't been saved, then append these to the MCMC chain file. Note
+    ## that due to the use of cbind, we have to check to make sure that (no_recorded-1) would not result in a single value
+    ## rather than an array
+    if(no_recorded > 2){
+        write.table(save_chain[1:(no_recorded-1),],file=mcmc_chain_file,row.names=FALSE,col.names=FALSE,sep=",",append=TRUE)
+    }
+    
+    if(VERBOSE){
+        print("Final step sizes:")
+        print(steps)
+    }
+    return(mcmc_chain_file)
+}
 
 
 
