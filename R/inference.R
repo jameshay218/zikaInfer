@@ -148,6 +148,7 @@ run_metropolis_MCMC <- function(iterations=1000,
 
     ## Create empty chain to store every iteration for the adaptive period
     empty_chain <- chain <- matrix(nrow=opt_freq,ncol=all_param_length+2)
+    chain_index <- 1
     ## Create empty chain to store "save_block" iterations at a time
     save_chain <- empty_save_chain <- matrix(nrow=save_block,ncol=all_param_length+2)
     
@@ -214,10 +215,11 @@ run_metropolis_MCMC <- function(iterations=1000,
         }
         
         if(opt_freq != 0 & i > burnin & i <= (adaptive_period+burnin)){
-            chain[i,1] <- sampno
-            chain[i,2:(ncol(chain)-1)] <- current_params
-            chain[i,ncol(chain)] <- probab
-            if(i%%opt_freq== 0) {
+            chain[chain_index,1] <- sampno
+            chain[chain_index,2:(ncol(chain)-1)] <- current_params
+            chain[chain_index,ncol(chain)] <- probab
+            chain_index <- chain_index + 1
+            if(chain_index - opt_freq > 0) {
                 pcur <- tempaccepted/tempiter
                 if(is.null(mvrPars)){
                     print(pcur[non_fixed_params])
@@ -237,13 +239,12 @@ run_metropolis_MCMC <- function(iterations=1000,
                     print(paste("New scale: ",scale,sep=""))
                     oldCov <- covMat
                     covMat <- cov(chain[,2:(ncol(chain)-1)])
-                    print(any(is.na(covMat)))
                     covMat <- (1-w)*oldCov + w*covMat
                     scaledCovMat <- covMat*scale
-                    if(any(is.na(covMat))) covMat <- oldCov
                     tmpiter <- tmpaccepted <- 0
                 }
                 chain <- empty_chain
+                chain_index <- 1
             }
         }
         
