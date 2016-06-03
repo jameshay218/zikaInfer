@@ -1,11 +1,15 @@
 setupStuff <- function(){
+  library(zikaProj)
+  library(deSolve)
+  library(Rcpp)
+  setwd("~/net/home/zika")
   runName <- "real_3_all"
   allDatFile <- "allDat20.04.16.csv"
   realDat <- read.csv(allDatFile)
   parTab <- setupParTable(version=3,realDat=realDat)
   pars <- setupListPars(duration = 1200,N_H = 9000000,N_M=27000000,version=3)
   
-  filename2 <- paste(sprintf("%s_%d", runName, chain),"B",sep="_")
+  filename2 <- paste(sprintf("%s_%d", runName, 1),"B",sep="_")
   opt_freq <- 5000
   states <- c("all",
               "pernambuco",
@@ -32,18 +36,48 @@ setupStuff <- function(){
   testDat <- generate_multiple_data(pars[[1]],parTab,NULL)
   
   plotStates <- unique(parTab$local)[2:length(unique(parTab$local))]
+  
+  
+  chain <- read.csv("outputs3/real_3_all_1_B_chain.csv")
   ps <- NULL
   for(i in 1:length(plotStates)){
-    ps[[i]] <- plot_best_trajectories(chain, realDat,parTab,pars,plotStates[i],i-1,100)[[1]]
+    ps[[i]] <- plot_best_trajectories(chain, realDat,parTab,pars,plotStates[i],i-1,100)
   }
   allPlots <- do.call("grid.arrange",c(ps,ncol=4))
 }
 
 plot_random_microceph_curves <- function(chain, runs){
-  tmpChain <- chain[,c("mean","var","scale")]
+  tmpChain <- chain[,c("mean","var","scale","lnlike")]
+  
+  ## Get best fitting parameters
+  bestPars <- as.numeric(tmpChain[which.max(tmpChain[,"lnlike"]),])
+  print(bestPars)
+  bestMean <- bestPars[1]
+  bestVar <- bestPars[2]
+  bestRate <- bestMean/bestVar
+  bestShape <- bestMean/bestRate
+  probs <- dgamma(0:39,bestShape,bestRate)*bestPars[3]
+  probs[probs > 1] <- 1
+  probs <- data.frame(probs=probs,week=seq(0,39,by=1))
+  print(probs)
+  myPlot <- ggplot() +
+    geom_line(dat=probs, aes(x=week,y=probs),col="blue",lwd=1)+
+    ylab("Prob of microcephaly | infection")+
+    xlab("Week of Gestation at Infection") +
+    ggtitle("Microcephaly Risk Curve") +
+    theme_bw()+
+    theme(axis.text.x=element_text(size=6),
+          panel.grid.minor=element_blank(),
+          plot.title=element_text(size=10),
+          axis.text.x=element_text(size=6),
+          axis.text.y=element_text(size=6),
+          axis.title.x=element_text(size=8),
+          axis.title.y=element_text(size=8))
+
+  
+  ## Add some random lines
   samples <- sample(nrow(tmpChain),runs)
   index <- 1
-  myPlot <- ggplot()
   for(i in samples){
     tmpPars <- as.numeric(tmpChain[i,])
     gammaMean <- tmpPars[1]
@@ -58,7 +92,7 @@ plot_random_microceph_curves <- function(chain, runs){
     #probs <- c(rep(pars["shape"],13),rep(pars["rate"],13),rep(pars["scale"],14))
     probs[probs > 1] <- 1
     probs <- data.frame(probs=probs,week=seq(0,39,by=1))
-    myPlot <- myPlot + geom_line(dat=probs, aes(x=week,y=probs))
+    myPlot <- myPlot + geom_line(dat=probs, aes(x=week,y=probs),col="red",alpha=0.3,lwd=0.5)
     index <- index+1
   }
   return(myPlot)
@@ -90,11 +124,12 @@ plot_best_trajectories <- function(chain, realDat, parTab, pars, state, number, 
   predictedInc <- tmp[[3]]
   probs <- tmp[[4]]
   predictedMicroceph <- tmp[[1]]
+
   r0s <- tmp[[5]]
   
   xlabels <- c("01/2014","04/2014","07/2014","10/2014","01/2015","04/2015","07/2015","10/2015","01/2016")
  
-   predictedInc$times <- as.integer(predictedInc$times)
+  predictedInc$times <- as.integer(predictedInc$times)
   
   probBounds <- sapply(unique(probs$weeks), function(x) quantile(probs[probs$weeks==x,"prob"], c(0.025,0.5,0.975)))
   microBounds <- sapply(unique(predictedMicroceph$day), function(x) quantile(predictedMicroceph[predictedMicroceph$day==x,"number"], c(0.025,0.5,0.975)))
@@ -105,7 +140,8 @@ plot_best_trajectories <- function(chain, realDat, parTab, pars, state, number, 
   incMean <- data.frame(value=incBounds[2,],Var1=seq(1,ncol(incBounds),by=1))
   incBounds <- melt(incBounds)
   
-  actualDat[,"microCeph"] <- actualDat[,"microCeph"]/actualDat[,"births"]
+  actualDat[,"microCeph"] <- actualDat[,"microCeph"]
+  #/actualDat[,"births"]
   
   microBounds[,"Var2"] <- actualDat[,"meanDay"][microBounds[,"Var2"]]
   
@@ -114,7 +150,7 @@ plot_best_trajectories <- function(chain, realDat, parTab, pars, state, number, 
    myPlot <- ggplot() + geom_point(dat=actualDat,aes(y=microCeph,x=meanDay),col="black",size=2) +
       geom_line(dat=microBounds,aes(y=value,x=Var2,group=Var1),lwd=0.5,linetype=2,col="red") +
       geom_line(dat=microMean,aes(y=value,x=Var1),col="red",lwd=0.5) +
-        scale_y_continuous(limits=c(0,0.05))+
+        scale_y_continuous(limits=c(0,200))+
        scale_x_continuous(labels=xlabels,breaks=xlabBreaks)+
        theme_bw() +
        ylab("Per capita zika (green)/microcephaly (red)") +
