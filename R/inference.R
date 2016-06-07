@@ -164,7 +164,7 @@ run_metropolis_MCMC <- function(iterations=1000,
 
     no_recorded <- 1
     sampno <- 2
-
+    
     ## Go through chain
     for (i in 1:(iterations+adaptive_period+burnin)){
         if(is.null(mvrPars)) {
@@ -362,26 +362,28 @@ setupParTable <- function(version=1, realDat=NULL){
     paramTable[paramTable[,"names"]=="probMicro",2:ncol(paramTable)] <- c(0.1,"all",9,0,1,0.1,0,1)
     paramTable[paramTable[,"names"]=="baselineProb",2:ncol(paramTable)] <- c(0.002,"all",0,0,1,0.1,0,0)
     paramTable[paramTable[,"names"]=="burnin",2:ncol(paramTable)] <- c(0,"all",0,0,1000,0.1,0,1)
-    paramTable[paramTable[,"names"]=="epiStart",2:ncol(paramTable)] <- c(0,"all",0,0,1000,0.1,0,0)
+    paramTable[paramTable[,"names"]=="epiStart",2:ncol(paramTable)] <- c(0,"all",0,0,700,0.1,0,0)
     paramTable[paramTable[,"names"]=="L_M",2:ncol(paramTable)] <- c(14,"all",0,0,100,0.1,0,1)
-    paramTable[paramTable[,"names"]=="D_EM",2:ncol(paramTable)] <- c(4,"all",0,0,100,0.1,0,1)
+    paramTable[paramTable[,"names"]=="D_EM",2:ncol(paramTable)] <- c(10.5,"all",0,0,100,0.1,0,1)
     paramTable[paramTable[,"names"]=="L_H",2:ncol(paramTable)] <- c(365*70,"all",0,0,200*365,0.1,0,1)
     paramTable[paramTable[,"names"]=="D_C",2:ncol(paramTable)] <- c(365*18,"all",0,0,25*365,0.1,0,1)
     paramTable[paramTable[,"names"]=="D_F",2:ncol(paramTable)] <- c(0.75*365,"all",0,0,365,0.1,0,1)
-    paramTable[paramTable[,"names"]=="D_EH",2:ncol(paramTable)] <- c(4,"all",0,0,100,0.1,0,1)
+    paramTable[paramTable[,"names"]=="D_EH",2:ncol(paramTable)] <- c(5.9,"all",0,0,100,0.1,0,1)
     paramTable[paramTable[,"names"]=="D_IH",2:ncol(paramTable)] <- c(5,"all",0,0,100,0.1,0,1)
-    paramTable[paramTable[,"names"]=="b",2:ncol(paramTable)] <- c(0.25,"all",0,0,100,0.1,0,0)
+    paramTable[paramTable[,"names"]=="b",2:ncol(paramTable)] <- c(0.25,"all",0,0,100,0.1,0,1)
     paramTable[paramTable[,"names"]=="p_HM",2:ncol(paramTable)] <- c(0.5,"all",0,0,1,0.1,0,1)
     paramTable[paramTable[,"names"]=="p_MH",2:ncol(paramTable)] <- c(0.5,"all",0,0,1,0.1,0,1)
     paramTable[paramTable[,"names"]=="constSeed",2:ncol(paramTable)] <- c(0,"all",0,0,100,0.1,0,1)
-    paramTable[paramTable[,"names"]=="mean",2:ncol(paramTable)] <- c(12,"all",0,0,100,0.1,0,0)
+    paramTable[paramTable[,"names"]=="mean",2:ncol(paramTable)] <- c(17,"all",0,0,100,0.1,0,0)
     paramTable[paramTable[,"names"]=="var",2:ncol(paramTable)] <- c(10,"all",0,0,100,0.1,0,0)
     paramTable[paramTable[,"names"]=="scale",2:ncol(paramTable)] <- c(1,"all",0,0,100,0.1,0,0)
     paramTable[paramTable[,"names"]=="tstep",2:ncol(paramTable)] <- c(7,"all",0,0,100,0.1,0,1)
     
     paramTable <- paramTable[paramTable[,"names"] %in% names(setupParsLong(version)),]
-    if(!is.null(realDat)) paramTable <- rbind(paramTable, setupStateParTable(realDat))
-
+    if(!is.null(realDat)) paramTable <- rbind(paramTable, setupStateParTable(realDat, version))
+    if(version == 4){
+        paramTable <- paramTable[!((paramTable[,"names"] %in% c("mean","var","scale")) & paramTable[,"local"] == "all"),]
+    }
     paramTable[,c("values","use_log","lower_bounds","upper_bounds","steps","log_proposal","fixed")] <- lapply(paramTable[,c("values","use_log","lower_bounds","upper_bounds","steps","log_proposal","fixed")], FUN=as.numeric)
     
     return(paramTable)
@@ -393,12 +395,18 @@ setupParTable <- function(version=1, realDat=NULL){
 #' @param stateDat the data frame of all data
 #' @return a parameter table
 #' @export
-setupStateParTable <- function(stateDat){
+setupStateParTable <- function(stateDat, version=3){
     places <- as.character(unique(stateDat$local))
-    paramTable <- matrix(0, ncol=9, nrow=5*length(places))
+    if(version==4) numberPars <- 10
+    else if(version==5) numberPars <- 13
+    else if(version==6) numberPars <- 16
+    else if(version==7) numberPars <- 18
+    else numberPars <- 5
+    paramTable <- matrix(0, ncol=9, nrow=numberPars*length(places))
     paramTable <- as.data.frame(paramTable)
     colnames(paramTable) <- c("names", "values","local","use_log", "lower_bounds","upper_bounds","steps","log_proposal","fixed")
     index <- 1
+    
     for(place in places){
         tmpDat <- stateDat[stateDat$local==place,]
         paramTable[index,] <- c("L_H",tmpDat[1,"L_H"],place,0,0,200*365,0.1,0,1)
@@ -407,10 +415,44 @@ setupStateParTable <- function(stateDat){
         index <- index + 1
         paramTable[index,] <- c("density",3,place,0,0,100,0.1,0,0)
         index <- index + 1
-        paramTable[index,] <- c("epiStart",50,place,0,0,600,0.1,0,0)
+        paramTable[index,] <- c("epiStart",250,place,0,0,730,0.1,0,0)
         index <- index + 1
         paramTable[index,] <- c("propn",1,place,0,0,1,0.1,0,1)
         index <- index + 1
+        if(version >= 4){
+            paramTable[index,] <- c("mean",17,place,0,0,40,0.1,0,0)
+            index <- index + 1
+            paramTable[index,] <- c("var", 20, place, 0,0,100,0.1,0,0)
+            index <- index + 1
+            paramTable[index,] <- c("scale",0.15,place,0,0,1,0.1,0,0)
+            index <- index + 1
+            paramTable[index,] <- c("incPropn",1,place,0,0,1,0.1,0,1)
+            index <- index + 1
+            paramTable[index,] <- c("baselineInc",0.002,place,0,0,1,0.1,0,1)
+            index <- index + 1
+            if(version >= 5){
+                paramTable[index,] <- c("p1",0.02,place,0,0,1,0.1,0,1)
+                index <- index + 1
+                paramTable[index,] <- c("p2",0.005,place,0,0,1,0.1,0,1)
+                index <- index + 1
+                paramTable[index,] <- c("p3",0.001,place,0,0,1,0.1,0,1)
+                index <- index + 1
+                if(version >= 6){
+                    paramTable[index,] <- c("p4",0.02,place,0,0,1,0.1,0,1)
+                    index <- index + 1
+                    paramTable[index,] <- c("p5",0.005,place,0,0,1,0.1,0,1)
+                    index <- index + 1
+                    paramTable[index,] <- c("p6",0.001,place,0,0,1,0.1,0,1)
+                    index <- index + 1
+                    if(version >= 7){
+                        paramTable[index,] <- c("p7",0.02,place,0,0,1,0.1,0,1)
+                        index <- index + 1
+                        paramTable[index,] <- c("p8",0.005,place,0,0,1,0.1,0,1)
+                        index <- index + 1
+                    }
+                }
+            }
+        }
     }
     return(paramTable)
 }

@@ -25,39 +25,7 @@
 posterior <- function(t_pars, y0s, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, version = 1, threshold=NULL, times=NULL, incDat=NULL,allPriors=FALSE,actualPeakTimes=NULL){
     if(version==1) return(posterior_simple_buckets(t_pars,y0s,values, startDays, endDays, buckets, microCeph, births, incDat))
     if(version==2) return(posterior_complex(t_pars, y0s, values, startDays, endDays, buckets, microCeph, births, threshold, times))
-    if(version==3) return(posterior_complex_buckets(t_pars,values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, incDat, allPriors, actualPeakTimes))
-}
-
-#' Posterior function for the simple SEIR model
-#'
-#' Given the time vector, initial conditions ODE parameters and a matrix of microcephaly data, calculates the posterior value for a given data set. Note that no priors are used here.
-#' @param ts time vector over which to solve the ODE model
-#' @param y0s initial conditions for the ODE model
-#' @param pars ODE parameters
-#' @param microCeph vector of microcephaly incidence for each bucket
-#' @param births vector of total briths for each bucket
-#' @return a single value for the posterior
-#' @export
-#' @useDynLib zikaProj
-posterior_simple <- function(t_pars, y0s, pars, microCeph, births){
-    y <- solveModelSimple(t_pars,y0s,pars)
-    if(length(y) <= 1 && y=="Error"){
-        print("Wow")
-        return(-Inf)
-    }
-    NH <- sum(y0s[c("S_H","E_H","I_H","R_H")])
-    b <- pars["b"]
-    pHM <- pars["p_HM"]
-    tstep <- pars["tstep"]
-    bp <- pars["baselineProb"]
-    shape <- pars["shape"]
-    rate <- pars["rate"]
-    scale <- pars["scale"]
-    
-    probs <- dgamma(0:39,shape,rate)*scale
-    probs[probs > 1] <- 1
-    lik <- likelihood_probM_all(microCeph,births,y[,"I_M"], probs, NH, b, pHM, bp, tstep)
-    return(lik)
+    if(version==3 | version==4 | version==5) return(posterior_complex_buckets(t_pars,values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, incDat, allPriors, actualPeakTimes, version))
 }
 
 #' Posterior function for the simple SEIR model with bucketed data for a single state
@@ -77,10 +45,19 @@ posterior_simple <- function(t_pars, y0s, pars, microCeph, births){
 #' @return a single value for the posterior
 #' @export
 #' @useDynLib zikaProj
-posterior_simple_buckets <- function(t_pars, y0s, pars, startDays, endDays, buckets, microCeph, births, incDat = NULL, allPriors=FALSE, actualPeakTime=NULL){
+posterior_simple_buckets <- function(t_pars, y0s, pars, startDays, endDays, buckets, microCeph, births, incDat = NULL, allPriors=FALSE, actualPeakTime=NULL, version=4){
+    lik <- 0
     y <- solveModelSimple(t_pars,y0s,pars)
     
     peakTime <- y[which.max(y[,"I_H"]),"times"]
+    
+    if(!is.null(incDat)){
+        tmpY <- y[y[,"times"] >= min(incDat[,"startDay"]) & y[,"times"] <= max(incDat[,"endDay"]),]
+        N_H <- average_buckets(rowSums(tmpY[,c("I_H","S_H","E_H","R_H")]), incDat[,"buckets"])
+        inc <- average_buckets(tmpY[,"I_H"], incDat[,"buckets"])
+        perCapInc <- 1-(1-(inc/N_H))*(1-pars["baselineInc"])
+        lik <- lik + incidence_likelihood(perCapInc*pars["incPropn"], incDat[,c("inc","N_H")])
+    }
     
     y <- y[y[,"times"] >= min(startDays) & y[,"times"] <= max(endDays),]
 
@@ -92,35 +69,16 @@ posterior_simple_buckets <- function(t_pars, y0s, pars, startDays, endDays, buck
     tstep <- pars["tstep"]
     bp <- pars["baselineProb"]
     scale <- pars["scale"]
-    
-    gammaMean <- pars["mean"]
-    gammaVar <- pars["var"]
-    
-    rate <- gammaMean/gammaVar
-    shape <- gammaMean*rate
-    
-    probs <- dgamma(0:39,shape,rate)*scale
-    probs[probs > 1] <- 1
-    probs <- rep(probs,each=tstep)
 
+    probs <- generate_micro_curve(pars,version)
     probM <- generate_probM(y[,"I_M"],probs, NH, b, pMH, bp, 1)
-    
-    
-    lik <- 0
-
     probM <- average_buckets(probM, buckets)*pars["propn"]
 
-    lik <- likelihood_probM(microCeph, births, probM)
+    lik <- lik + likelihood_probM(microCeph, births, probM)
     
-    if(allPriors){
-        lik <- lik + dnorm(pars["mean"], 12, 10,1)
-    }
-    if(!is.null(actualPeakTime)){
-        lik <- lik + log(dunif(peakTime, actualPeakTime["start"],actualPeakTime["end"]))
-        #lik <- lik <-  dnorm(peakTime, mean(c(actualPeakTime["start"],actualPeakTime["end"])), 10,1)
-    }
-    if(!is.null(incDat)) lik <- lik + incidence_likelihood(y[,"I_H"]/rowSums(y[,c("I_H","S_H","E_H","R_H")]),incDat)
-
+    if(allPriors) lik <- lik + dnorm(pars["mean"], 15, 10,1)
+    if(!is.null(actualPeakTime)) lik <- lik + log(dunif(peakTime, actualPeakTime["start"],actualPeakTime["end"]))
+    
     return(lik)
 }
 
@@ -145,10 +103,11 @@ posterior_simple_buckets <- function(t_pars, y0s, pars, startDays, endDays, buck
 #' @return a single value for the posterior
 #' @export
 #' @useDynLib zikaProj
-posterior_complex_buckets <- function(t_pars, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, incDat = NULL, allPriors = NULL, peakTimes=NULL){
+posterior_complex_buckets <- function(t_pars, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, incDat = NULL, allPriors = FALSE, peakTimes=NULL, version=4){
     lik <- 0
     places <- unique(local)
     places <- places[places != "all"]
+    
     for(place in places){
         indices <- data_locals == place | data_locals == "all"
         indices_pars <- local == place | local == "all"
@@ -161,17 +120,30 @@ posterior_complex_buckets <- function(t_pars, values, names, local, startDays, e
         names(tmpPars) <- names[indices_pars]
         tmpY0s <- generate_y0s(as.numeric(tmpPars["N_H"]),as.numeric(tmpPars["density"]))
             
-        
         tmpIncDat <- tmpPriors <- tmpPeaks <- NULL
         if(!is.null(incDat)) tmpIncDat <- incDat[incDat[,"local"] == place,]
         if(!is.null(peakTimes)){
             tmpPeaks <- as.numeric(peakTimes[peakTimes[,"local"] == place,c("start","end")])
             names(tmpPeaks) <- c("start","end")
         }
-        lik <- lik + posterior_simple_buckets(t_pars, tmpY0s, tmpPars, tmpStart, tmpEnd, tmpBuckets, tmpMicro, tmpBirths, tmpIncDat, allPriors, tmpPeaks)
+        lik <- lik + posterior_simple_buckets(t_pars, tmpY0s, tmpPars, tmpStart, tmpEnd, tmpBuckets, tmpMicro, tmpBirths, tmpIncDat, allPriors, tmpPeaks,version)
     }
     return(lik)
 }
+
+
+#' Incidence likelihood
+#'
+#' Given time-varying probabilities of observing Zika incidence and actual data, returns a single likelihood
+#' @param perCapInc expected per capita incidence of Zika
+#' @param dat two column matrix. First column is observed Zika cases, second is total possible zika cases
+#' @return a single log likelihood
+#' @export
+#' @useDynLib zikaProj
+incidence_likelihood <- function(perCapInc, dat){
+    return(sum(dbinom(dat[,1],dat[,2],perCapInc,log=1)))    
+}
+
 
 #' @export
 posterior_SA <- function(values, fixed_values, t_pars, names_fixed, names_unfixed, local_fixed, local_unfixed, startDays, endDays, buckets, microCeph, births, data_locals, peakTimes=NULL){
@@ -256,13 +228,10 @@ posterior_apply <- function(place, t_pars, values, names, local, startDays, endD
 #' @export
 #' @useDynLib zikaProj
 priors <- function(pars){
-    meanPrior <- dnorm(pars["mean"],12,5,1)
+    meanPrior <- dnorm(pars["mean"],15,5,1)
     return(meanPrior)
 }
 
-incidence_likelihood <- function(perCapInc, dat){
-    return(sum(dbinom(dat[,1],dat[,2],perCapInc,log=1)))    
-}
 
 
 #' Posterior function for complex ODE model
@@ -335,5 +304,38 @@ posterior_complex <- function(t_pars, y0s, pars, dat, threshold=NULL, times=NULL
         )
         
     }
+    return(lik)
+}
+
+
+#' Posterior function for the simple SEIR model
+#'
+#' Given the time vector, initial conditions ODE parameters and a matrix of microcephaly data, calculates the posterior value for a given data set. Note that no priors are used here.
+#' @param ts time vector over which to solve the ODE model
+#' @param y0s initial conditions for the ODE model
+#' @param pars ODE parameters
+#' @param microCeph vector of microcephaly incidence for each bucket
+#' @param births vector of total briths for each bucket
+#' @return a single value for the posterior
+#' @export
+#' @useDynLib zikaProj
+posterior_simple <- function(t_pars, y0s, pars, microCeph, births){
+    y <- solveModelSimple(t_pars,y0s,pars)
+    if(length(y) <= 1 && y=="Error"){
+        print("Wow")
+        return(-Inf)
+    }
+    NH <- sum(y0s[c("S_H","E_H","I_H","R_H")])
+    b <- pars["b"]
+    pHM <- pars["p_HM"]
+    tstep <- pars["tstep"]
+    bp <- pars["baselineProb"]
+    shape <- pars["shape"]
+    rate <- pars["rate"]
+    scale <- pars["scale"]
+    
+    probs <- dgamma(0:39,shape,rate)*scale
+    probs[probs > 1] <- 1
+    lik <- likelihood_probM_all(microCeph,births,y[,"I_M"], probs, NH, b, pHM, bp, tstep)
     return(lik)
 }

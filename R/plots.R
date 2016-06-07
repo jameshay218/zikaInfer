@@ -122,19 +122,20 @@ plot_MCMC <- function(chain, parTab=NULL){
 #' @export
 #' @useDynLib zikaProj
 plot_random_microceph_curves <- function(chain, runs){
-    tmpChain <- chain[,c("mean","var","scale","lnlike")]
+    tmpChain <- chain[,c("mean","var","scale","tstep","lnlike")]
 
     ## Get best fitting parameters
     bestPars <- as.numeric(tmpChain[which.max(tmpChain[,"lnlike"]),])
-    bestMean <- bestPars[1]
-    bestVar <- bestPars[2]
-    bestRate <- bestMean/bestVar
-    bestShape <- bestMean/bestRate
-    probs <- dgamma(0:39,bestShape,bestRate)*bestPars[3]
-    probs[probs > 1] <- 1
-    probs <- data.frame(prob=probs,week=seq(0,39,by=1))
+   
+    names(bestPars) <- colnames(tmpChain)
+    bestPars["tstep"] <- 1
+
+    probs <- generate_micro_curve(bestPars)
+ 
+    bestProbs <- data.frame(prob=probs,week=seq(0,39,by=1))
+
     myPlot <- ggplot() +
-        geom_line(dat=probs, aes(x=week,y=prob),col="blue",lwd=1) +
+        geom_line(dat=bestProbs, aes(x=week,y=prob),col="blue",lwd=1) +
         ylab("Probability of microcephaly given infection")+
         xlab("Week of gestation at infection") +
         ggtitle("Microcephaly Risk Curve") +
@@ -221,6 +222,7 @@ create_polygons <- function(lower,upper){
 #' @useDynLib zikaProj
 plot_best_trajectory_multi <- function(runName, chain=NULL, realDat=NULL, parTab=NULL, pars=NULL, runs=100, runDir="~/net/home/zika/outputs3", allDatFile = "allDat20.04.16.csv",nchains=3, mcmcPars=c("burnin"=50000,"adaptive"=100000,"thin"=50)){
     ps <- NULL
+
     if(is.null(chain) | is.null(realDat) | is.null(parTab) | is.null(pars)){
         allPars <- plot_setup(runName, runDir, allDatFile, nchains, mcmcPars)
         chain <- allPars$chains
@@ -228,7 +230,7 @@ plot_best_trajectory_multi <- function(runName, chain=NULL, realDat=NULL, parTab
         realDat <- allPars$dat
         pars <- allPars$pars
     }
-    
+
     states <- unique(parTab$local)
     states <- states[states != "all"]
 
@@ -251,10 +253,12 @@ plot_best_trajectory_multi <- function(runName, chain=NULL, realDat=NULL, parTab
 #' @param runDir the full directory path where the MCMC chains are located
 #' @param allDatFile local filename of actual data OPTIONAL
 #' @param nchain number of chains run
+#' @param mcmcPars a named vector of the burnin, adaptive period and thinning
+#' @param ylim ylimit for the plot
 #' @return a ggplot object with the incidence plots
 #' @export
 #' @useDynLib zikaProj
-plot_best_trajectory_single <- function(runName, local, chain=NULL, realDat=NULL, parTab=NULL, pars=NULL, runs=100,ylabel=TRUE,xlabel=TRUE, runDir="~/net/home/zika/outputs3", allDatFile = "allDat20.04.16.csv",nchains=3, mcmcPars=c("burnin"=50000,"adaptive"=100000,"thin"=50)){
+plot_best_trajectory_single <- function(runName, local, chain=NULL, realDat=NULL, parTab=NULL, pars=NULL, runs=100,ylabel=TRUE,xlabel=TRUE, runDir="~/net/home/zika/outputs3", allDatFile = "allDat20.04.16.csv",nchains=3, mcmcPars=c("burnin"=50000,"adaptive"=100000,"thin"=50),ylim=200){
     if(is.null(chain) | is.null(realDat) | is.null(parTab) | is.null(pars)){
         allPars <- plot_setup(runName, runDir, allDatFile, nchains, mcmcPars)
         chain <- allPars$chains
@@ -273,6 +277,7 @@ plot_best_trajectory_single <- function(runName, local, chain=NULL, realDat=NULL
 
     xlabels <- c("01/2014","04/2014","07/2014","10/2014","01/2015","04/2015","07/2015","10/2015","01/2016")
     xlabBreaks <- dat[,"meanDay"][seq(1,length(dat[,"meanDay"]),by=3)]
+    if(length(xlabels) != length(xlabBreaks)) xlabels <- seq(1,length(xlabBreaks),by=1)
 
     quantiles <- unique(microBounds[,"quantile"])
     botM <- microBounds[microBounds[,"quantile"]==quantiles[1],c("time","micro")]
@@ -288,7 +293,7 @@ plot_best_trajectory_single <- function(runName, local, chain=NULL, realDat=NULL
       geom_line(dat=microBounds,aes(y=micro,x=time,group=quantile),lwd=0.5,linetype=2,col="blue",alpha=0.5) +
       geom_line(dat=bestMicro,aes(y=number,x=day),col="blue",lwd=0.5) +
         geom_polygon(data=polygonM,aes(x=x,y=y),alpha=0.2,fill="blue")+
-        scale_y_continuous(limits=c(0,200))+
+        scale_y_continuous(limits=c(0,ylim))+
         scale_x_continuous(labels=xlabels,breaks=xlabBreaks)+
         theme_bw() +
         ylab("Microcephaly cases (blue)") +
@@ -503,7 +508,7 @@ volcano_plots <- function(chains, parTab){
     states <- unique(parTab$local)
     states <- states[states != "all"]
     tmp <- sort(states,index.return=TRUE)
-    numbers <- tmp$ix - 2
+    numbers <- tmp$ix - 1
     states <- tmp$x
 
     country_names <- c(
