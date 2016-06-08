@@ -5,8 +5,8 @@
 \title{Posterior function for the simple SEIR model with bucketed data for multiple states}
 \usage{
 posterior_complex_buckets(t_pars, values, names, local, startDays, endDays,
-  buckets, microCeph, births, data_locals, incDat = NULL, allPriors = NULL,
-  peakTimes = NULL)
+  buckets, microCeph, births, data_locals, incDat = NULL, peakTimes = NULL,
+  allPriors = NULL)
 }
 \arguments{
 \item{names}{names for the ODE parameters}
@@ -30,8 +30,6 @@ posterior_complex_buckets(t_pars, values, names, local, startDays, endDays,
 \item{allPriors}{defaults to NULL. Arguments for parameter priors, if desired.}
 
 \item{ts}{time vector over which to solve the ODE model}
-
-\item{y0s}{initial conditions for the ODE model}
 
 \item{pars}{ODE parameters}
 

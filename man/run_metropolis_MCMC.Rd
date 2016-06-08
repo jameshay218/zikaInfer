@@ -4,45 +4,34 @@
 \alias{run_metropolis_MCMC}
 \title{Adaptive Metropolis-within-Gibbs Random Walk Algorithm.}
 \usage{
-run_metropolis_MCMC(iterations = 1000, data, t_pars, y0s, N_H, N_M,
-  version = 1, param_table, popt = 0.44, opt_freq = 50, thin = 1,
-  burnin = 100, adaptive_period = 1, filename, save_block = 500,
-  threshold = NULL, buckets = NULL, mvrPars = NULL, incDat = NULL,
-  allPriors = FALSE, peakTimes = NULL, VERBOSE = FALSE)
+run_metropolis_MCMC(data, t_pars, param_table, mcmcPars = c(iterations = 1000,
+  popt = 0.44, opt_freq = 50, thin = 1, burnin = 100, adaptive_period = 100,
+  save_block = 500), filename, mvrPars = NULL, incDat = NULL,
+  peakTimes = NULL, allPriors = NULL, ...)
 }
 \arguments{
-\item{iterations}{number of iterations to run the MCMC chain for. Note that each parameter is moved once independently for each iteration. Defaults to 1000}
-
 \item{data}{the data against which the likelihood is calculated}
-
-\item{y0s}{starting conditions for the ODE model}
 
 \item{param_table}{a table of parameter data used for information such as bounds and prior function pointers.}
 
-\item{popt}{the desired acceptance rate. Defaults to 0.44}
-
-\item{opt_freq}{how frequently the acceptance rate is adapted. Defaults to 50}
-
-\item{thin}{thinning value for the MCMC chain. Default is 1}
-
-\item{burnin}{the length of the burn in period. Defaults to 100}
-
-\item{adaptive_period}{length of the adaptive period. Defaults to 1}
+\item{mcmcPars}{a named vector with parameters for the MCMC procedure. Iterations, popt, opt_freq, thin, burnin, adaptive_period and save_block.}
 
 \item{filename}{the full filepath at which the MCMC chain should be saved. "_chain.csv" will be appended to the end of this, so filename should have no file extensions}
 
-\item{save_block}{the number of iterations that R will keep in memory before writing to .csv. Defaults to 500}
+\item{mvrPars}{a list of parameters if using a multivariate proposal. Must contain an initial covariance matrix, weighting for adapting cov matrix, and an initial scaling parameter (0-1)}
 
-\item{VERBOSE}{boolean flag for additional output. Defaults to FALSE}
+\item{incDat}{optional data frame of incidence data if including incidence data in the likelihood function}
 
-\item{startvalue}{a vector of parameter values used as the starting point for the MCMC chain. MUST be valid parameters for the model function}
+\item{peakTimes}{optional parameter - data frame of peak times for Zika incidence for each state}
+
+\item{allPriors}{flag of whether or not to use priors}
 
 \item{ts}{vector of times to solve the ODE model over}
 
-\item{_threshold}{boolean value that is true if using threshold data}
+\item{y0s}{starting conditions for the ODE model}
 }
 \value{
-the full file path at which the MCMC chain is saved as a .csv file
+a list with: 1) full file path at which the MCMC chain is saved as a .csv file; 2) the last used covarianec matrix; 3) the last used scale size
 }
 \description{
 The Adaptive Metropolis-within-Gibbs algorithm. Given a starting point and the necessary MCMC parameters as set out below, performs a random-walk of the posterior space to produce an MCMC chain that can be used to generate MCMC density and iteration plots. The algorithm undergoes an adaptive period, where it changes the step size of the random walk for each parameter to approach the desired acceptance rate, popt. After this, a burn in period is established, and the algorithm then uses \code{\link{proposalfunction}} to explore the parameter space, recording the value and posterior value at each step. The MCMC chain is saved in blocks as a .csv file at the location given by filename.

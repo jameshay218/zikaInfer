@@ -4,7 +4,7 @@
 \alias{getDaysPerMonth}
 \title{Get days per month of the year}
 \usage{
-getDaysPerMonth()
+getDaysPerMonth(breaks = 12)
 }
 \value{
 vector of days

@@ -4,14 +4,10 @@
 \alias{b.calc}
 \title{Bite rate calculation}
 \usage{
-b.calc(params, NH, NM, R0)
+b.calc(params, R0)
 }
 \arguments{
 \item{params}{Vector of parameters matching those returned by \code{\link{setupListPars}}}
-
-\item{NH}{integer value for human population size}
-
-\item{NM}{integer value for mosquito population size}
 
 \item{R0}{desired R0 value}
 }

@@ -4,14 +4,11 @@
 \alias{posterior}
 \title{Posterior function for ODE model}
 \usage{
-posterior(t_pars, y0s, values, names, local, startDays, endDays, buckets,
-  microCeph, births, data_locals, version = 1, threshold = NULL,
-  times = NULL, incDat = NULL, allPriors = FALSE,
-  actualPeakTimes = NULL)
+posterior(t_pars, values, names, local, startDays, endDays, buckets, microCeph,
+  births, data_locals, incDat = NUL, actualPeakTimes = NULL,
+  allPriors = NULL, ...)
 }
 \arguments{
-\item{y0s}{initial conditions for the ODE model}
-
 \item{values}{ODE parameters}
 
 \item{names}{names for the ODE parameters}
@@ -30,17 +27,11 @@ posterior(t_pars, y0s, values, names, local, startDays, endDays, buckets,
 
 \item{data_locals}{corresponding vector of state names for the microcephaly data}
 
-\item{version}{which version of the model is being used. 1 is for the simple single state SEIR, 3 is for the multi-state version. 2 is for an outdated version of the model.}
-
-\item{threshold}{Defaults to NULL. Used for an outdated version of the model.}
-
-\item{times}{defaults to NULL. Used for an outdated version of the model.}
-
 \item{incDat}{defaults to NULL. If provided, uses the incidence data to improve parameter estimates.}
 
-\item{allPriors}{defaults to NULL. Arguments for parameter priors, if desired.}
-
 \item{actualPeakTimes}{defaults to NULL. Data frame of priors belief on incidence peak times. Provide a row for each state and three columns - the name of the state, the lower bound and the upper bound on peak time. Puts a uniform prior on this range.}
+
+\item{allPriors}{defaults to NULL. Arguments for parameter priors, if desired.}
 
 \item{ts}{time vector over which to solve the ODE model}
 }

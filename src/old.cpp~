@@ -1,0 +1,99 @@
+
+//' Likelihood function for time-varying microcephaly
+//'
+//' Calculates the likelihood of observing a vector of microcephaly births given the total number of births and microcephaly probabilities. Takes model generated/used parameters.
+//' @param microBirths the vector of observed microcephaly cases over time
+//' @param allBirths the corresponding total number of births
+//' @param IM a numeric vector of number of infected mosquitoes over time
+//' @param probM the time varying risk of developing microcephaly given infection over the course of gestation
+//' @param NH the constant human population size
+//' @param b the per vector per day bite rate
+//' @param pMH the probability of transmission upon bite
+//' @param bp the baseline probability of microcephaly
+//' @param tstep the time step for the buckets. Best left to 1.
+//' @return a single likelihood value
+//' @export
+//' @useDynLib zikaProj
+//' @seealso \link{\code{likelihood_probM}}
+//[[Rcpp::export]]
+double likelihood_probM_all(NumericVector microBirths, NumericVector allBirths, NumericVector IM, NumericVector probM, double NH, double b, double pHM, double bp, double tstep){
+  NumericVector allP = generate_probM(IM, probM, NH, b, pHM, bp, tstep);
+  return(likelihood_probM(microBirths, allBirths, allP));
+}
+
+//[[Rcpp::export]]
+double proposal_function(double current, double lower, double upper, double step){
+  double update;
+  double move;
+  double new1;
+  new1 = toUnitScale(current,lower,upper);
+  
+  do {
+    new1 = toUnitScale(current,lower,upper);
+    update = R::rnorm(0, 1);
+    new1 = new1 + update*step;
+  } while(new1 > 1 || new1 < 0);
+  
+  new1 = fromUnitScale(new1,lower,upper);
+  
+  return(new1);
+}
+
+
+//[[Rcpp::export]]
+double scaletuning2(double step, double popt, double pcur){
+  if(pcur>=1) pcur = 0.99;
+  if(pcur<=0) pcur = 0.01;
+  step = (step*R::qnorm(popt/2,0,1,1,0))/R::qnorm(pcur/2,0,1,1,0);
+  return(step);
+}
+
+//' Calculates alphas for given time bucket sizes
+//'
+//' @param y the matrix of pregnant adult counts. First column should be times
+//' @param probMicro probability of developing microcephaly given infection
+//' @param times matrix of times to create alphas over. First column is start of bucket, last column is end of bucket
+//' @return the vector of alphas
+//' @export
+//' @useDynLib zikaProj 
+//[[Rcpp::export]]
+NumericVector calculate_alphas_buckets(NumericMatrix y, double probMicro, NumericMatrix times){
+  int i = 0;
+  int index = 0;
+  double start = 0;
+  double end = 0;
+  double tmp = 0;
+  int j = 0;
+  NumericVector alphas(times.nrow());
+
+  // Get to start of y matrix that has relevant information
+  while(y(i,0) < start) i++;
+
+  // Go through all of the y matrix
+  while(i < y.nrow() && index < alphas.size()){
+    tmp = 0;
+    j = 0;
+
+    // Get upper and lower bounds of time
+    start = times(index,0);
+    end = times(index,1);
+    //    Rcpp::Rcout << start << " " << end << std::endl;
+
+    // Increase y index until at start of bucket
+    while(y(i,0) < start) i++;
+
+    // Go through y until end of bucket, storing incidence over this time
+    while(y(i,0) < end && i < y.nrow()){
+      tmp += y(i,1)/(y(i,1)+y(i,2)+y(i,3)+y(i,4));
+      j++;
+      i++;
+    }
+
+    // Take average incidence over this time to be alpha for this bucket
+    alphas[index] = probMicro*tmp/j;
+    //    Rcpp::Rcout << alphas[index] << std::endl;
+    // Increase index of bucket/alpha
+    index++;
+  }
+  return(alphas);
+}

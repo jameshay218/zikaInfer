@@ -4,12 +4,12 @@
 \alias{plot_MCMC}
 \title{Plot MCMC chains}
 \usage{
-plot_MCMC(chain, parTab = NULL)
+plot_MCMC(chains, parTab = NULL)
 }
 \arguments{
-\item{parTab}{optional parameter table}
-
 \item{chains}{list of MCMC chains}
+
+\item{parTab}{optional parameter table}
 }
 \value{
 nothing - saves plots to pdf

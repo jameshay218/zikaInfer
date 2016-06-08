@@ -4,7 +4,8 @@
 \alias{generate_multiple_data}
 \title{Simulation multi-state microcephaly data}
 \usage{
-generate_multiple_data(t_pars, paramTable, allBirths, weeks = FALSE)
+generate_multiple_data(t_pars, paramTable, allBirths, weeks = FALSE,
+  dataRange = c(0, t_pars["dur"]), version = 1, noise = NULL)
 }
 \arguments{
 \item{t_pars}{vector of two components - the total run time in days and the time step for the ODE solver}

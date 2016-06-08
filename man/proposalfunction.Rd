@@ -7,11 +7,15 @@
 proposalfunction(values, lower_bounds, upper_bounds, steps, index)
 }
 \arguments{
+\item{values}{a vector of the parameters to be explored}
+
+\item{lower_bounds}{a vector of the low allowable bounds for the proposal}
+
+\item{upper_bounds}{a vector of the upper allowable bounds for the proposal}
+
+\item{steps}{a vector of step sizes for the proposal}
+
 \item{index}{numeric value for the index of the parameter to be moved from the param table and vector}
-
-\item{param}{a vector of the parameters to be explored}
-
-\item{param_table}{a matrix of flags and bounds that specify how the proposal should be treated. Crucial elements are the 3rd column (lower bound), 4th column (upper bound), 5th column )step size) and 6th column (flag for log proposal)}
 }
 \value{
 the parameter vector after step

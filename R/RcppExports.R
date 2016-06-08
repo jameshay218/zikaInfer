@@ -25,109 +25,6 @@ fromUnitScale <- function(x, min, max) {
     .Call('zikaProj_fromUnitScale', PACKAGE = 'zikaProj', x, min, max)
 }
 
-#' Calculate gaussian mixture model likelihood
-#'
-#' Given a matrix of data points (columns represent individuals, rows represent sampling times), computes the log likelihood using the gaussian mixture model with known alphas, mus and sds.
-#' @param dat the matrix of data
-#' @param alphas matrix of of alphas. 2 columns (1 for both distributions) with number of rows matching number of rows in dat
-#' @param mus vector of mus for the 2 distributions 
-#' @param sds vector of sds for the 2 distributions
-#' @return a single log likelihood
-#' @export
-#' @useDynLib zikaProj 
-likelihood <- function(dat, alphas, mus, sds) {
-    .Call('zikaProj_likelihood', PACKAGE = 'zikaProj', dat, alphas, mus, sds)
-}
-
-#' Calculate likelihood for threshold data
-#'
-#' Given a matrix of threshold data (ie. microcephaly or not) for different sampling times, gives a log likelihood with the given parameter values
-#' @param dat the matrix of data. 2 columns for counts of positive and total births, and N rows for each sampling time
-#' @param alphas matrix of of alphas. 2 columns (1 for both distributions) with number of rows matching number of rows in dat
-#' @param mus vector of mus for the 2 distributions 
-#' @param sds vector of sds for the 2 distributions
-#' @param threshold the threshold value below which a data point is classified as having microcephaly
-#' @return a single log likelihood
-#' @export
-#' @useDynLib zikaProj 
-likelihood_threshold <- function(dat, alphas, mus, sds, threshold) {
-    .Call('zikaProj_likelihood_threshold', PACKAGE = 'zikaProj', dat, alphas, mus, sds, threshold)
-}
-
-#' Calculate likelihood for probability data
-#'
-#' Given a matrix of threshold data (ie. microcephaly or not) for different sampling times, gives a log likelihood with the given parameter values
-#' @param dat the matrix of data. 2 columns for counts of positive and total births, and N rows for each sampling time
-#' @param alphas vector of probability of giving birth to an infant with microcephaly over time
-#' @return a single log likelihood
-#' @export
-#' @useDynLib zikaProj 
-likelihood_prob <- function(dat, alphas) {
-    .Call('zikaProj_likelihood_prob', PACKAGE = 'zikaProj', dat, alphas)
-}
-
-#' Calculates probabilities of microcephaly over time for given time bucket sizes
-#'
-#' @param y the matrix of pregnant adult counts. First column should be times
-#' @param probMicro probability of developing microcephaly given infection
-#' @param baselineProb the baseline probability of giving birth to an infant with microcephaly
-#' @param times matrix of times to create alphas over. First column is start of bucket, last column is end of bucket
-#' @return the vector of alphas
-#' @export
-#' @useDynLib zikaProj 
-calculate_alphas_prob_buckets <- function(y, probMicro, baselineProb, times) {
-    .Call('zikaProj_calculate_alphas_prob_buckets', PACKAGE = 'zikaProj', y, probMicro, baselineProb, times)
-}
-
-#' Calculates probability of microcephaly over time with regular sampling intervals
-#'
-#' @param y the matrix of pregnant adult counts. First column should be times
-#' @param probMicro probability of developing microcephaly given infection
-#' @param baselineProb the baseline probability of giving birth to an infant with microcephaly
-#' @param sampFreq the frequency of sampling
-#' @return the value converted to a linear scale
-#' @export
-#' @useDynLib zikaProj 
-calculate_alphas_prob_sampfreq <- function(y, probMicro, baselineProb, sampFreq) {
-    .Call('zikaProj_calculate_alphas_prob_sampfreq', PACKAGE = 'zikaProj', y, probMicro, baselineProb, sampFreq)
-}
-
-p_test <- function(dat, alphas, mus, sds, threshold) {
-    .Call('zikaProj_p_test', PACKAGE = 'zikaProj', dat, alphas, mus, sds, threshold)
-}
-
-#' Converts to linear scale
-#'
-#' @param x the double to be converted back to linear scale
-#' @param min the minimum value on the linear scale
-#' @param max the maximum value on the linear scale
-#' @return the value converted to a linear scale
-#' @export
-#' @useDynLib zikaProj 
-calculate_alphas <- function(y, probMicro, sampFreq) {
-    .Call('zikaProj_calculate_alphas', PACKAGE = 'zikaProj', y, probMicro, sampFreq)
-}
-
-#' Calculates alphas for given time bucket sizes
-#'
-#' @param y the matrix of pregnant adult counts. First column should be times
-#' @param probMicro probability of developing microcephaly given infection
-#' @param times matrix of times to create alphas over. First column is start of bucket, last column is end of bucket
-#' @return the vector of alphas
-#' @export
-#' @useDynLib zikaProj 
-calculate_alphas_buckets <- function(y, probMicro, times) {
-    .Call('zikaProj_calculate_alphas_buckets', PACKAGE = 'zikaProj', y, probMicro, times)
-}
-
-scaletuning2 <- function(step, popt, pcur) {
-    .Call('zikaProj_scaletuning2', PACKAGE = 'zikaProj', step, popt, pcur)
-}
-
-proposal_function <- function(current, lower, upper, step) {
-    .Call('zikaProj_proposal_function', PACKAGE = 'zikaProj', current, lower, upper, step)
-}
-
 #' FOI calculation
 #'
 #' Calculates the force of infection over time for an SEIR model
@@ -210,26 +107,6 @@ generate_probM <- function(IM, probM, NH, b, pMH, bp, tstep) {
 #' @useDynLib zikaProj
 likelihood_probM <- function(microBirths, allBirths, probM) {
     .Call('zikaProj_likelihood_probM', PACKAGE = 'zikaProj', microBirths, allBirths, probM)
-}
-
-#' Likelihood function for time-varying microcephaly
-#'
-#' Calculates the likelihood of observing a vector of microcephaly births given the total number of births and microcephaly probabilities. Takes model generated/used parameters.
-#' @param microBirths the vector of observed microcephaly cases over time
-#' @param allBirths the corresponding total number of births
-#' @param IM a numeric vector of number of infected mosquitoes over time
-#' @param probM the time varying risk of developing microcephaly given infection over the course of gestation
-#' @param NH the constant human population size
-#' @param b the per vector per day bite rate
-#' @param pMH the probability of transmission upon bite
-#' @param bp the baseline probability of microcephaly
-#' @param tstep the time step for the buckets. Best left to 1.
-#' @return a single likelihood value
-#' @export
-#' @useDynLib zikaProj
-#' @seealso \link{\code{likelihood_probM}}
-likelihood_probM_all <- function(microBirths, allBirths, IM, probM, NH, b, pHM, bp, tstep) {
-    .Call('zikaProj_likelihood_probM_all', PACKAGE = 'zikaProj', microBirths, allBirths, IM, probM, NH, b, pHM, bp, tstep)
 }
 
 #' Averages a vector based on bucket sizes

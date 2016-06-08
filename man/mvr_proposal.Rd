@@ -7,16 +7,16 @@
 mvr_proposal(values, fixed, covMat)
 }
 \arguments{
+\item{values}{the vector of current parameter values}
+
+\item{fixed}{set of flags corresponding to the parameter vector indicating which parameters are fixed}
+
 \item{covMat}{the 2D covariance matrix for all of the parameters}
-
-\item{current}{the vector of current parameter values}
-
-\item{param_table}{a matrix of flags and bounds that specify how the proposal should be treated. Crucial elements are the 3rd column (lower bound), 4th column (upper bound), 5th column )step size) and 6th column (flag for log proposal)}
 }
 \value{
 a parameter vector of a proposed move. Note that these may fall outside the allowable ranges.
 }
 \description{
-Given the current parameters, bounds and a covariance matrix, returns a vector for a proposed jump from a multivariate normal distribution
+Given the current parameters and a covariance matrix, returns a vector for a proposed jump from a multivariate normal distribution
 }
 

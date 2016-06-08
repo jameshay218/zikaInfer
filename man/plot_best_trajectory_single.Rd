@@ -5,27 +5,28 @@
 \title{Plot single best trajectory}
 \usage{
 plot_best_trajectory_single(runName, local, chain = NULL, realDat = NULL,
-  parTab = NULL, pars = NULL, runs = 100, ylabel = TRUE,
-  xlabel = TRUE, runDir = "~/net/home/zika/outputs3",
-  allDatFile = "allDat20.04.16.csv", nchains = 3, mcmcPars = c(burnin =
-  50000, adaptive = 1e+05, thin = 50))
+  parTab = NULL, pars = NULL, runs = 100, incDat = NULL,
+  ylabel = TRUE, xlabel = TRUE, mcmcPars = c(burnin = 50000, adaptive =
+  1e+05, thin = 50), ylimM = 200, ylimI = 0.02)
 }
 \arguments{
 \item{runName}{the type of model fitting done}
 
 \item{runs}{the number of runs to use for prediction intervals}
 
+\item{incDat}{optional data frame of actual incidence data}
+
 \item{ylabel}{boolean whether or not to add y axis label}
 
 \item{xlabel}{boolean whether or not to add x axis label}
 
-\item{runDir}{the full directory path where the MCMC chains are located}
+\item{mcmcPars}{a named vector of the burnin, adaptive period and thinning}
 
-\item{allDatFile}{local filename of actual data OPTIONAL}
+\item{ylimM}{ylimit for the microcephaly plot}
+
+\item{ylimI}{ylimit for the incidence plot}
 
 \item{state}{the name of the state to be fitted}
-
-\item{nchain}{number of chains run}
 }
 \value{
 a ggplot object with the incidence plots

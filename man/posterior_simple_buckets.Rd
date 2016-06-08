@@ -5,8 +5,8 @@
 \title{Posterior function for the simple SEIR model with bucketed data for a single state}
 \usage{
 posterior_simple_buckets(t_pars, y0s, pars, startDays, endDays, buckets,
-  microCeph, births, incDat = NULL, allPriors = FALSE,
-  actualPeakTime = NULL)
+  microCeph, births, incDat = NULL, actualPeakTime = NULL,
+  allPriors = NULL)
 }
 \arguments{
 \item{y0s}{initial conditions for the ODE model}

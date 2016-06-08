@@ -4,20 +4,16 @@
 \alias{r0.calc}
 \title{R0 calculation}
 \usage{
-r0.calc(params, NH, NM)
+r0.calc(params)
 }
 \arguments{
 \item{params}{Vector of parameters matching those returned by \code{\link{setupListPars}}}
-
-\item{NH}{integer value for human population size}
-
-\item{NM}{integer value for mosquito population size}
 }
 \value{
 A single value for R0
 }
 \description{
-Calculates the R0 of the SEIR model given a vector of parameters and human/mosquito population sizes. R0 defined as number of expected human cases given introduction of 1 infected human into a totally naive population of humans and mosquitoes.
+Calculates the R0 of the SEIR model given a vector of parameters. R0 defined as number of expected human cases given introduction of 1 infected human into a totally naive population of humans and mosquitoes.
 }
 \seealso{
 \code{\link{b.calc}}

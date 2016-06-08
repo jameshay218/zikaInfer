@@ -4,27 +4,28 @@
 \alias{plot_best_trajectory_multi}
 \title{Plot all best trajectoroes}
 \usage{
-plot_best_trajectory_multi(runName, chain = NULL, realDat = NULL,
-  parTab = NULL, pars = NULL, runs = 100,
-  runDir = "~/net/home/zika/outputs3", allDatFile = "allDat20.04.16.csv",
-  nchains = 3, mcmcPars = c(burnin = 50000, adaptive = 1e+05, thin = 50))
+plot_best_trajectory_multi(chain, realDat, parTab, t_pars, runs = 100,
+  incDat = NULL, mcmcPars = c(burnin = 50000, adaptive = 1e+05, thin = 50),
+  ylimM = 200, ylimI = 0.01)
 }
 \arguments{
-\item{runName}{the type of model fitting done}
+\item{chain}{the MCMC chain of estimated parameters}
+
+\item{realDat}{the data frame of data used for fitting}
+
+\item{parTab}{the parameter table used for fitting}
+
+\item{t_pars}{the time parameters used for solving the ODEs}
 
 \item{runs}{the number of runs to use for prediction intervals}
 
-\item{runDir}{the full directory path where the MCMC chains are located}
+\item{incDat}{optional data frame of actual incidence data}
 
-\item{allDatFile}{local filename of actual data OPTIONAL}
+\item{mcmcPars}{a named vector of the burnin, adaptive period and thinning}
 
-\item{state}{the name of the state to be fitted}
+\item{ylimM}{ylimit for the microcephaly plot}
 
-\item{ylabel}{boolean whether or not to add y axis label}
-
-\item{xlabel}{boolean whether or not to add x axis label}
-
-\item{nchain}{number of chains run}
+\item{ylimI}{ylimit for the incidence plot}
 }
 \value{
 a ggplot object with the incidence plots

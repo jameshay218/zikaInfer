@@ -1,15 +1,15 @@
 #' MCMC proposal function
 #'
 #' Proposal function for MCMC random walk, taking random steps of a given size. Random walk may be on a linear or log scale
-#' @param param a vector of the parameters to be explored
-#' @param param_table a matrix of flags and bounds that specify how the proposal should be treated. Crucial elements are the 3rd column (lower bound), 4th column (upper bound), 5th column )step size) and 6th column (flag for log proposal)
+#' @param values a vector of the parameters to be explored
+#' @param lower_bounds a vector of the low allowable bounds for the proposal
+#' @param upper_bounds a vector of the upper allowable bounds for the proposal
+#' @param steps a vector of step sizes for the proposal
 #' @param index numeric value for the index of the parameter to be moved from the param table and vector
 #' @return the parameter vector after step
 #' @export
 #' @useDynLib zikaProj
 proposalfunction <- function(values, lower_bounds, upper_bounds,steps, index){
-                                        # 4th index is upper bound, 3rd is lower
-                                        # 1st and 2nd index used in other functions
     mn <- lower_bounds[index]
     mx <- upper_bounds[index]
 
@@ -17,20 +17,20 @@ proposalfunction <- function(values, lower_bounds, upper_bounds,steps, index){
     
     x <- toUnitScale(values[index],mn,mx)
 
-                                        # 5th index is step size
+    ## 5th index is step size
     stp <- steps[index]
 
     rv <- runif(1)
     rv <- (rv-0.5)*stp
     x <- x + rv
 
-                                        # Bouncing boundary condition
+    ## Bouncing boundary condition
     if (x < 0) x <- -x
     if (x > 1) x <- 2-x
 
-                                        # Cyclical boundary conditions
-                                        #if (x < 0) x <- 1 + x	
-                                        #if (x > 1) x <- x - 1
+    ## Cyclical boundary conditions
+    ##if (x < 0) x <- 1 + x	
+    ##if (x > 1) x <- x - 1
     
     if(x < 0 | x > 1) print("Stepped outside of unit scale. Something went wrong...")
 
@@ -40,9 +40,9 @@ proposalfunction <- function(values, lower_bounds, upper_bounds,steps, index){
 
 #' Multivariate proposal function
 #'
-#' Given the current parameters, bounds and a covariance matrix, returns a vector for a proposed jump from a multivariate normal distribution
-#' @param current the vector of current parameter values
-#' @param param_table a matrix of flags and bounds that specify how the proposal should be treated. Crucial elements are the 3rd column (lower bound), 4th column (upper bound), 5th column )step size) and 6th column (flag for log proposal)
+#' Given the current parameters and a covariance matrix, returns a vector for a proposed jump from a multivariate normal distribution
+#' @param values the vector of current parameter values
+#' @param fixed set of flags corresponding to the parameter vector indicating which parameters are fixed
 #' @param covMat the 2D covariance matrix for all of the parameters
 #' @return a parameter vector of a proposed move. Note that these may fall outside the allowable ranges.
 #' @export
@@ -56,56 +56,44 @@ mvr_proposal <- function(values, fixed, covMat){
 
 
 
-    #' Adaptive Metropolis-within-Gibbs Random Walk Algorithm.
+#' Adaptive Metropolis-within-Gibbs Random Walk Algorithm.
 #'
 #' The Adaptive Metropolis-within-Gibbs algorithm. Given a starting point and the necessary MCMC parameters as set out below, performs a random-walk of the posterior space to produce an MCMC chain that can be used to generate MCMC density and iteration plots. The algorithm undergoes an adaptive period, where it changes the step size of the random walk for each parameter to approach the desired acceptance rate, popt. After this, a burn in period is established, and the algorithm then uses \code{\link{proposalfunction}} to explore the parameter space, recording the value and posterior value at each step. The MCMC chain is saved in blocks as a .csv file at the location given by filename.
-#' @param startvalue a vector of parameter values used as the starting point for the MCMC chain. MUST be valid parameters for the model function
-#' @param iterations number of iterations to run the MCMC chain for. Note that each parameter is moved once independently for each iteration. Defaults to 1000
 #' @param data the data against which the likelihood is calculated
 #' @param ts vector of times to solve the ODE model over
 #' @param y0s starting conditions for the ODE model
 #' @param param_table a table of parameter data used for information such as bounds and prior function pointers.
-#' @param popt the desired acceptance rate. Defaults to 0.44
-#' @param opt_freq how frequently the acceptance rate is adapted. Defaults to 50
-#' @param thin thinning value for the MCMC chain. Default is 1
-#' @param burnin the length of the burn in period. Defaults to 100
-#' @param adaptive_period length of the adaptive period. Defaults to 1
+#' @param mcmcPars a named vector with parameters for the MCMC procedure. Iterations, popt, opt_freq, thin, burnin, adaptive_period and save_block.
 #' @param filename the full filepath at which the MCMC chain should be saved. "_chain.csv" will be appended to the end of this, so filename should have no file extensions
-#' @param save_block the number of iterations that R will keep in memory before writing to .csv. Defaults to 500
-#' @param _threshold boolean value that is true if using threshold data
-#' @param VERBOSE boolean flag for additional output. Defaults to FALSE
-#' @return the full file path at which the MCMC chain is saved as a .csv file
+#' @param mvrPars a list of parameters if using a multivariate proposal. Must contain an initial covariance matrix, weighting for adapting cov matrix, and an initial scaling parameter (0-1)
+#' @param incDat optional data frame of incidence data if including incidence data in the likelihood function
+#' @param peakTimes optional parameter - data frame of peak times for Zika incidence for each state
+#' @param allPriors flag of whether or not to use priors
+#' @return a list with: 1) full file path at which the MCMC chain is saved as a .csv file; 2) the last used covarianec matrix; 3) the last used scale size
 #' @export
 #' @seealso \code{\link{posterior}}, \code{\link{proposalfunction}}
 #' @useDynLib zikaProj
-run_metropolis_MCMC <- function(iterations=1000,
-                                data,
+run_metropolis_MCMC <- function(data,
                                 t_pars,
-                                y0s,
-                                N_H,
-                                N_M,
-                                version = 1,
                                 param_table,
-                                popt=0.44,
-                                opt_freq=50,
-                                thin=1,
-                                burnin=100,
-                                adaptive_period=1,
+                                mcmcPars=c("iterations"=1000,"popt"=0.44,"opt_freq"=50,"thin"=1,"burnin"=100,"adaptive_period"=100,"save_block"=500),
                                 filename,
-                                save_block = 500,
-                                threshold=NULL,
-                                buckets=NULL,
                                 mvrPars=NULL,
                                 incDat=NULL,
-                                allPriors=FALSE,
                                 peakTimes=NULL,
-                                VERBOSE=FALSE
+                                allPriors=NULL,
+                                ...
                                 ){
+
+    iterations <- mcmcPars["iterations"]
+    popt <- mcmcPars["popt"]
+    opt_freq<- mcmcPars["opt_freq"]
+    thin <- mcmcPars["thin"]
+    burnin <- mcmcPars["burnin"]
+    adaptive_period<- mcmcPars["adaptive_period"]
+    save_block <- mcmcPars["save_block"]
+
     TUNING_ERROR<- 0.1
-
-    if(opt_freq ==0 && VERBOSE){ print("Not running adaptive MCMC - opt_freq set to 0")}
-    else if(VERBOSE){ print("Adaptive MCMC - will adapt step size during specified burnin period")}
-
 
     ## Extract parameter table into individual vectors for speed
     non_fixed_params <- which(param_table$fixed==0)
@@ -135,7 +123,7 @@ run_metropolis_MCMC <- function(iterations=1000,
     chain_colnames <- c("sampno",param_table$names,"lnlike")
     
     ## Arrays to store acceptance rates
-    if(is.null(mvrPars)) tempaccepted <- tempiter <- reset <- integer(all_param_length)
+    if(is.null(mvrPars)) tempaccepted <- tempiter <- integer(all_param_length)
     else {
         tempaccepted <- tempiter <- 0
         covMat <- mvrPars[[1]]
@@ -152,7 +140,7 @@ run_metropolis_MCMC <- function(iterations=1000,
     ## Create empty chain to store "save_block" iterations at a time
     save_chain <- empty_save_chain <- matrix(nrow=save_block,ncol=all_param_length+2)
     
-    probab <- posterior(t_pars, y0s, current_params, par_names, par_labels, startDays, endDays, buckets, microCeph, births, data_locals, version, threshold, buckets, incDat,allPriors, peakTimes)
+    probab <- posterior(t_pars, current_params, par_names, par_labels, startDays, endDays, buckets, microCeph, births, data_locals, incDat, peakTimes, allPriors, ...)
     ## Set up initial csv file
     tmp_table <- array(dim=c(1,length(chain_colnames)))
     tmp_table <- as.data.frame(tmp_table)
@@ -171,31 +159,24 @@ run_metropolis_MCMC <- function(iterations=1000,
             ## For each parameter (Gibbs)
             j <- sample(non_fixed_params,1)
             proposal <- proposalfunction(current_params, lower_bounds, upper_bounds, steps,j)
-            
         } else proposal <- mvr_proposal(current_params, non_fixed_params, scaledCovMat)
         names(proposal) <- names(current_params)
+
         ## Propose new parameters and calculate posterior
         if(!any(proposal[non_fixed_params] < lower_bounds[non_fixed_params] | proposal[non_fixed_params] > upper_bounds[non_fixed_params])){
-
-            newprobab <- posterior(t_pars, y0s, proposal, par_names, par_labels, startDays, endDays, buckets, microCeph, births, data_locals,version, threshold,buckets, incDat, allPriors,peakTimes)
+            newprobab <- posterior(t_pars, proposal, par_names, par_labels, startDays, endDays, buckets, microCeph, births, data_locals, incDat, peakTimes, allPriors, ...)
             ## Calculate log difference in posteriors and accept/reject
             difflike <- newprobab - probab
-            if ((!is.nan(difflike) & !is.infinite(newprobab)) & (runif(1) < exp(difflike) |  difflike > 0)){
+            if ((!is.nan(difflike) & !is.infinite(newprobab)) & (runif(1) < exp(difflike))){
                 current_params <- proposal
                 probab <- newprobab
                 if(is.null(mvrPars)){
                     tempaccepted[j] <- tempaccepted[j] + 1
-                } else {
-                    tempaccepted <- tempaccepted + 1
-                }
+                } else tempaccepted <- tempaccepted + 1
             }
-            
         }
-
         if(is.null(mvrPars)) tempiter[j] <- tempiter[j] + 1
         else tempiter <- tempiter + 1
-
-       
         
         ## If current iteration matches with recording frequency, store in the chain. If we are at the limit of the save block,
         ## save this block of chain to file and reset chain
@@ -205,7 +186,6 @@ run_metropolis_MCMC <- function(iterations=1000,
             save_chain[no_recorded,ncol(save_chain)] <- probab
             no_recorded <- no_recorded + 1
         }
-
         
         ## Update step sizes based on acceptance rate
         ## Note that if opt_freq is 0, then no tuning will take place
@@ -254,9 +234,7 @@ run_metropolis_MCMC <- function(iterations=1000,
             save_chain <- empty_save_chain
             no_recorded <- 1
         }
-
         sampno <- sampno + 1
-        
     }
     
     ## If there are some recorded values left that haven't been saved, then append these to the MCMC chain file. Note
@@ -265,14 +243,39 @@ run_metropolis_MCMC <- function(iterations=1000,
     if(no_recorded > 2){
         write.table(save_chain[1:(no_recorded-1),],file=mcmc_chain_file,row.names=FALSE,col.names=FALSE,sep=",",append=TRUE)
     }
-    
-    if(VERBOSE){
-        print("Final step sizes:")
-        print(steps)
+
+    if(is.null(mvrPars)){
+        covMat <- NULL
+        scale <- NULL
+    } else {
+        steps <- NULL
     }
-    return(mcmc_chain_file)
+    return(list("file"=mcmc_chain_file,"covMat"=covMat,"scale"=scale, "steps"=steps))
 }
 
+
+
+
+
+
+
+
+#' Scale step sizes
+#'
+#' Scales the given step size (between 0 and 1) based on the current acceptance rate to get closed to the desired acceptance rate
+#' @param step the current step size
+#' @param popt the desired acceptance rate
+#' @param pcur the current acceptance rate
+#' @return the scaled step size
+#' @export
+#' @useDynLib zikaProj
+scaletuning <- function(step, popt,pcur){
+    if(pcur ==1) pcur <- 0.99
+    if(pcur == 0) pcur <- 0.01
+    step = (step*qnorm(popt/2))/qnorm(pcur/2)
+    if(step > 1) step <- 1
+    return(step)
+}
 
 
 
@@ -335,145 +338,4 @@ mcmc_diagnostics <- function(mcmc_chains, filename, param_table,VERBOSE=FALSE){
     }
     
     return(errors)
-}
-
-
-#' MCMC parameter setup
-#'
-#' Sets up the parameter table for use in \code{\link{run_metropolis_MCMC}}
-#' @param pars the vector of parameters that would be used for the ODE model
-#' @return a matrix of needed settings for the MCMC algorithm. For each parameter, gives a name, lower and upper bounds, boolean for log scale, initial step sizes, log proposal and whether or not the parameter should be fixed.
-#' @export
-setupParTable <- function(version=1, realDat=NULL){
-    names <- c("sampFreq","sampPropn","mu_I","sd_I","mu_N","sd_N","probMicro","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","p_HM","p_MH","constSeed","mean","var","scale","tstep")    
-    paramTable <- matrix(0, ncol=9, nrow=length(names))
-    paramTable <- as.data.frame(paramTable)
-    colnames(paramTable) <- c("names", "values","local","use_log", "lower_bounds","upper_bounds","steps","log_proposal","fixed")
-    paramTable[,"names"] <- names
-    paramTable$names <- as.character(paramTable$names)
-    
-
-    paramTable[paramTable[,"names"]=="sampFreq",2:ncol(paramTable)] <- c(7,"all",0,0,30,0.1,0,1)
-    paramTable[paramTable[,"names"]=="sampPropn",2:ncol(paramTable)] <- c(1,"all",0,0,1,0.1,0,1)
-    paramTable[paramTable[,"names"]=="mu_I",2:ncol(paramTable)] <- c(30,"all",0,0,60,0.1,0,1)
-    paramTable[paramTable[,"names"]=="sd_I",2:ncol(paramTable)] <- c(2,"all",0,0,10,0.1,0,1)
-    paramTable[paramTable[,"names"]=="mu_N",2:ncol(paramTable)] <- c(30,"all",0,0,60,0.1,0,1)
-    paramTable[paramTable[,"names"]=="sd_N",2:ncol(paramTable)] <- c(2,"all",0,0,10,0.1,0,1)
-    paramTable[paramTable[,"names"]=="probMicro",2:ncol(paramTable)] <- c(0.1,"all",9,0,1,0.1,0,1)
-    paramTable[paramTable[,"names"]=="baselineProb",2:ncol(paramTable)] <- c(0.002,"all",0,0,1,0.1,0,0)
-    paramTable[paramTable[,"names"]=="burnin",2:ncol(paramTable)] <- c(0,"all",0,0,1000,0.1,0,1)
-    paramTable[paramTable[,"names"]=="epiStart",2:ncol(paramTable)] <- c(0,"all",0,0,700,0.1,0,0)
-    paramTable[paramTable[,"names"]=="L_M",2:ncol(paramTable)] <- c(14,"all",0,0,100,0.1,0,1)
-    paramTable[paramTable[,"names"]=="D_EM",2:ncol(paramTable)] <- c(10.5,"all",0,0,100,0.1,0,1)
-    paramTable[paramTable[,"names"]=="L_H",2:ncol(paramTable)] <- c(365*70,"all",0,0,200*365,0.1,0,1)
-    paramTable[paramTable[,"names"]=="D_C",2:ncol(paramTable)] <- c(365*18,"all",0,0,25*365,0.1,0,1)
-    paramTable[paramTable[,"names"]=="D_F",2:ncol(paramTable)] <- c(0.75*365,"all",0,0,365,0.1,0,1)
-    paramTable[paramTable[,"names"]=="D_EH",2:ncol(paramTable)] <- c(5.9,"all",0,0,100,0.1,0,1)
-    paramTable[paramTable[,"names"]=="D_IH",2:ncol(paramTable)] <- c(5,"all",0,0,100,0.1,0,1)
-    paramTable[paramTable[,"names"]=="b",2:ncol(paramTable)] <- c(0.25,"all",0,0,100,0.1,0,1)
-    paramTable[paramTable[,"names"]=="p_HM",2:ncol(paramTable)] <- c(0.5,"all",0,0,1,0.1,0,1)
-    paramTable[paramTable[,"names"]=="p_MH",2:ncol(paramTable)] <- c(0.5,"all",0,0,1,0.1,0,1)
-    paramTable[paramTable[,"names"]=="constSeed",2:ncol(paramTable)] <- c(0,"all",0,0,100,0.1,0,1)
-    paramTable[paramTable[,"names"]=="mean",2:ncol(paramTable)] <- c(17,"all",0,0,100,0.1,0,0)
-    paramTable[paramTable[,"names"]=="var",2:ncol(paramTable)] <- c(10,"all",0,0,100,0.1,0,0)
-    paramTable[paramTable[,"names"]=="scale",2:ncol(paramTable)] <- c(1,"all",0,0,100,0.1,0,0)
-    paramTable[paramTable[,"names"]=="tstep",2:ncol(paramTable)] <- c(7,"all",0,0,100,0.1,0,1)
-    
-    paramTable <- paramTable[paramTable[,"names"] %in% names(setupParsLong(version)),]
-    if(!is.null(realDat)) paramTable <- rbind(paramTable, setupStateParTable(realDat, version))
-    if(version == 4){
-        paramTable <- paramTable[!((paramTable[,"names"] %in% c("mean","var","scale")) & paramTable[,"local"] == "all"),]
-    }
-    paramTable[,c("values","use_log","lower_bounds","upper_bounds","steps","log_proposal","fixed")] <- lapply(paramTable[,c("values","use_log","lower_bounds","upper_bounds","steps","log_proposal","fixed")], FUN=as.numeric)
-    
-    return(paramTable)
-}
-
-#' Setup state specific parameter table
-#'
-#' Takes the entire data set and returns a useable format parameter table for the place specific parameters
-#' @param stateDat the data frame of all data
-#' @return a parameter table
-#' @export
-setupStateParTable <- function(stateDat, version=3){
-    places <- as.character(unique(stateDat$local))
-    if(version==4) numberPars <- 10
-    else if(version==5) numberPars <- 13
-    else if(version==6) numberPars <- 16
-    else if(version==7) numberPars <- 18
-    else numberPars <- 5
-    paramTable <- matrix(0, ncol=9, nrow=numberPars*length(places))
-    paramTable <- as.data.frame(paramTable)
-    colnames(paramTable) <- c("names", "values","local","use_log", "lower_bounds","upper_bounds","steps","log_proposal","fixed")
-    index <- 1
-    
-    for(place in places){
-        tmpDat <- stateDat[stateDat$local==place,]
-        paramTable[index,] <- c("L_H",tmpDat[1,"L_H"],place,0,0,200*365,0.1,0,1)
-        index <- index + 1
-        paramTable[index,] <- c("N_H", tmpDat[1,"N_H"], place, 0,0,100000000,0.1,0,1)
-        index <- index + 1
-        paramTable[index,] <- c("density",3,place,0,0,100,0.1,0,0)
-        index <- index + 1
-        paramTable[index,] <- c("epiStart",250,place,0,0,730,0.1,0,0)
-        index <- index + 1
-        paramTable[index,] <- c("propn",1,place,0,0,1,0.1,0,1)
-        index <- index + 1
-        if(version >= 4){
-            paramTable[index,] <- c("mean",17,place,0,0,40,0.1,0,0)
-            index <- index + 1
-            paramTable[index,] <- c("var", 20, place, 0,0,100,0.1,0,0)
-            index <- index + 1
-            paramTable[index,] <- c("scale",0.15,place,0,0,1,0.1,0,0)
-            index <- index + 1
-            paramTable[index,] <- c("incPropn",1,place,0,0,1,0.1,0,1)
-            index <- index + 1
-            paramTable[index,] <- c("baselineInc",0.002,place,0,0,1,0.1,0,1)
-            index <- index + 1
-            if(version >= 5){
-                paramTable[index,] <- c("p1",0.02,place,0,0,1,0.1,0,1)
-                index <- index + 1
-                paramTable[index,] <- c("p2",0.005,place,0,0,1,0.1,0,1)
-                index <- index + 1
-                paramTable[index,] <- c("p3",0.001,place,0,0,1,0.1,0,1)
-                index <- index + 1
-                if(version >= 6){
-                    paramTable[index,] <- c("p4",0.02,place,0,0,1,0.1,0,1)
-                    index <- index + 1
-                    paramTable[index,] <- c("p5",0.005,place,0,0,1,0.1,0,1)
-                    index <- index + 1
-                    paramTable[index,] <- c("p6",0.001,place,0,0,1,0.1,0,1)
-                    index <- index + 1
-                    if(version >= 7){
-                        paramTable[index,] <- c("p7",0.02,place,0,0,1,0.1,0,1)
-                        index <- index + 1
-                        paramTable[index,] <- c("p8",0.005,place,0,0,1,0.1,0,1)
-                        index <- index + 1
-                    }
-                }
-            }
-        }
-    }
-    return(paramTable)
-}
-
-
-
-
-
-#' Scale step sizes
-#'
-#' Scales the given step size (between 0 and 1) based on the current acceptance rate to get closed to the desired acceptance rate
-#' @param step the current step size
-#' @param popt the desired acceptance rate
-#' @param pcur the current acceptance rate
-#' @return the scaled step size
-#' @export
-#' @useDynLib zikaProj
-scaletuning <- function(step, popt,pcur){
-    if(pcur ==1) pcur <- 0.99
-    if(pcur == 0) pcur <- 0.01
-    step = (step*qnorm(popt/2))/qnorm(pcur/2)
-    if(step > 1) step <- 1
-    return(step)
 }

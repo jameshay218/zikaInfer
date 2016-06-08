@@ -1,0 +1,398 @@
+
+
+
+
+#' Obsolete - the R implementation of the ODE model
+#'
+#' Set of ODEs for the zika SEIR model to be used by deSolve
+#' @param t the vector of times to be solved over
+#' @param y the compartment states
+#' @param pars the parameters used to solve the ODE model
+#' @return set of derivatives at the given time point
+#' @export
+#' @useDynLib zikaProj
+zika.ode <-function(t, y,pars){
+  L_M <- pars[1]
+  D_EM <- pars[2]
+   
+  L_H <- pars[3]
+  D_C <- pars[4]
+  D_F <- pars[5]
+  D_EH <- pars[6]
+  D_IH <- pars[7]
+  B_H <- L_H - D_C
+ 
+  b <- pars[8]
+  P_HM <- pars[9]
+  P_MH <- pars[10]
+  
+  t_seed <- pars[11]
+  I0 <- pars[12]
+  epsilon <- 0.0001
+  seed <- 0
+  offset <- 0
+  
+  if(t >= t_seed){
+      offset <- pars[13]
+      if(t < t_seed + epsilon){
+          seed <- I0
+      }
+  }
+  
+  S_M <- y[1]
+  E_M <- y[2]
+  I_M <- y[3]
+  S_C <- y[4]
+  S_A <- y[5]
+  S_F <- y[6]
+  
+  R_C <- y[13]
+  R_A <- y[14]
+  R_F <- y[15]
+  
+  N_H <- sum(y[4:15])
+  N_M <- sum(y[1:3])
+  
+  lambda_M <- b*(N_M/N_H)*P_HM*(I_C + I_A + I_F + offset + seed)/N_H
+  lambda_H <- b*(N_M/N_H)*P_MH*I_M/N_H
+  
+  dS_M <- N_M/L_M - S_M/L_M - lambda_M*S_M
+  dE_M <- lambda_M*S_M - E_M/L_M - E_M/D_EM
+  dI_M <- E_M/D_EM - I_M/L_M
+  
+  dS_C <- N_H/L_H - S_C/L_H - S_C/D_C - lambda_H*S_C
+  dS_A <- S_C/D_C - S_A/L_H - S_A/B_H + S_F/D_F - lambda_H*S_A
+  dS_F <- S_A/B_H - S_F/D_F - S_F/L_H - lambda_H*S_F
+  
+  dE_C <- lambda_H*S_C - E_C/L_H           - E_C/D_EH           - E_C/D_C
+  dE_A <- lambda_H*S_A - E_A/L_H - E_A/B_H - E_A/D_EH + E_F/D_F + E_C/D_C
+  dE_F <- lambda_H*S_F - E_F/L_H + E_A/B_H - E_F/D_EH - E_F/D_F
+  
+  dI_C <- E_C/D_EH - I_C/L_H - I_C/D_IH           - I_C/D_C
+  dI_A <- E_A/D_EH - I_A/L_H - I_A/D_IH - I_A/B_H + I_C/D_C + I_F/D_F
+  dI_F <- E_F/D_EH - I_F/L_H - I_F/D_IH + I_A/B_H           - I_F/D_F 
+  
+  dR_C <- I_C/D_IH - R_C/L_H - R_C/D_C
+  dR_A <- I_A/D_IH + R_C/D_C - R_A/L_H - R_A/B_H + R_F/D_F
+  dR_F <- I_F/D_IH + R_A/B_H - R_F/D_F - R_F/L_H
+  
+  dIf_A <- I_F/D_F
+  df_B <- S_F/D_F + E_F/D_F + R_F/D_F + I_F/D_F
+  dE <- E_C/D_EH + E_A/D_EH + E_F/D_EH
+  
+  return(list(c(dS_M,dE_M,dI_M,dS_C,dS_A,dS_F,dE_C,dE_A,dE_F,dI_C,dI_A,dI_F,dR_C,dR_A,dR_F,dIf_A,df_B,dE)))
+}
+
+
+test_SEIR <- function(t,y,pars){
+    L_M <- pars[1]
+    D_EM <- pars[2]
+    
+    L_H <- pars[3]
+    D_C <- pars[4]
+    D_F <- pars[5]
+    D_EH <- pars[6]
+    D_IH <- pars[7]
+    B_H <- L_H - D_C
+    
+    b <- pars[8]
+    P_HM <- pars[9]
+    P_MH <- pars[10]
+    
+    t_seed <- pars[11]
+    I0 <- pars[12]
+
+    S_M <- y[1]
+    E_M <- y[2]
+    I_M <- y[3]
+    S_H <- y[4]
+    E_H <- y[5]
+    I_H <- y[6]
+    R_H <- y[7]
+
+    N_H <- S_H + E_H + I_H + R_H
+    N_M <- S_M + E_M + I_M
+
+    lambda_M <- b*P_HM*(I_H)/N_H
+    lambda_H <- b*P_MH*I_M/N_H
+
+    dS_M <- -lambda_M*S_M - S_M/L_M + N_M/L_M
+    dE_M <- lambda_M*S_M - E_M/D_EM - E_M/L_M
+    dI_M <- E_M/D_EM - I_M/L_M
+
+    dS_H <- -lambda_H*S_H - S_H/L_H
+    dE_H <- lambda_H*S_H  - E_H/D_EH - E_H/L_H
+    dI_H <- E_H/D_EH - I_H/D_IH - I_H/L_H
+    dR_H <- I_H/D_IH - R_H/L_H
+
+    dDeaths <- S_M/L_M + E_M/L_M +  I_M/L_M
+    dBirths <- N_M/L_M
+    return(list(c(dS_M, dE_M,dI_M,dS_H,dE_H,dI_H,dR_H,dDeaths,dBirths)))
+    
+}
+
+
+#' Simulates head circumference data from an SEIR vector borne model
+#'
+#' Takes a list of necessary arguments to solve a system of ODEs that generates head circumferences of new born infants
+#' @param allPars A list of parameter vectors. First vector should be an array of time points over which to solve the SEIR model. Second vector should be the vector of starting conditions. Third vector should be all of the parameters.
+#' @return a matrix of simulated head circumferences over time.
+#' @export
+#' @useDynLib zikaProj
+zika.sim <- function(allPars,headMeasurements=TRUE,buckets=NULL){
+    ## Get length and time step for ODE solver
+    y <- solveModel(allPars)
+    y <- as.data.frame(y)
+    y0s <- allPars[[2]]
+    pars <- allPars[[3]]
+    
+    sampFreq <- pars["sampFreq"]
+    sampPropn <- pars["sampPropn"]
+    mu_I <- pars["mu_I"]
+    sd_I <- pars["sd_I"]
+    mu_N <- pars["mu_N"]
+    sd_N <- pars["sd_N"]
+    probMicro <- pars["probMicro"]
+    baselineProb <- pars["baselineProb"]
+    lifeExpectancy <- pars["L_H"]
+ 
+    daysPerYear <- nrow(y)/max(y$times)
+    birthsPerYear <- sum(y0s[4:6])/lifeExpectancy
+    birthsPerDay <- ceiling(birthsPerYear/daysPerYear)
+    if(headMeasurements){
+        if(!is.null(buckets)){
+            alphas_I<- calculate_alphas_buckets(as.matrix(unname(y[,c("times","I_F","S_F","E_F","R_F")])),probMicro,buckets)
+        }
+        else {
+            alphas_I<- calculate_alphas(as.matrix(unname(y[,c("I_F","S_F","E_F","R_F")])),probMicro,sampFreq)
+        }
+        alphas_N <- 1 - alphas_I
+    }
+    else {
+        if(!is.null(buckets)){
+            alphas_I <- calculate_alphas_prob_buckets(as.matrix(unname(y[,c("times","I_F","S_F","E_F","R_F")])),probMicro, baselineProb, buckets)
+        }
+        else {
+            alphas_I <- calculate_alphas_prob_sampfreq(as.matrix(unname(y[,c("I_F","S_F","E_F","R_F")])),probMicro, baselineProb, sampFreq)
+        }
+    }
+    N <- sampPropn*birthsPerDay*sampFreq
+    index <- 1
+    all <- NULL
+    while(index <= length(alphas_I)){
+        if(!is.null(buckets)) N <- sampPropn*(birthsPerYear*(buckets[index,"end"]-buckets[index,"start"]))
+        else N <- sampPropn*(birthsPerDay*sampFreq)
+
+        if(headMeasurements){
+            components <- sample(1:2,c(alphas_I[index],alphas_N[index]),size=N,replace=TRUE)
+            mus <- c(mu_I,mu_N)
+            sds <- c(sd_I,sd_N)
+            
+            distribution <- round(rnorm(n=N,mean=mus[components],sd=sds[components]),digits=1)
+            all[[index]] <- distribution
+        }
+        else all[[index]] <- rbind(ceiling(alphas_I[index]*N), ceiling(N-(alphas_I[index]*N)))
+        index <- index + 1
+    }
+    tmp <- as.matrix(rbind.fill(lapply(all,function(x) {as.data.frame(t(x))})))
+    if(!headMeasurements | !is.null(buckets)) colnames(tmp) <- c("microCeph","births")
+    return(tmp)
+}
+
+
+
+
+#' @export
+posterior_SA <- function(values, fixed_values, t_pars, names_fixed, names_unfixed, local_fixed, local_unfixed, startDays, endDays, buckets, microCeph, births, data_locals, peakTimes=NULL){
+    lik <- 0
+    places <- unique(data_locals)
+    places <- places[places != "all"]
+    
+    for(place in places){
+        indices <- data_locals == place | data_locals == "all"
+        indices_pars <- local_fixed== place | local_fixed== "all"
+        tmpParsFixed <- fixed_values[indices_pars]
+        names(tmpParsFixed) <- names_fixed[indices_pars]
+        
+
+        indices_pars_unfixed <- local_unfixed == place | local_unfixed == "all"
+
+        tmpParsUnfixed <- values[indices_pars_unfixed]
+
+        names(tmpParsUnfixed) <- names_unfixed[indices_pars_unfixed]
+
+        tmpPars <- c(tmpParsFixed,tmpParsUnfixed)
+        
+        tmpMicro <- microCeph[indices]
+        tmpBirths <- births[indices]
+        tmpStart <- startDays[indices]
+        tmpEnd <- endDays[indices]
+        tmpBuckets <- buckets[indices]
+
+        tmpY0s <- generate_y0s(as.numeric(tmpPars["N_H"]),as.numeric(tmpPars["density"]))
+            
+        
+        tmpIncDat <- tmpPriors <- tmpPeaks <- NULL
+             if(!is.null(peakTimes)){
+            tmpPeaks <- as.numeric(peakTimes[peakTimes[,"local"] == place,c("start","end")])
+            names(tmpPeaks) <- c("start","end")
+        }
+        lik <- lik + posterior_simple_buckets(t_pars, tmpY0s, tmpPars, tmpStart, tmpEnd, tmpBuckets, tmpMicro, tmpBirths, tmpIncDat, tmpPriors, tmpPeaks)
+    }
+    return(-lik)
+}
+
+
+#' Oh wow
+#'
+#' Given the time vector, initial conditions ODE parameters and a matrix of microcephaly data, calculates the posterior value for a given data set.
+#' @param ts time vector over which to solve the ODE model
+#' @param y0s initial conditions for the ODE model
+#' @param pars ODE parameters
+#' @param dat unnamed matrix over which to calculate likelihoods
+#' @return a single value for the posterior
+#' @export
+#' @useDynLib zikaProj
+posterior_apply <- function(place, t_pars, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals,incDat = NULL, allPriors = NULL, peakTimes=NULL){
+    indices <- data_locals == place | data_locals == "all"
+    indices_pars <- local == place | local == "all"
+    tmpMicro <- microCeph[indices]
+    tmpBirths <- births[indices]
+    tmpStart <- startDays[indices]
+    tmpEnd <- endDays[indices]
+    tmpBuckets <- buckets[indices]
+    tmpPars <- values[indices_pars]
+    names(tmpPars) <- names[indices_pars]
+    tmpY0s <- generate_y0s(as.numeric(tmpPars["N_H"]),as.numeric(tmpPars["density"]))
+
+    tmpIncDat <- tmpPriors <- tmpPeaks <- NULL
+    if(!is.null(incDat)) tmpIncDat <- incDat[incDat[,"local"] == place,]
+    if(!is.null(priors)) tmpPriors <- allPriors[allPriors[,"local"] == place,]
+    if(!is.null(peakTimes)){
+        tmpPeaks <- as.numeric(peakTimes[peakTimes[,"local"] == place,])
+        print(tmpPeaks)
+    }
+    
+    lik <- posterior_simple_buckets(t_pars, tmpY0s, tmpPars, tmpStart, tmpEnd, tmpBuckets, tmpMicro, tmpBirths, tmpIncDat, tmpPriors, tmpPeaks)
+    return(lik)
+}
+
+#' All model priors
+#'
+#' Takes the vector of model parameters and returns a single value for the log prior probability
+#' @param pars the vector of parameters
+#' @return a single log prior value
+#' @export
+#' @useDynLib zikaProj
+priors <- function(pars){
+    meanPrior <- dnorm(pars["mean"],15,5,1)
+    return(meanPrior)
+}
+
+
+
+#' Posterior function for complex ODE model
+#'
+#' Given the time vector, initial conditions and ODE parameters, calculates the posterior value for a given data set. Note that no priors are used here.
+#' @param ts time vector over which to solve the ODE model
+#' @param y0s initial conditions for the ODE model
+#' @param pars ODE parameters
+#' @param dat unnamed matrix over which to calculate likelihoods
+#' @param threshold optional paramter. If not null, should be the threshold for microcephaly diagnosis
+#' @param times optional parameter. If not null, then this should be a matrix of times over which data is recorded
+#' @return a single value for the posterior
+#' @export
+#' @useDynLib zikaProj
+posterior_complex <- function(t_pars, y0s, pars, dat, threshold=NULL, times=NULL){
+    y <- solveModel(t_pars,y0s,pars)
+    if(length(y) <= 1 && y=="Error") return(-Inf)
+    sampFreq <- pars["sampFreq"]
+    sampPropn <- pars["sampPropn"]
+    mu_I <- pars["mu_I"]
+    sd_I <- pars["sd_I"]
+    mu_N <- pars["mu_N"]
+    sd_N <- pars["sd_N"]
+    probMicro <- pars["probMicro"]
+    baselineProb <- pars["baselineProb"]
+
+    if(!is.null(threshold)){
+        if(!is.null(times)){
+            alphas <- calculate_alphas_buckets(
+                as.matrix(unname(y[,c("times","I_F","S_F","E_F","R_F")])),
+                probMicro,
+                times)
+            lik <- likelihood_threshold(
+                as.matrix(unname(dat[,c("microCeph","births")])),
+                unname(cbind(alphas,1-alphas)),
+                c(mu_I,mu_N),
+                c(sd_I,sd_N),
+                threshold)
+        } else {
+            alphas <- calculate_alphas(
+                as.matrix(unname(y[,c("I_F","S_F","E_F","R_F")])),
+                probMicro,
+                sampFreq)
+            lik <- likelihood(
+                as.matrix(unname(dat)),
+                unname(cbind(alphas,1-alphas)),
+                c(mu_I,mu_N),
+                c(sd_I,sd_N)
+            )
+        }
+    }
+    else{
+        if(!is.null(times)){
+            alphas <- calculate_alphas_prob_buckets(
+                as.matrix(unname(y[,c("times","I_F","S_F","E_F","R_F")])),
+                probMicro,
+                baselineProb,
+                times
+            )
+        } else {
+            alphas <- calculate_alphas_prob_sampfreq(
+                as.matrix(unname(y[,c("I_F","S_F","E_F","R_F")])),
+                probMicro,
+                baselineProb,
+                sampFreq)
+        }
+        lik <- likelihood_prob(
+            as.matrix(unname(dat[,c("microCeph","births")])),
+            alphas
+        )
+        
+    }
+    return(lik)
+}
+
+
+#' Posterior function for the simple SEIR model
+#'
+#' Given the time vector, initial conditions ODE parameters and a matrix of microcephaly data, calculates the posterior value for a given data set. Note that no priors are used here.
+#' @param ts time vector over which to solve the ODE model
+#' @param y0s initial conditions for the ODE model
+#' @param pars ODE parameters
+#' @param microCeph vector of microcephaly incidence for each bucket
+#' @param births vector of total briths for each bucket
+#' @return a single value for the posterior
+#' @export
+#' @useDynLib zikaProj
+posterior_simple <- function(t_pars, y0s, pars, microCeph, births){
+    y <- solveModelSimple(t_pars,y0s,pars)
+    if(length(y) <= 1 && y=="Error"){
+        print("Wow")
+        return(-Inf)
+    }
+    NH <- sum(y0s[c("S_H","E_H","I_H","R_H")])
+    b <- pars["b"]
+    pHM <- pars["p_HM"]
+    tstep <- pars["tstep"]
+    bp <- pars["baselineProb"]
+    shape <- pars["shape"]
+    rate <- pars["rate"]
+    scale <- pars["scale"]
+    
+    probs <- dgamma(0:39,shape,rate)*scale
+    probs[probs > 1] <- 1
+    lik <- likelihood_probM_all(microCeph,births,y[,"I_M"], probs, NH, b, pHM, bp, tstep)
+    return(lik)
+}
