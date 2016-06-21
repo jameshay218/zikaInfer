@@ -4,7 +4,7 @@
 \alias{incidence_likelihood}
 \title{Incidence likelihood}
 \usage{
-incidence_likelihood(perCapInc, dat)
+incidence_likelihood(perCapInc, inc, N_H)
 }
 \arguments{
 \item{perCapInc}{expected per capita incidence of Zika}

@@ -4,14 +4,14 @@
 \alias{generate_probM}
 \title{Time varying microcephaly risk}
 \usage{
-generate_probM(IM, probM, NH, b, pMH, bp, tstep)
+generate_probM(IM, NH, probM, b, pMH, bp, tstep)
 }
 \arguments{
 \item{IM}{a numeric vector of number of infected mosquitoes over time}
 
-\item{probM}{the time varying risk of developing microcephaly given infection over the course of gestation}
-
 \item{NH}{the constant human population size}
+
+\item{probM}{the time varying risk of developing microcephaly given infection over the course of gestation}
 
 \item{b}{the per vector per day bite rate}
 

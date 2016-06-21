@@ -12,9 +12,13 @@ generate_incidence_data(t_pars, paramTable, dataRange = c(0, t_pars["dur"]),
 
 \item{paramTable}{Table of all parameters needed to solve the SEIR model and microcephaly simulation for each unique state. See \code{\link{setupParTable}}}
 
+\item{dataRange}{a vector with lower and upper bounds on days for simulation data}
+
 \item{weeks}{Defaults to TRUE. If true. returns weekly microcephaly births rather than by month.}
 
 \item{pars}{a named vector with all of the necessary parameters to solve the ODE model. See \code{\link{setupParsODE}}}
+
+\item{amount}{of noise to add (rate for normal distribution)}
 }
 \value{
 a data frame of incidence data and corresponding times.

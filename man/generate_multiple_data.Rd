@@ -4,19 +4,21 @@
 \alias{generate_multiple_data}
 \title{Simulation multi-state microcephaly data}
 \usage{
-generate_multiple_data(t_pars, paramTable, allBirths, weeks = FALSE,
-  dataRange = c(0, t_pars["dur"]), version = 1, noise = NULL)
+generate_multiple_data(t_pars, paramTable, weeks = FALSE, dataRange = c(0,
+  t_pars["dur"]), noise = NULL)
 }
 \arguments{
 \item{t_pars}{vector of two components - the total run time in days and the time step for the ODE solver}
 
 \item{paramTable}{Table of all parameters needed to solve the SEIR model and microcephaly simulation for each unique state. See \code{\link{setupParTable}}}
 
-\item{allBirths}{number of actual births per month}
-
 \item{weeks}{Defaults to FALSE. If true. returns weekly microcephaly births rather than by month.}
 
+\item{dataRange}{a vector with lower and upper bounds on days for simulation data}
+
 \item{pars}{a named vector with all of the necessary parameters to solve the ODE model. See \code{\link{setupParsODE}}}
+
+\item{amount}{of noise to add (rate for normal distribution)}
 }
 \value{
 a data frame of microcephaly births, total births and corresponding times.
