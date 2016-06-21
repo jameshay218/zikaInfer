@@ -450,11 +450,12 @@ generate_multiple_data <- function(t_pars, paramTable,weeks=FALSE, dataRange=c(0
 #' @param pars a named vector with all of the necessary parameters to solve the ODE model. See \code{\link{setupParsODE}}
 #' @param weeks Defaults to TRUE. If true. returns weekly microcephaly births rather than by month.
 #' @param dataRange a vector with lower and upper bounds on days for simulation data
-#' @param amount of noise to add (rate for normal distribution)
+#' @param noise amount of noise to add (rate for normal distribution)
+#' @param peakTimeRange if not NULL, returns an additional data frame with a range around the actual incidence peak time
 #' @return a data frame of incidence data and corresponding times.
 #' @export
 #' @useDynLib zikaProj
-generate_incidence_data <- function(t_pars, paramTable, dataRange=c(0,t_pars["dur"]), weeks=TRUE, noise=NULL){
+generate_incidence_data <- function(t_pars, paramTable, dataRange=c(0,t_pars["dur"]), weeks=TRUE, noise=NULL, peakTimeRange=NULL){
     length <- t_pars["dur"]/365
     
     if(!weeks) buckets <- rep(getDaysPerMonth(),length)
@@ -463,7 +464,8 @@ generate_incidence_data <- function(t_pars, paramTable, dataRange=c(0,t_pars["du
     places <- unique(paramTable$local)
     places <- places[places!="all"]
     
-    overallDat <- NULL    
+    overallDat <- NULL
+    peakTimes <- NULL
     for(place in places){
         ## Get state specific and universal parameters out of param table
         pars <- paramTable$values[paramTable$local== "all" | paramTable$local==place]
@@ -471,9 +473,14 @@ generate_incidence_data <- function(t_pars, paramTable, dataRange=c(0,t_pars["du
         
         y0s <- generate_y0s(as.numeric(pars["N_H"]), as.numeric(pars["density"]))
         y <- solveModelSimple(t_pars, y0s, pars)
-        
-        peakTime <- y[which.max(y[,"I_H"]),"times"]
 
+        if(!is.null(peakTimeRange)){
+            peakTime <- y[which.max(y[,"I_H"]),"times"]
+            lowerPeakTime <- peakTime - peakTimeRange/2
+            upperPeakTime <- peakTime + peakTimeRange/2
+            tmpPeakTime <- data.frame("start"=lowerPeakTime,"end"=upperPeakTime,"local"=as.character(place), stringsAsFactors=FALSE,row.names=NULL)
+            peakTimes <- rbind(peakTimes, tmpPeakTime)
+        }
         
         N_H <- average_buckets(rowSums(y[,c("I_H","S_H","E_H","R_H")]), buckets)
         inc <- average_buckets(y[,"I_H"], buckets)
@@ -492,7 +499,8 @@ generate_incidence_data <- function(t_pars, paramTable, dataRange=c(0,t_pars["du
         
         overallDat <- rbind(overallDat,allDat)
     }
-    return(overallDat)
+    if(!is.null(peakTimeRange)) return(list("incDat"=overallDat,"peakTimes"=peakTimes))
+    else return(overallDat)
 }
 
 
@@ -591,7 +599,7 @@ createParTable <- function(version=1,realDat=NULL, saveFile=NULL){
     paramTable[paramTable[,"names"]=="mu_N",2:ncol(paramTable)] <- c(30,"all",0,60,0.1,1)
     paramTable[paramTable[,"names"]=="sd_N",2:ncol(paramTable)] <- c(2,"all",0,10,0.1,1)
     paramTable[paramTable[,"names"]=="probMicro",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,1)
-    paramTable[paramTable[,"names"]=="baselineProb",2:ncol(paramTable)] <- c(0.002,"all",0,1,0.1,0)
+    paramTable[paramTable[,"names"]=="baselineProb",2:ncol(paramTable)] <- c(0.0002,"all",0,1,0.1,0)
     paramTable[paramTable[,"names"]=="burnin",2:ncol(paramTable)] <- c(0,"all",0,1000,0.1,1)
     paramTable[paramTable[,"names"]=="epiStart",2:ncol(paramTable)] <- c(0,"all",0,700,0.1,1)
     paramTable[paramTable[,"names"]=="L_M",2:ncol(paramTable)] <- c(14,"all",0,100,0.1,1)

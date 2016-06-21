@@ -5,7 +5,7 @@
 \title{Simulation multi-state Zika incidence data}
 \usage{
 generate_incidence_data(t_pars, paramTable, dataRange = c(0, t_pars["dur"]),
-  weeks = TRUE, noise = NULL)
+  weeks = TRUE, noise = NULL, peakTimeRange = NULL)
 }
 \arguments{
 \item{t_pars}{vector of two components - the total run time in days and the time step for the ODE solver}
@@ -16,9 +16,11 @@ generate_incidence_data(t_pars, paramTable, dataRange = c(0, t_pars["dur"]),
 
 \item{weeks}{Defaults to TRUE. If true. returns weekly microcephaly births rather than by month.}
 
-\item{pars}{a named vector with all of the necessary parameters to solve the ODE model. See \code{\link{setupParsODE}}}
+\item{noise}{amount of noise to add (rate for normal distribution)}
 
-\item{amount}{of noise to add (rate for normal distribution)}
+\item{peakTimeRange}{if not NULL, returns an additional data frame with a range around the actual incidence peak time}
+
+\item{pars}{a named vector with all of the necessary parameters to solve the ODE model. See \code{\link{setupParsODE}}}
 }
 \value{
 a data frame of incidence data and corresponding times.
