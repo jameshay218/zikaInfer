@@ -337,3 +337,81 @@ mcmc_diagnostics <- function(mcmc_chains, filename, param_table,VERBOSE=FALSE){
     
     return(errors)
 }
+
+
+make_optim_r0 <- function(t_pars, pars, incDat){
+    function(x){
+        pars["density"] <- x[1]
+        pars["constSeed"] <- x[2]
+        pars["incPropn"] <- x[3]
+        pars["baselineInc"] <- x[4]
+        y0s <- generate_y0s(pars["N_H"],pars["density"])
+        
+        y <- solveModelSimple(t_pars,y0s,pars)
+        tmpY <- y[y[,"times"] >= min(incDat[,"startDay"]) & y[,"times"] <= max(incDat[,"endDay"]),]
+        N_H <- average_buckets(rowSums(tmpY[,c("I_H","S_H","E_H","R_H")]), incDat[,"buckets"])
+        inc <- average_buckets(tmpY[,"I_H"], incDat[,"buckets"])
+        perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
+        return(-incidence_likelihood(perCapInc, incDat[,"inc"],incDat[,"N_H"]))
+    }
+}
+
+make_optim_micro <- function(t_pars, pars, parNames,microDat){
+    function(x){
+        pars[names(pars) %in% parNames] <- x
+
+        y0s <- generate_y0s(pars["N_H"],pars["density"])
+        
+        y <- solveModelSimple(t_pars,y0s,pars)
+        probs <- generate_micro_curve(pars)
+        probM <- generate_probM(y[,"I_M"], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)*pars["propn"]
+        probM <- probM[which(y[,"times"] >= min(microDat$startDay) & y[,"times"] <= max(microDat$endDay))]
+        probM <- average_buckets(probM, microDat$buckets)
+        
+        return(-likelihood_probM(microDat$microCeph, microDat$births, probM))
+    }
+}
+
+optimise <- function(state, parTab, t_pars, incDat, testDat){
+    incPars <- c("density","constSeed","incPropn","baselineInc")
+    microcephPars <- c("baselineProb","mean","var","c","p1","p2","p3","p4","p5","p6","p7","p8")
+    checkLn <- NaN
+    tmpDat <- incDat[incDat$local == state,]
+    tmpTab <- parTab[parTab$local %in% c("all",state),]
+    tmpMicro <- testDat[testDat$local == state,]
+    indices <- parTab$local %in% c("all",state)
+    while(is.nan(checkLn) | is.infinite(checkLn)){
+        startPars <- generate_start_pars(tmpTab)
+        if(!is.null(incDat)){
+            lik_r0 <- make_optim_r0(t_pars, startPars, tmpDat)
+            opti1 <- optim(startPars[names(startPars) %in% incPars],lik_r0,control=list("maxit"=5000))
+            startPars[names(startPars) %in% incPars] <- opti1$par
+        }
+        lik_micro <- make_optim_micro(t_pars, startPars, startPars[names(startPars) %in% microcephPars], tmpMicro)
+        opti2 <- optim(startPars[names(startPars) %in% microcephPars], lik_micro, control=list("maxit"=5000))
+        startPars[names(startPars) %in% microcephPars] <- opti2$par
+        startPars <- bounds_check(startPars, parTab)
+        checkLn <- posterior(t_pars, startPars, parTab$names, parTab$local,testDat$startDay,testDat$endDay,testDat$buckets,testDat$microCeph,testDat$births,testDat$local,incDat)
+    }
+    tmpPars <- parTab$values
+    tmpPars[indices] <- startPars
+    names(tmpPars) <- parTab$names
+    return(tmpPars)
+}
+
+generate_start_pars <- function(parTab){
+    startPars <- parTab$values
+    names(startPars) <- parTab$names
+    for(i in which(parTab$fixed==0)){
+        startPars[i] <- runif(1,parTab[i,"lower_bounds"],parTab[i,"upper_bounds"])
+    }
+    return(startPars)
+}
+bounds_check <- function(x, parTab){
+    pars <- x
+    for(i in 1:length(x)){
+            if(x[i] < parTab[i,"lower_bounds"]) pars[i] <- parTab[i,"lower_bounds"]
+            if(x[i] > parTab[i,"upper_bounds"]) pars[i] <- parTab[i,"upper_bounds"]
+    }
+    return(pars)
+}
