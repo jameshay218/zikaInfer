@@ -2,7 +2,7 @@
 #' Posterior function for ODE model
 #'
 #' Given the time vector, initial conditions and ODE parameters, calculates the posterior value for a given data set. Note that no priors are used here. It seems like a lot of parameters, but these are basically the vectorised versions of the data frames provided by \code{\link{setupParTable}} and \code{\link{generate_microceph_dat}}
-#' @param ts time vector over which to solve the ODE model
+#' @param t_pars time vector over which to solve the ODE model
 #' @param values ODE parameters
 #' @param names names for the ODE parameters
 #' @param local names of all the states that are being considered
@@ -24,6 +24,7 @@ posterior <- function(t_pars, values, names, local, startDays, endDays, buckets,
     ##if(version==2) return(posterior_complex(t_pars, y0s, values, startDays, endDays, buckets, microCeph, births, threshold, times))
 
 }
+
 
 #' Posterior function for the simple SEIR model with bucketed data for a single state
 #'
@@ -53,25 +54,17 @@ posterior_simple_buckets <- function(t_pars, y0s, pars, startDays, endDays, buck
         tmpY <- y[y[,"times"] >= min(incDat[,"startDay"]) & y[,"times"] <= max(incDat[,"endDay"]),]
         N_H <- average_buckets(rowSums(tmpY[,c("I_H","S_H","E_H","R_H")]), incDat[,"buckets"])
         inc <- average_buckets(tmpY[,"I_H"], incDat[,"buckets"])
-        
-        perCapInc <- 1-(1-(inc/N_H))*(1-pars["baselineInc"])
-        lik <- lik + incidence_likelihood(perCapInc*pars["incPropn"], incDat[,c("inc","N_H")])
+        perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
+        lik <- lik + incidence_likelihood(perCapInc, incDat[,"inc"],incDat[,"N_H"])
     }
 
     if(length(y) <= 1 && y=="Error") return(-Inf)
     
-    NH <- sum(y0s[c("S_H","E_H","I_H","R_H")])
-    b <- pars["b"]
-    pMH <- pars["p_MH"]
-    tstep <- pars["tstep"]
-    bp <- pars["baselineProb"]
-    scale <- pars["scale"]
-
     probs <- generate_micro_curve(pars)
-    probM <- generate_probM(y[,"I_M"],probs, NH, b, pMH, bp, 1)
+    probM <- generate_probM(y[,"I_M"], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)*pars["propn"]
     probM <- probM[which(y[,"times"] >= min(startDays) & y[,"times"] <= max(endDays))]
-    probM <- average_buckets(probM, buckets)*pars["propn"]
-
+    probM <- average_buckets(probM, buckets)
+   
     lik <- lik + likelihood_probM(microCeph, births, probM)
 
     if(!is.null(allPriors)) lik <- lik + allPriors(pars)
@@ -137,7 +130,7 @@ posterior_complex_buckets <- function(t_pars, values, names, local, startDays, e
 #' @return a single log likelihood
 #' @export
 #' @useDynLib zikaProj
-incidence_likelihood <- function(perCapInc, dat){
-    return(likelihood_probM(dat[,1],dat[,2],perCapInc))
-    #return(sum(dbinom(dat[,1],dat[,2],perCapInc,log=1)))    
+incidence_likelihood <- function(perCapInc, inc, N_H){
+   #return(likelihood_probM(inc,N_H,perCapInc))
+    return(sum(dbinom(inc,N_H,perCapInc,log=1)))
 }

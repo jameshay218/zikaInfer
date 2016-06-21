@@ -2,7 +2,7 @@
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
 
-static double parms[11];
+static double parms[12];
 #define L_M parms[0]
 #define D_EM parms[1]
 #define L_H parms[2]
@@ -14,11 +14,12 @@ static double parms[11];
 #define P_HM parms[8]
 #define P_MH parms[9]
 #define seeding parms[10]
+#define t0 parms[11]
 
 /* initializer */
 void initmod(void (* odeparms)(int *, double *))
 {
-  int N=11;
+  int N=12;
   odeparms(&N, parms);
 }
 /* Derivatives and 1 output variable */

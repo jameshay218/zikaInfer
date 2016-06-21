@@ -92,8 +92,8 @@ generate_probM_aux <- function(riskI, probM, bp) {
 #' @export
 #' @useDynLib zikaProj
 #' @seealso \link{\code{generate_probM_aux}}
-generate_probM <- function(IM, probM, NH, b, pMH, bp, tstep) {
-    .Call('zikaProj_generate_probM', PACKAGE = 'zikaProj', IM, probM, NH, b, pMH, bp, tstep)
+generate_probM <- function(IM, NH, probM, b, pMH, bp, tstep) {
+    .Call('zikaProj_generate_probM', PACKAGE = 'zikaProj', IM, NH, probM, b, pMH, bp, tstep)
 }
 
 #' Likelihood function for time-varying microcephaly

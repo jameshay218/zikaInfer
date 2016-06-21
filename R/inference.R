@@ -84,7 +84,6 @@ run_metropolis_MCMC <- function(data,
                                 allPriors=NULL,
                                 ...
                                 ){
-
     iterations <- mcmcPars["iterations"]
     popt <- mcmcPars["popt"]
     opt_freq<- mcmcPars["opt_freq"]
@@ -104,7 +103,6 @@ run_metropolis_MCMC <- function(data,
     upper_bounds <- param_table$upper_bounds
     steps <- param_table$steps
     fixed <- param_table$fixed
-
     names(current_params) <- names(start_values) <- par_names
 
     ## Extract data into vectors
@@ -121,7 +119,6 @@ run_metropolis_MCMC <- function(data,
     ## Setup MCMC chain file with correct column names
     mcmc_chain_file <- paste(filename,"_chain.csv",sep="")
     chain_colnames <- c("sampno",param_table$names,"lnlike")
-    
     ## Arrays to store acceptance rates
     if(is.null(mvrPars)) tempaccepted <- tempiter <- integer(all_param_length)
     else {
@@ -139,29 +136,30 @@ run_metropolis_MCMC <- function(data,
     chain_index <- 1
     ## Create empty chain to store "save_block" iterations at a time
     save_chain <- empty_save_chain <- matrix(nrow=save_block,ncol=all_param_length+2)
-    
     probab <- posterior(t_pars, current_params, par_names, par_labels, startDays, endDays, buckets, microCeph, births, data_locals, incDat, peakTimes, allPriors, ...)
     ## Set up initial csv file
     tmp_table <- array(dim=c(1,length(chain_colnames)))
     tmp_table <- as.data.frame(tmp_table)
     tmp_table[1,] <- c(1,as.numeric(current_params),probab)
     colnames(tmp_table) <- chain_colnames
-    
     ## Write starting conditions to file
     write.table(tmp_table,file=mcmc_chain_file,row.names=FALSE,col.names=TRUE,sep=",",append=FALSE)
 
     no_recorded <- 1
     sampno <- 2
-    
+    index2 <- 1
     ## Go through chain
     for (i in 1:(iterations+adaptive_period+burnin)){
         if(is.null(mvrPars)) {
             ## For each parameter (Gibbs)
-            j <- sample(non_fixed_params,1)
-            proposal <- proposalfunction(current_params, lower_bounds, upper_bounds, steps,j)
+            proposal <- current_params
+            j <- non_fixed_params[index2]
+            index2 <- index2 + 1
+            if(index2 > length(non_fixed_params)) index2 <- 1
+            proposal <- proposalfunction(proposal, lower_bounds, upper_bounds, steps,j)
         } else proposal <- mvr_proposal(current_params, non_fixed_params, scaledCovMat)
         names(proposal) <- names(current_params)
-
+        
         ## Propose new parameters and calculate posterior
         if(!any(proposal[non_fixed_params] < lower_bounds[non_fixed_params] | proposal[non_fixed_params] > upper_bounds[non_fixed_params])){
             newprobab <- posterior(t_pars, proposal, par_names, par_labels, startDays, endDays, buckets, microCeph, births, data_locals, incDat, peakTimes, allPriors, ...)

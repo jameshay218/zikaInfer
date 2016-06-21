@@ -140,7 +140,7 @@ NumericVector generate_probM_aux(NumericVector riskI, NumericVector probM, doubl
 //' @useDynLib zikaProj
 //' @seealso \link{\code{generate_probM_aux}}
 //[[Rcpp::export]]
-NumericVector generate_probM(NumericVector IM, NumericVector probM, double NH, double b, double pMH, double bp, double tstep){
+NumericVector generate_probM(NumericVector IM, double NH, NumericVector probM, double b, double pMH, double bp, double tstep){
   NumericVector foi = generate_foi(IM, NH, b, pMH, tstep);
   NumericVector riskS = generate_riskS(foi, tstep);
   NumericVector riskI = generate_riskI(foi, riskS, tstep);
@@ -165,7 +165,6 @@ double likelihood_probM(NumericVector microBirths, NumericVector allBirths, Nume
   }
   return(lnlik);
 }
-
 
 
 //' Averages a vector based on bucket sizes

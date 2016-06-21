@@ -174,6 +174,7 @@ plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=
     dat <- allDat$data
 
     xlim <- c(min(dat[,"startDay"]),max(dat[,"endDay"]))
+    xlim <- c(0,1500)
 
     quantiles <- unique(microBounds[,"quantile"])
     botM <- microBounds[microBounds[,"quantile"]==quantiles[1],c("time","micro")]
@@ -186,7 +187,8 @@ plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=
 
     xlabs <- generate_x_labels(xlim[1],xlim[2])
     myPlot <- microceph_plot(dat,microBounds,bestMicro,polygonM,local,xlim,ylimM,xlabs)
-    incPlot <- inc_plot(incBounds,bestInc,polygonI,ylimI,incDat)
+    incPlot <- inc_plot(incBounds,bestInc,polygonI,ylimI,xlim,incDat)
+
     if(!ylabel){
         myPlot <- myPlot + ylab("") + theme(plot.margin=unit(c(0,0.4,-0.2,-0.3),"cm"))
         incPlot <- incPlot + ylab("") + theme(plot.margin=unit(c(0,0.4,-0.2,-0.3),"cm"))
@@ -224,12 +226,13 @@ microceph_plot <- function(dat, microBounds, bestMicro, polygonM, local, xlim, y
     return(myPlot)
 }
 
-inc_plot <- function(incBounds, bestInc, polygonI, ylimI,incDat=NULL){
+inc_plot <- function(incBounds, bestInc, polygonI, ylimI,xlim, incDat=NULL){
     incPlot <- ggplot() +
         geom_line(dat=incBounds,aes(y=inc,x=time,group=quantile),linetype=2,col="red",size=0.5,alpha=0.5) +
         geom_line(dat=bestInc,aes(y=I_H,x=times),col="red",lwd=0.5)+
         geom_polygon(data=polygonI,aes(x=x,y=y),alpha=0.2,fill="red")+
         scale_y_continuous(limits=c(0,ylimI))+
+        scale_x_continuous(limits=xlim)+
         ylab("\nPer capita incidence (red)")+
         xlab("")+
         theme(
@@ -244,7 +247,7 @@ inc_plot <- function(incBounds, bestInc, polygonI, ylimI,incDat=NULL){
             
         )
     if(!is.null(incDat)){
-        incDat$meanDay <- rowMeans(cbind(incDat[,"startDay"],incDat[,"endDay"]))
+        incDat$meanDay <-rowMeans(incDat[,c("startDay","endDay")])
         incDat$perCapInc <- incDat[,"inc"]/incDat[,"N_H"]
         incPlot <- incPlot + geom_point(dat=incDat,aes(x=meanDay,y=perCapInc),col="black",size=1, shape=3)
     }
@@ -351,19 +354,21 @@ plot_setup_data_auxiliary <- function(pars, dat, parTab, t_pars, local){
     ## Generate actual incidence data for these parameters
     y0s <- generate_y0s(pars["N_H"],pars["density"])
     y <- solveModelSimple(t_pars, y0s, pars)
-   
+
     ## Generate predicted microcephaly incidence for these parameters - need to restrict to predictions within the data range
     probs <- generate_micro_curve(pars)
-    probM <- generate_probM(y[,"I_M"],probs, pars["N_H"], pars["b"], pars["p_MH"], pars["baselineProb"], 1)
+    probM <- generate_probM(y[,"I_M"], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)
     probM <- probM[which(y[,"times"] >= min(dat[,"startDay"]) & y[,"times"] <= max(dat[,"endDay"]))]
+
     probM <- average_buckets(probM, dat[,"buckets"])
 
     predicted <- probM*dat[,"births"]*pars["propn"]
     predicted <- data.frame(day=dat[,"meanDay"],number=predicted)
     
-    y[,"I_H"] <- pars["incPropn"]*y[,"I_H"]/rowSums(y[,c("I_H","E_H","S_H","R_H")])
+    y[,"I_H"] <- y[,"I_H"]/rowSums(y[,c("I_H","E_H","S_H","R_H")])
     y[,"I_H"] <- 1- (1-(y[,"I_H"]))*(1-pars["baselineInc"])
-    y <- as.data.frame(y)
+    y[,"I_H"] <- y[,"I_H"]*pars["incPropn"]
+    y <- as.data.frame(y[,c("times","I_H")])
     y$times <- as.integer(y$times)
     
     return(list("micro"=predicted,"inc"=y))

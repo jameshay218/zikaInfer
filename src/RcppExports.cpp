@@ -85,19 +85,19 @@ BEGIN_RCPP
 END_RCPP
 }
 // generate_probM
-NumericVector generate_probM(NumericVector IM, NumericVector probM, double NH, double b, double pMH, double bp, double tstep);
-RcppExport SEXP zikaProj_generate_probM(SEXP IMSEXP, SEXP probMSEXP, SEXP NHSEXP, SEXP bSEXP, SEXP pMHSEXP, SEXP bpSEXP, SEXP tstepSEXP) {
+NumericVector generate_probM(NumericVector IM, double NH, NumericVector probM, double b, double pMH, double bp, double tstep);
+RcppExport SEXP zikaProj_generate_probM(SEXP IMSEXP, SEXP NHSEXP, SEXP probMSEXP, SEXP bSEXP, SEXP pMHSEXP, SEXP bpSEXP, SEXP tstepSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< NumericVector >::type IM(IMSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type probM(probMSEXP);
     Rcpp::traits::input_parameter< double >::type NH(NHSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type probM(probMSEXP);
     Rcpp::traits::input_parameter< double >::type b(bSEXP);
     Rcpp::traits::input_parameter< double >::type pMH(pMHSEXP);
     Rcpp::traits::input_parameter< double >::type bp(bpSEXP);
     Rcpp::traits::input_parameter< double >::type tstep(tstepSEXP);
-    __result = Rcpp::wrap(generate_probM(IM, probM, NH, b, pMH, bp, tstep));
+    __result = Rcpp::wrap(generate_probM(IM, NH, probM, b, pMH, bp, tstep));
     return __result;
 END_RCPP
 }

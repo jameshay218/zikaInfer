@@ -111,11 +111,13 @@ generate_micro_curve <- function(pars){
 
 #' Microcephaly risk curve under gamma distribution
 microceph_v1 <- function(pars){
-    gammaMean <- pars["mean"]
-    gammaVar <- pars["var"]
-    rate <- gammaMean/gammaVar
-    shape <- gammaMean*rate
-    probs <- dgamma(0:39,shape,rate)*pars["scale"]
+    mean <- pars["mean"]
+    var <- pars["var"]
+
+    scale <- var/mean
+    shape <- mean/scale
+    
+    probs <- dgamma(0:39,shape=shape,scale=scale)*pars["c"]
     probs[probs > 1] <- 1
     probs <- rep(probs, each=pars["tstep"])
     return(probs)
@@ -159,20 +161,28 @@ solveModelSimple <- function(t_pars, y0s, pars){
     ## Package ODE pars
     pars <- pars[c("L_M","L_H","D_EM","D_EH","D_IH","b","p_HM","p_MH","constSeed")]
     ## Temporarily remove initial seeding  for burn in period
+    ts <- seq(0, time_length,by=time_by)
+       
+    y <- ode(y0s, ts, func="simpleSEIR",parms=pars,dllname="zikaProj",initfunc="initmodSEIR",nout=0)
+    colnames(y) <- c("times","S_M","E_M","I_M","S_H","E_H","I_H","R_H")
+    return(y)
+
+    
     I0 <- y0s["I_H"]
     y0s["I_H"] <- 0
     y0s["S_H"] <- y0s["S_H"] + I0
     y1 <- NULL
+    
     ## Create time series for ode solver
-    if(burnin+epiStart > time_by){
+    if((burnin+epiStart) > time_by){
         ts1 <- seq(0, burnin+epiStart,by=time_by)
         y1 <- ode(y0s,ts1,func="simpleSEIR",parms=pars,dllname="zikaProj",initfunc="initmodSEIR",nout=0)
         if(is.null(y1) || nrow(y1) < 1) return("Error - ODE solver returned NULL")
         
         colnames(y1) <- c("times","S_M","E_M","I_M","S_H","E_H","I_H","R_H")
         y0s2 <- y1[nrow(y1),2:ncol(y1)]
-        y1[,"times"] <- y1[,"times"] - burnin
-        y1 <- y1[y1[,"times"] >= 0,]
+        y1[,"times"] <- y1[,"times"] - (burnin+1)
+        y1 <- y1[y1[,"times"] >=0 ,]
     } else {
         y0s2 <- y0s
     }
@@ -187,6 +197,7 @@ solveModelSimple <- function(t_pars, y0s, pars){
     if(is.null(y)) return("Error - ODE solver returned NULL")
     if(epiStart+burnin > time_by & !is.null(y1)) y <- rbind(y1,y)
     colnames(y) <- c("times","S_M","E_M","I_M","S_H","E_H","I_H","R_H")
+    print(head(y))
     return(y)
 }
 
@@ -247,13 +258,13 @@ generate_microceph_dat <- function(t_pars, y0s, pars, births, weeks=FALSE){
 
     if(!weeks) buckets <- rep(getDaysPerMonth(),length)
     else buckets <- rep(7, 365/7 * length)
-    N_H <- sum(y0s[c("S_H","E_H","I_H","R_H")])
+    #N_H <- sum(y0s[c("S_H","E_H","I_H","R_H")])
     y <- solveModelSimple(t_pars,y0s,pars)
     ## Generate weekly microcephaly probabilities
     probs <- generate_micro_curve(pars)
-    probM <- generate_probM(y[,"I_M"],probs, N_H, pars["b"], pars["p_MH"], pars["baselineProb"], 1)
+    probM <- generate_probM(y[,"I_M"], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)
     probM <- average_buckets(probM, buckets)
-    microDat <- as.integer(probM*births*pars["propn"])
+    microDat <- round(probM*births*pars["propn"])
     allDat <- cbind("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"microCeph"=microDat,"births"=rep(births,length(buckets)))
     return(allDat)
 }
@@ -277,10 +288,9 @@ setupParsODE <- function(version=1){
     b=100/365
     p_MH=0.5
     p_HM=0.5
-    offset <- 0
 
-    if(version <= 4) pars <- c("L_M"=L_M,"D_EM"=D_EM,"D_EH"=D_EH,"D_IH"=D_IH,"b"=b,"p_HM"=p_HM,"p_MH"=p_MH,"constSeed"=offset)
-    else pars <- c("L_M"=L_M,"L_H"=L,"D_EM"=D_EM,"D_EH"=D_EH,"D_IH"=D_IH,"b"=b,"p_HM"=p_HM,"p_MH"=p_MH,"constSeed"=offset)
+    if(version <= 4) pars <- c("L_M"=L_M,"D_EM"=D_EM,"D_EH"=D_EH,"D_IH"=D_IH,"b"=b,"p_HM"=p_HM,"p_MH"=p_MH)
+    else pars <- c("L_M"=L_M,"L_H"=L,"D_EM"=D_EM,"D_EH"=D_EH,"D_IH"=D_IH,"b"=b,"p_HM"=p_HM,"p_MH"=p_MH)
     return(pars)
 }
 
@@ -303,10 +313,10 @@ setupParsLong <- function(version = 1){
     probMicro <- 1
     baseline <- 0.00002
     burnin <- 3
-    epiStart <- 5
-    shape <- 12
-    rate <- 10
-    scale <- 1
+    epiStart <- 0
+    mean <- 17
+    var <- 3
+    c <- 0.15
     tstep <- 7
     p1 <- 0.1
     p2 <- 0.1
@@ -318,7 +328,7 @@ setupParsLong <- function(version = 1){
     p8 <- 0.1
     
     if(version ==1){
-        pars <- c("burnin"=burnin,"baselineProb"=baseline,pars,"mean"=shape,"var"=rate,"scale"=scale, "tstep"=tstep)
+        pars <- c("burnin"=burnin,"baselineProb"=baseline,pars,"mean"=mean,"var"=var,"c"=c, "tstep"=tstep)
     } else if(version ==2){
         pars <- c("burnin"=burnin,"baselineProb"=baseline,pars,"tstep"=tstep, "p1"=p1, "p2"=p2, "p3"=p3)
     } else if(version==3){
@@ -326,7 +336,7 @@ setupParsLong <- function(version = 1){
     } else if(version==4){
         pars <- c("burnin"=burnin,"baselineProb"=baseline,pars,"tstep"=tstep, "p1"=p1, "p2"=p2, "p3"=p3, "p4"=p4, "p5"=p5, "p6"=p6, "p7"=p7, "p8"=p8)  
     } else {
-        pars <- c("sampFreq"=sampFreq,"sampPropn"=sampPropn,"mu_I"=mu_I,"sd_I"=sd_I,"mu_N"=mu_N,"sd_N"=sd_N,"probMicro"=probMicro,"baselineProb"=baseline,"burnin"=burnin,"epiStart"=epiStart,pars,"mean"=shape,"var"=rate,"scale"=scale,"tstep"=tstep)
+        pars <- c("sampFreq"=sampFreq,"sampPropn"=sampPropn,"mu_I"=mu_I,"sd_I"=sd_I,"mu_N"=mu_N,"sd_N"=sd_N,"probMicro"=probMicro,"baselineProb"=baseline,"burnin"=burnin,"epiStart"=epiStart,pars,"mean"=mean,"var"=var,"c"=c,"tstep"=tstep)
     }
     return(pars)   
 }
@@ -355,20 +365,25 @@ setupListPars <- function(duration=2*365, version=1){
 #' @param pars a named vector with all of the necessary parameters to solve the ODE model. See \code{\link{setupParsODE}}
 #' @param weeks Defaults to FALSE. If true. returns weekly microcephaly births rather than by month.
 #' @param dataRange a vector with lower and upper bounds on days for simulation data
-#' @param amount of noise to add (var for normal distribution)
+#' @param amount of noise to add (rate for normal distribution)
 #' @return a data frame of microcephaly births, total births and corresponding times.
 #' @export
 #' @useDynLib zikaProj
 generate_multiple_data <- function(t_pars, paramTable,weeks=FALSE, dataRange=c(0,t_pars["dur"]), noise=NULL){
+    ## Get duration in years
     length <- t_pars["dur"]/365
 
+    ## Create vector of how big the buckets should be - weeks or months
     if(!weeks) buckets <- rep(getDaysPerMonth(),length)
     else buckets <- rep(7, 365/7 * length)
-    
+
+    ## Get all unique places that data should be created for
     places <- unique(paramTable$local)
     places <- places[places!="all"]
    
-    overallDat <- NULL    
+    overallDat <- NULL
+    incDat <- NULL
+    ## For each place
     for(place in places){
         ## Get state specific and universal parameters out of param table
         pars <- paramTable$values[paramTable$local== "all" | paramTable$local==place]
@@ -376,30 +391,55 @@ generate_multiple_data <- function(t_pars, paramTable,weeks=FALSE, dataRange=c(0
 
         ## Generate microcephaly curve
         probs <- generate_micro_curve(pars)
-        
-        y0s <- generate_y0s(as.numeric(pars["N_H"]), as.numeric(pars["density"]))
+
+        ## Generate starting population sizes
+        y0s <- generate_y0s(pars["N_H"], pars["density"])
+        ## Solve the ODE model
         y <- solveModelSimple(t_pars, y0s, pars)
+
+        ## Generate simulated incidence data
+        inc <- average_buckets(y[,"I_H"],buckets)
+        N_H <- average_buckets(rowSums(y[,c("I_H","S_H","E_H","R_H")]),buckets)
+        perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
+        datInc <- perCapInc*N_H
         
-        peakTime <- y[which.max(y[,"I_H"]),"times"]
-        
-        probM <- generate_probM(y[,"I_M"],probs, pars["N_H"], pars["b"], pars["p_MH"], pars["baselineProb"], 1)
+        ## Generate simulated microcephaly data using solved ODE model and pregnancy risk curve
+        probM <- generate_probM(y[,"I_M"], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)
         probM <- average_buckets(probM, buckets)
-        births <- as.integer(pars["N_H"]*(1/(pars["L_H"]/365)/12))
+        ## Total number of births each observation point is from populatoin size
+        
+        yearBirths <- pars["N_H"]/(pars["L_H"]/365)
+        
+        if(weeks) births <- yearBirths/52
+        else births <- yearBirths/12
+        
+        births <- round(births)
+
+        ## Certain proportion of all births are microcephaly, but only a given proportion of those are observed
         microDat <- probM*births*pars["propn"]
         
         if(!is.null(noise)){
             microDat <- microDat*rnorm(length(microDat),1,noise)
             microDat[microDat < 0] <- 0
         }
-        
-        microDat <- as.integer(microDat)
-        
+
+        ## Needs to be to the nearest integer
+        microDat <- round(microDat)
+
+        ## Add in times etc
         allDat <- data.frame("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"microCeph"=microDat,"births"=rep(births,length(buckets)),"local"=place)
-        allDat <- allDat[allDat[,"startDay"] >= dataRange[1] & allDat[,"endDay"] <= dataRange[2],]
+        incDat1 <- data.frame("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"inc"=datInc,"N_H"=N_H,"local"=place)
+
         
+        ## Only return data in the desired range
+        allDat <- allDat[allDat[,"startDay"] >= dataRange[1] & allDat[,"endDay"] <= dataRange[2],]
+        incDat <- incDat[incDat[,"startDay"] >= dataRange[1] & incDat[,"endDay"] <= dataRange[2],]
+                         
+        incDat <- rbind(incDat, incDat1)
         overallDat <- rbind(overallDat,allDat)
     }
-    return(overallDat)    
+    return(overallDat)
+#    return(list("micro"=overallDat,"inc"=incDat))    
 }
 
 #' Simulation multi-state Zika incidence data
@@ -410,7 +450,7 @@ generate_multiple_data <- function(t_pars, paramTable,weeks=FALSE, dataRange=c(0
 #' @param pars a named vector with all of the necessary parameters to solve the ODE model. See \code{\link{setupParsODE}}
 #' @param weeks Defaults to TRUE. If true. returns weekly microcephaly births rather than by month.
 #' @param dataRange a vector with lower and upper bounds on days for simulation data
-#' @param amount of noise to add (var for normal distribution)
+#' @param amount of noise to add (rate for normal distribution)
 #' @return a data frame of incidence data and corresponding times.
 #' @export
 #' @useDynLib zikaProj
@@ -447,7 +487,7 @@ generate_incidence_data <- function(t_pars, paramTable, dataRange=c(0,t_pars["du
             inc[inc < 0] <- 0
         }
         
-        allDat <- data.frame("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"inc"=as.integer(inc),"N_H"=as.integer(N_H),"local"=place)
+        allDat <- data.frame("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"inc"=round(inc),"N_H"=round(N_H),"local"=place)
         allDat <- allDat[allDat[,"startDay"] >= dataRange[1] & allDat[,"endDay"] <= dataRange[2],]
         
         overallDat <- rbind(overallDat,allDat)
@@ -536,7 +576,7 @@ solveModelComplex <- function(t_pars,y0s, pars){
 #' @export
 #' @useDynLib zikaProj
 createParTable <- function(version=1,realDat=NULL, saveFile=NULL){
-    names <- c("sampFreq","sampPropn","mu_I","sd_I","mu_N","sd_N","probMicro","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","p_HM","p_MH","constSeed","mean","var","scale","tstep","p1","p2","p3","p4","p5","p6","p7","p8")    
+    names <- c("sampFreq","sampPropn","mu_I","sd_I","mu_N","sd_N","probMicro","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","p_HM","p_MH","constSeed","mean","var","c","tstep","p1","p2","p3","p4","p5","p6","p7","p8")    
     paramTable <- matrix(0, ncol=7, nrow=length(names))
     paramTable <- as.data.frame(paramTable)
     colnames(paramTable) <- c("names", "values","local","lower_bounds","upper_bounds","steps","fixed")
@@ -553,7 +593,7 @@ createParTable <- function(version=1,realDat=NULL, saveFile=NULL){
     paramTable[paramTable[,"names"]=="probMicro",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,1)
     paramTable[paramTable[,"names"]=="baselineProb",2:ncol(paramTable)] <- c(0.002,"all",0,1,0.1,0)
     paramTable[paramTable[,"names"]=="burnin",2:ncol(paramTable)] <- c(0,"all",0,1000,0.1,1)
-    paramTable[paramTable[,"names"]=="epiStart",2:ncol(paramTable)] <- c(0,"all",0,700,0.1,0)
+    paramTable[paramTable[,"names"]=="epiStart",2:ncol(paramTable)] <- c(0,"all",0,700,0.1,1)
     paramTable[paramTable[,"names"]=="L_M",2:ncol(paramTable)] <- c(14,"all",0,100,0.1,1)
     paramTable[paramTable[,"names"]=="D_EM",2:ncol(paramTable)] <- c(10.5,"all",0,100,0.1,1)
     paramTable[paramTable[,"names"]=="L_H",2:ncol(paramTable)] <- c(365*70,"all",0,200*365,0.1,1)
@@ -565,9 +605,9 @@ createParTable <- function(version=1,realDat=NULL, saveFile=NULL){
     paramTable[paramTable[,"names"]=="p_HM",2:ncol(paramTable)] <- c(0.5,"all",0,1,0.1,1)
     paramTable[paramTable[,"names"]=="p_MH",2:ncol(paramTable)] <- c(0.5,"all",0,1,0.1,1)
     paramTable[paramTable[,"names"]=="constSeed",2:ncol(paramTable)] <- c(0,"all",0,100,0.1,1)
-    paramTable[paramTable[,"names"]=="mean",2:ncol(paramTable)] <- c(17,"all",0,100,0.1,0)
-    paramTable[paramTable[,"names"]=="var",2:ncol(paramTable)] <- c(10,"all",0,100,0.1,0)
-    paramTable[paramTable[,"names"]=="scale",2:ncol(paramTable)] <- c(1,"all",0,100,0.1,0)
+    paramTable[paramTable[,"names"]=="mean",2:ncol(paramTable)] <- c(5,"all",0,100,0.1,0)
+    paramTable[paramTable[,"names"]=="var",2:ncol(paramTable)] <- c(3,"all",0,100,0.1,0)
+    paramTable[paramTable[,"names"]=="c",2:ncol(paramTable)] <- c(1,"all",0,100,0.1,0)
     paramTable[paramTable[,"names"]=="tstep",2:ncol(paramTable)] <- c(7,"all",0,100,0.1,1)
     paramTable[paramTable[,"names"]=="p1",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0)
     paramTable[paramTable[,"names"]=="p2",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0)
@@ -593,7 +633,7 @@ createParTable <- function(version=1,realDat=NULL, saveFile=NULL){
 #' @useDynLib zikaProj
 createStateParTable <- function(stateDat, saveFile = NULL){
     places <- as.character(unique(stateDat$local))
-    numberPars <- 18
+    numberPars <- 19
     paramTable <- matrix(0, ncol=7, nrow=numberPars*length(places))
     paramTable <- as.data.frame(paramTable)
     colnames(paramTable) <- c("names", "values","local", "lower_bounds","upper_bounds","steps","fixed")
@@ -607,19 +647,21 @@ createStateParTable <- function(stateDat, saveFile = NULL){
         index <- index + 1
         paramTable[index,] <- c("density",3,place,0,100,0.1,0)
         index <- index + 1
-        paramTable[index,] <- c("epiStart",250,place,0,730,0.1,0)
+        paramTable[index,] <- c("epiStart",0,place,0,2000,0.1,1)
         index <- index + 1
         paramTable[index,] <- c("propn",1,place,0,1,0.1,1)
         index <- index + 1
-        paramTable[index,] <- c("mean",17,place,0,40,0.1,0)
+        paramTable[index,] <- c("constSeed",400,place,0,2000,0.1,0)
         index <- index + 1
-        paramTable[index,] <- c("var", 20, place, 0,100,0.1,0)
+        paramTable[index,] <- c("mean",17,place,0,1000,0.1,0)
         index <- index + 1
-        paramTable[index,] <- c("scale",0.15,place,0,1,0.1,0)
+        paramTable[index,] <- c("var", 3, place, 0,100,0.1,0)
         index <- index + 1
-        paramTable[index,] <- c("incPropn",1,place,0,1,0.1,1)
+        paramTable[index,] <- c("c",0.15,place,0,100,0.1,0)
         index <- index + 1
-        paramTable[index,] <- c("baselineInc",0.002,place,0,1,0.1,1)
+        paramTable[index,] <- c("incPropn",0.0025,place,0,1,0.1,0)
+        index <- index + 1
+        paramTable[index,] <- c("baselineInc",0.0001,place,0,1,0.1,0)
         index <- index + 1
         paramTable[index,] <- c("p1",0.1,place,0,1,0.1,1)
         index <- index + 1
@@ -660,17 +702,17 @@ setupParTable <- function(version=1, realDat=NULL, sharedProb=FALSE, parFile = "
     useNames <- names(setupParsLong(version))
     
     ## Gets the parameter names used for each version of the model
-    allMicroPars <- c("mean","var","scale","p1","p2","p3","p4","p5","p6","p7","p8")
+    allMicroPars <- c("mean","var","c","p1","p2","p3","p4","p5","p6","p7","p8")
     if(version==2) microPars <- c("p1","p2","p3")
     else if(version==3) microPars <- c("p1","p2","p3","p4","p5","p6")
     else if(version==4) microPars <- c("p1","p2","p3","p4","p5","p6","p7","p8")
-    else microPars <- c("mean","var","scale")
+    else microPars <- c("mean","var","c")
     notMicroPars <- allMicroPars[!(allMicroPars %in% microPars)]
     
     ## Remove all unneccessary parameters
     paramTable <- paramTable[paramTable[,"names"] %in% useNames,]
     if(!sharedProb) paramTable <- paramTable[!(paramTable[,"names"] %in% microPars),]
-    
+
     ## Adds state specific parameters
     stateParTable <- NULL
     if(!is.null(realDat) | file.exists(stateParFile)){
