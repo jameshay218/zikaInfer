@@ -339,6 +339,8 @@ mcmc_diagnostics <- function(mcmc_chains, filename, param_table,VERBOSE=FALSE){
 }
 
 
+#' @export
+#' @useDynLib zikaProj
 make_optim_r0 <- function(t_pars, pars, incDat){
     function(x){
         pars["density"] <- x[1]
@@ -356,6 +358,8 @@ make_optim_r0 <- function(t_pars, pars, incDat){
     }
 }
 
+#' @export
+#' @useDynLib zikaProj
 make_optim_micro <- function(t_pars, pars, parNames,microDat){
     function(x){
         pars[names(pars) %in% parNames] <- x
@@ -372,6 +376,8 @@ make_optim_micro <- function(t_pars, pars, parNames,microDat){
     }
 }
 
+#' @export
+#' @useDynLib zikaProj
 optimise <- function(state, parTab, t_pars, incDat, testDat){
     incPars <- c("density","constSeed","incPropn","baselineInc")
     microcephPars <- c("baselineProb","mean","var","c","p1","p2","p3","p4","p5","p6","p7","p8")
@@ -399,6 +405,8 @@ optimise <- function(state, parTab, t_pars, incDat, testDat){
     return(tmpPars)
 }
 
+#' @export
+#' @useDynLib zikaProj
 generate_start_pars <- function(parTab){
     startPars <- parTab$values
     names(startPars) <- parTab$names
@@ -407,6 +415,9 @@ generate_start_pars <- function(parTab){
     }
     return(startPars)
 }
+
+#' @export
+#' @useDynLib zikaProj
 bounds_check <- function(x, parTab){
     pars <- x
     for(i in 1:length(x)){
