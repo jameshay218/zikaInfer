@@ -585,46 +585,46 @@ solveModelComplex <- function(t_pars,y0s, pars){
 #' @useDynLib zikaProj
 createParTable <- function(version=1,realDat=NULL, saveFile=NULL){
     names <- c("sampFreq","sampPropn","mu_I","sd_I","mu_N","sd_N","probMicro","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","p_HM","p_MH","constSeed","mean","var","c","tstep","p1","p2","p3","p4","p5","p6","p7","p8")    
-    paramTable <- matrix(0, ncol=7, nrow=length(names))
+    paramTable <- matrix(0, ncol=9, nrow=length(names))
     paramTable <- as.data.frame(paramTable)
-    colnames(paramTable) <- c("names", "values","local","lower_bounds","upper_bounds","steps","fixed")
+    colnames(paramTable) <- c("names", "values","local","lower_bounds","upper_bounds","steps","fixed","start_lower","start_upper")
     paramTable[,"names"] <- names
     paramTable$names <- as.character(paramTable$names)
     
 
-    paramTable[paramTable[,"names"]=="sampFreq",2:ncol(paramTable)] <- c(7,"all",0,30,0.1,1)
-    paramTable[paramTable[,"names"]=="sampPropn",2:ncol(paramTable)] <- c(1,"all",0,1,0.1,1)
-    paramTable[paramTable[,"names"]=="mu_I",2:ncol(paramTable)] <- c(30,"all",0,60,0.1,1)
-    paramTable[paramTable[,"names"]=="sd_I",2:ncol(paramTable)] <- c(2,"all",0,10,0.1,1)
-    paramTable[paramTable[,"names"]=="mu_N",2:ncol(paramTable)] <- c(30,"all",0,60,0.1,1)
-    paramTable[paramTable[,"names"]=="sd_N",2:ncol(paramTable)] <- c(2,"all",0,10,0.1,1)
-    paramTable[paramTable[,"names"]=="probMicro",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,1)
-    paramTable[paramTable[,"names"]=="baselineProb",2:ncol(paramTable)] <- c(0.0002,"all",0,1,0.1,0)
-    paramTable[paramTable[,"names"]=="burnin",2:ncol(paramTable)] <- c(0,"all",0,1000,0.1,1)
-    paramTable[paramTable[,"names"]=="epiStart",2:ncol(paramTable)] <- c(0,"all",0,700,0.1,1)
-    paramTable[paramTable[,"names"]=="L_M",2:ncol(paramTable)] <- c(14,"all",0,100,0.1,1)
-    paramTable[paramTable[,"names"]=="D_EM",2:ncol(paramTable)] <- c(10.5,"all",0,100,0.1,1)
-    paramTable[paramTable[,"names"]=="L_H",2:ncol(paramTable)] <- c(365*70,"all",0,200*365,0.1,1)
-    paramTable[paramTable[,"names"]=="D_C",2:ncol(paramTable)] <- c(365*18,"all",0,25*365,0.1,1)
-    paramTable[paramTable[,"names"]=="D_F",2:ncol(paramTable)] <- c(0.75*365,"all",0,365,0.1,1)
-    paramTable[paramTable[,"names"]=="D_EH",2:ncol(paramTable)] <- c(5.9,"all",0,100,0.1,1)
-    paramTable[paramTable[,"names"]=="D_IH",2:ncol(paramTable)] <- c(5,"all",0,100,0.1,1)
-    paramTable[paramTable[,"names"]=="b",2:ncol(paramTable)] <- c(0.25,"all",0,100,0.1,1)
-    paramTable[paramTable[,"names"]=="p_HM",2:ncol(paramTable)] <- c(0.5,"all",0,1,0.1,1)
-    paramTable[paramTable[,"names"]=="p_MH",2:ncol(paramTable)] <- c(0.5,"all",0,1,0.1,1)
-    paramTable[paramTable[,"names"]=="constSeed",2:ncol(paramTable)] <- c(0,"all",0,100,0.1,1)
-    paramTable[paramTable[,"names"]=="mean",2:ncol(paramTable)] <- c(5,"all",0,100,0.1,0)
-    paramTable[paramTable[,"names"]=="var",2:ncol(paramTable)] <- c(3,"all",0,100,0.1,0)
-    paramTable[paramTable[,"names"]=="c",2:ncol(paramTable)] <- c(1,"all",0,100,0.1,0)
-    paramTable[paramTable[,"names"]=="tstep",2:ncol(paramTable)] <- c(7,"all",0,100,0.1,1)
-    paramTable[paramTable[,"names"]=="p1",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0)
-    paramTable[paramTable[,"names"]=="p2",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0)
-    paramTable[paramTable[,"names"]=="p3",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0)
-    paramTable[paramTable[,"names"]=="p4",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0)
-    paramTable[paramTable[,"names"]=="p5",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0)
-    paramTable[paramTable[,"names"]=="p6",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0)
-    paramTable[paramTable[,"names"]=="p7",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0)
-    paramTable[paramTable[,"names"]=="p8",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0)
+    paramTable[paramTable[,"names"]=="sampFreq",2:ncol(paramTable)] <- c(7,"all",0,30,0.1,1,0,30)
+    paramTable[paramTable[,"names"]=="sampPropn",2:ncol(paramTable)] <- c(1,"all",0,1,0.1,1,0,1)
+    paramTable[paramTable[,"names"]=="mu_I",2:ncol(paramTable)] <- c(30,"all",0,60,0.1,1,0,60)
+    paramTable[paramTable[,"names"]=="sd_I",2:ncol(paramTable)] <- c(2,"all",0,10,0.1,1,0,10)
+    paramTable[paramTable[,"names"]=="mu_N",2:ncol(paramTable)] <- c(30,"all",0,60,0.1,1,0,60)
+    paramTable[paramTable[,"names"]=="sd_N",2:ncol(paramTable)] <- c(2,"all",0,10,0.1,1,0,10)
+    paramTable[paramTable[,"names"]=="probMicro",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,1,0,1)
+    paramTable[paramTable[,"names"]=="baselineProb",2:ncol(paramTable)] <- c(0.0002,"all",0,1,0.1,0,0,1)
+    paramTable[paramTable[,"names"]=="burnin",2:ncol(paramTable)] <- c(0,"all",0,1000,0.1,1,0,1000)
+    paramTable[paramTable[,"names"]=="epiStart",2:ncol(paramTable)] <- c(0,"all",0,700,0.1,1,0,700)
+    paramTable[paramTable[,"names"]=="L_M",2:ncol(paramTable)] <- c(14,"all",0,100,0.1,1,0,100)
+    paramTable[paramTable[,"names"]=="D_EM",2:ncol(paramTable)] <- c(10.5,"all",0,100,0.1,1,0,100)
+    paramTable[paramTable[,"names"]=="L_H",2:ncol(paramTable)] <- c(365*70,"all",0,200*365,0.1,1,0,200*365)
+    paramTable[paramTable[,"names"]=="D_C",2:ncol(paramTable)] <- c(365*18,"all",0,25*365,0.1,1,0,25*365)
+    paramTable[paramTable[,"names"]=="D_F",2:ncol(paramTable)] <- c(0.75*365,"all",0,365,0.1,1,0,365)
+    paramTable[paramTable[,"names"]=="D_EH",2:ncol(paramTable)] <- c(5.9,"all",0,100,0.1,1,0,100)
+    paramTable[paramTable[,"names"]=="D_IH",2:ncol(paramTable)] <- c(5,"all",0,100,0.1,1,0,100)
+    paramTable[paramTable[,"names"]=="b",2:ncol(paramTable)] <- c(0.25,"all",0,100,0.1,1,0,100)
+    paramTable[paramTable[,"names"]=="p_HM",2:ncol(paramTable)] <- c(0.5,"all",0,1,0.1,1,0,1)
+    paramTable[paramTable[,"names"]=="p_MH",2:ncol(paramTable)] <- c(0.5,"all",0,1,0.1,1,0,1)
+    paramTable[paramTable[,"names"]=="constSeed",2:ncol(paramTable)] <- c(0,"all",0,1000,0.1,1,400,600)
+    paramTable[paramTable[,"names"]=="mean",2:ncol(paramTable)] <- c(5,"all",0,100,0.1,0,8,20)
+    paramTable[paramTable[,"names"]=="var",2:ncol(paramTable)] <- c(3,"all",0,100,0.1,0,1,5)
+    paramTable[paramTable[,"names"]=="c",2:ncol(paramTable)] <- c(1,"all",0,100,0.1,0,0.1,0.5)
+    paramTable[paramTable[,"names"]=="tstep",2:ncol(paramTable)] <- c(7,"all",0,100,0.1,1,0,7)
+    paramTable[paramTable[,"names"]=="p1",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0,0.01,0.1)
+    paramTable[paramTable[,"names"]=="p2",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0,0.01,0.1)
+    paramTable[paramTable[,"names"]=="p3",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0,0.01,0.1)
+    paramTable[paramTable[,"names"]=="p4",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0,0.01,0.1)
+    paramTable[paramTable[,"names"]=="p5",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0,0.01,0.1)
+    paramTable[paramTable[,"names"]=="p6",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0,0.01,0.1)
+    paramTable[paramTable[,"names"]=="p7",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0,0.01,0.1)
+    paramTable[paramTable[,"names"]=="p8",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0,0.01,0.1)
 
     if(!is.null(saveFile)) write.table(paramTable,saveFile,row.names=FALSE,sep=",")
     
@@ -642,50 +642,50 @@ createParTable <- function(version=1,realDat=NULL, saveFile=NULL){
 createStateParTable <- function(stateDat, saveFile = NULL){
     places <- as.character(unique(stateDat$local))
     numberPars <- 19
-    paramTable <- matrix(0, ncol=7, nrow=numberPars*length(places))
+    paramTable <- matrix(0, ncol=9, nrow=numberPars*length(places))
     paramTable <- as.data.frame(paramTable)
-    colnames(paramTable) <- c("names", "values","local", "lower_bounds","upper_bounds","steps","fixed")
+    colnames(paramTable) <- c("names", "values","local", "lower_bounds","upper_bounds","steps","fixed","start_lower","start_upper")
     index <- 1
     
     for(place in places){
         tmpDat <- stateDat[stateDat$local==place,]
-        paramTable[index,] <- c("L_H",tmpDat[1,"L_H"]*365,place,0,200*365,0.1,1)
+        paramTable[index,] <- c("L_H",tmpDat[1,"L_H"]*365,place,0,200*365,0.1,1,0,200*365)
         index <- index + 1
-        paramTable[index,] <- c("N_H", tmpDat[1,"N_H"], place, 0,100000000,0.1,1)
+        paramTable[index,] <- c("N_H", tmpDat[1,"N_H"], place, 0,100000000,0.1,1,0,1000000000)
         index <- index + 1
-        paramTable[index,] <- c("density",3,place,0,100,0.1,0)
+        paramTable[index,] <- c("density",3,place,0,100,0.1,0,3,6)
         index <- index + 1
-        paramTable[index,] <- c("epiStart",0,place,0,2000,0.1,1)
+        paramTable[index,] <- c("epiStart",0,place,0,2000,0.1,1,200,600)
         index <- index + 1
-        paramTable[index,] <- c("propn",1,place,0,1,0.1,1)
+        paramTable[index,] <- c("propn",1,place,0,1,0.1,1,0.01,0.2)
         index <- index + 1
-        paramTable[index,] <- c("constSeed",400,place,0,2000,0.1,0)
+        paramTable[index,] <- c("constSeed",400,place,0,2000,0.1,0,400,600)
         index <- index + 1
-        paramTable[index,] <- c("mean",17,place,0,1000,0.1,0)
+        paramTable[index,] <- c("mean",17,place,0,100,0.1,0,8,20)
         index <- index + 1
-        paramTable[index,] <- c("var", 3, place, 0,100,0.1,0)
+        paramTable[index,] <- c("var", 3, place, 0,100,0.1,0,1,5)
         index <- index + 1
-        paramTable[index,] <- c("c",0.15,place,0,100,0.1,0)
+        paramTable[index,] <- c("c",0.15,place,0,100,0.1,0,0.1,0.3)
         index <- index + 1
-        paramTable[index,] <- c("incPropn",0.0025,place,0,1,0.1,0)
+        paramTable[index,] <- c("incPropn",0.0025,place,0,1,0.1,0,0.001,0.005)
         index <- index + 1
-        paramTable[index,] <- c("baselineInc",0.0001,place,0,1,0.1,0)
+        paramTable[index,] <- c("baselineInc",0.0001,place,0,1,0.1,0,0.00005,0.0005)
         index <- index + 1
-        paramTable[index,] <- c("p1",0.1,place,0,1,0.1,1)
+        paramTable[index,] <- c("p1",0.1,place,0,1,0.1,1,0.01,0.1)
         index <- index + 1
-        paramTable[index,] <- c("p2",0.1,place,0,1,0.1,1)
+        paramTable[index,] <- c("p2",0.1,place,0,1,0.1,1,0.01,0.1)
         index <- index + 1
-        paramTable[index,] <- c("p3",0.1,place,0,1,0.1,1)
+        paramTable[index,] <- c("p3",0.1,place,0,1,0.1,1,0.01,0.1)
         index <- index + 1
-        paramTable[index,] <- c("p4",0.1,place,0,1,0.1,1)
+        paramTable[index,] <- c("p4",0.1,place,0,1,0.1,1,0.01,0.1)
         index <- index + 1
-        paramTable[index,] <- c("p5",0.1,place,0,1,0.1,1)
+        paramTable[index,] <- c("p5",0.1,place,0,1,0.1,1,0.01,0.1)
         index <- index + 1
-        paramTable[index,] <- c("p6",0.1,place,0,1,0.1,1)
+        paramTable[index,] <- c("p6",0.1,place,0,1,0.1,1,0.01,0.1)
         index <- index + 1
-        paramTable[index,] <- c("p7",0.1,place,0,1,0.1,1)
+        paramTable[index,] <- c("p7",0.1,place,0,1,0.1,1,0.01,0.1)
         index <- index + 1
-        paramTable[index,] <- c("p8",0.1,place,0,1,0.1,1)
+        paramTable[index,] <- c("p8",0.1,place,0,1,0.1,1,0.01,0.1)
         index <- index + 1
     }
     if(!is.null(saveFile)) write.table(paramTable,saveFile,row.names=FALSE,sep=",")
@@ -732,7 +732,7 @@ setupParTable <- function(version=1, realDat=NULL, sharedProb=FALSE, parFile = "
 
     paramTable <- rbind(paramTable, stateParTable)
     
-    paramTable[,c("values","lower_bounds","upper_bounds","steps","fixed")] <- lapply(paramTable[,c("values","lower_bounds","upper_bounds","steps","fixed")], FUN=as.numeric)
+    paramTable[,c("values","lower_bounds","upper_bounds","steps","fixed","start_lower","start_upper")] <- lapply(paramTable[,c("values","lower_bounds","upper_bounds","steps","fixed","start_lower","start_upper")], FUN=as.numeric)
     
     return(paramTable)
 }

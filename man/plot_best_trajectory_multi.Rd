@@ -6,7 +6,7 @@
 \usage{
 plot_best_trajectory_multi(chain, realDat, parTab, t_pars, runs = 100,
   incDat = NULL, mcmcPars = c(burnin = 50000, adaptive = 1e+05, thin = 50),
-  ylimM = 200, ylimI = 0.01)
+  ylimM = NULL, ylimI = NULL)
 }
 \arguments{
 \item{chain}{the MCMC chain of estimated parameters}

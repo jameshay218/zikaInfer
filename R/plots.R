@@ -6,7 +6,7 @@
 #' @return nothing - saves plots to pdf
 #' @export
 #' @useDynLib zikaProj
-plot_MCMC <- function(chains, parTab=NULL){
+plot_MCMC <- function(chains, parTab=NULL,filename="mcmcplots.pdf"){
     for(i in 1:length(chains)){
         if(!is.null(parTab)){
             indices <- which(parTab$fixed==0)
@@ -15,7 +15,7 @@ plot_MCMC <- function(chains, parTab=NULL){
         chains[[i]] <- as.mcmc(chains[[i]])
     }
 
-    pdf("mcmcplots.pdf")
+    pdf(filename)
     plot(as.mcmc.list(chains))
     dev.off()
 }
@@ -124,7 +124,7 @@ create_polygons <- function(lower,upper){
 #' @return a ggplot object with the incidence plots
 #' @export
 #' @useDynLib zikaProj
-plot_best_trajectory_multi <- function(chain, realDat, parTab, t_pars, runs=100, incDat=NULL, mcmcPars=c("burnin"=50000,"adaptive"=100000,"thin"=50), ylimM=200,ylimI=0.01){
+plot_best_trajectory_multi <- function(chain, realDat, parTab, t_pars, runs=100, incDat=NULL, mcmcPars=c("burnin"=50000,"adaptive"=100000,"thin"=50), ylimM=NULL,ylimI=NULL){
     ps <- NULL
     
     states <- unique(parTab$local)
@@ -164,7 +164,7 @@ generate_x_labels <- function(startDay, endDay){
 #' @return a ggplot object with the incidence plots
 #' @export
 #' @useDynLib zikaProj
-plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=NULL, t_pars=NULL, runs=100,incDat=NULL, ylabel=TRUE,xlabel=TRUE, mcmcPars=c("burnin"=50000,"adaptive_period"=100000,"thin"=50),ylimM=200, ylimI=0.02){
+plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=NULL, t_pars=NULL, runs=100,incDat=NULL, ylabel=TRUE,xlabel=TRUE, mcmcPars=c("burnin"=50000,"adaptive_period"=100000,"thin"=50),ylimM=NULL, ylimI=NULL){
     allDat <- plot_setup_data(chain,realDat, parTab, t_pars,local,runs)
 
     bestMicro <- allDat$bestMicro
@@ -208,7 +208,6 @@ microceph_plot <- function(dat, microBounds, bestMicro, polygonM, local, xlim, y
         geom_line(dat=microBounds,aes(y=micro,x=time,group=quantile),lwd=0.5,linetype=2,col="blue",alpha=0.5) +
         geom_line(dat=bestMicro,aes(y=number,x=day),col="blue",lwd=0.5) +
         geom_polygon(data=polygonM,aes(x=x,y=y),alpha=0.2,fill="blue")+
-        scale_y_continuous(limits=c(0,ylim))+
         scale_x_continuous(labels=xlabels,breaks=xlabBreaks,limits=xlim)+
         theme_bw() +
         ylab("Microcephaly cases (blue)") +
@@ -223,6 +222,7 @@ microceph_plot <- function(dat, microBounds, bestMicro, polygonM, local, xlim, y
             axis.title.y=element_text(size=8),
             plot.margin=unit(c(0.1,0.8,0.1,0.1),"cm")
         )
+    if(!is.null(ylim)) myPlot <- myPlot + scale_y_continuous(limits=c(0,ylim))
     return(myPlot)
 }
 
@@ -231,8 +231,11 @@ inc_plot <- function(incBounds, bestInc, polygonI, ylimI,xlim, incDat=NULL){
         geom_line(dat=incBounds,aes(y=inc,x=time,group=quantile),linetype=2,col="red",size=0.5,alpha=0.5) +
         geom_line(dat=bestInc,aes(y=I_H,x=times),col="red",lwd=0.5)+
         geom_polygon(data=polygonI,aes(x=x,y=y),alpha=0.2,fill="red")+
-        scale_y_continuous(limits=c(0,ylimI))+
-        scale_x_continuous(limits=xlim)+
+        scale_x_continuous(limits=xlim)
+    
+    if(!is.null(ylimI)) incPlot <- incPlot + scale_y_continuous(limits=c(0,ylimI))
+
+    incPlot <- incPlot + 
         ylab("\nPer capita incidence (red)")+
         xlab("")+
         theme(
@@ -246,6 +249,7 @@ inc_plot <- function(incBounds, bestInc, polygonI, ylimI,xlim, incDat=NULL){
             plot.margin=unit(c(0.1,0.8,0.1,0.1),"cm")
             
         )
+    
     if(!is.null(incDat)){
         incDat$meanDay <-rowMeans(incDat[,c("startDay","endDay")])
         incDat$perCapInc <- incDat[,"inc"]/incDat[,"N_H"]

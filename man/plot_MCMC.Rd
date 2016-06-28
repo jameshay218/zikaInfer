@@ -4,7 +4,7 @@
 \alias{plot_MCMC}
 \title{Plot MCMC chains}
 \usage{
-plot_MCMC(chains, parTab = NULL)
+plot_MCMC(chains, parTab = NULL, filename = "mcmcplots.pdf")
 }
 \arguments{
 \item{chains}{list of MCMC chains}

@@ -7,7 +7,7 @@
 plot_best_trajectory_single(local, chain = NULL, realDat = NULL,
   parTab = NULL, t_pars = NULL, runs = 100, incDat = NULL,
   ylabel = TRUE, xlabel = TRUE, mcmcPars = c(burnin = 50000,
-  adaptive_period = 1e+05, thin = 50), ylimM = 200, ylimI = 0.02)
+  adaptive_period = 1e+05, thin = 50), ylimM = NULL, ylimI = NULL)
 }
 \arguments{
 \item{runs}{the number of runs to use for prediction intervals}
