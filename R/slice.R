@@ -12,7 +12,7 @@
 #' @return a dataframe of the MCMC chain
 #' @export
 #' @useDynLib
-mcmc_simple <- function(target, x_init, fixed, nsteps, w, lower=-Inf, upper=-Inf, print_every=1){
+mcmc_simple <- function(target, x_init, fixed, nsteps, w, lower=-Inf, upper=-Inf, print_every=1,save_file=NULL){
     npar <- length(x_init)
     hist_pars <- matrix(NA, ncol=npar, nrow=nsteps)
     hist_prob <- rep(NA, nsteps)
@@ -31,16 +31,21 @@ mcmc_simple <- function(target, x_init, fixed, nsteps, w, lower=-Inf, upper=-Inf
     }
 
     we_should_print <- make_every_so_often(print_every)
-
+    if(!is.null(save_file)) write.table(t(c(i=0,x_init,lnlik=y_init)),file=save_file,row.names=FALSE,col.names=FALSE,sep=",",append=FALSE)
+    
+    last_save <- 1
     for (i in seq_len(nsteps)) {
         tmp <- sampler_slice(target, x_init, fixed, y_init, w, lower, upper)
         x_init <- hist_pars[i,] <- tmp[[1]]
         y_init <- hist_prob[i]  <- tmp[[2]]
-
         if (we_should_print()) {
             message(sprintf("%d: {%s} -> %2.5f", i,
                             paste(sprintf("%2.4f", x_init), collapse=", "),
                             y_init))
+            if(!is.null(save_file)){
+                write.table(data.frame(i=seq(last_save,i,by=1),hist_pars[last_save:i,],lnlik=hist_prob[last_save:i]),file=save_file,row.names=FALSE,col.names=FALSE,sep=",",append=TRUE)
+                last_save <- i+1
+            }
         }
     }
 

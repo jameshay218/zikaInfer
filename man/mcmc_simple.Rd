@@ -5,7 +5,7 @@
 \title{Simple MCMC algorithm}
 \usage{
 mcmc_simple(target, x_init, fixed, nsteps, w, lower = -Inf, upper = -Inf,
-  print_every = 1)
+  print_every = 1, save_file = NULL)
 }
 \arguments{
 \item{target}{pointer to the posterior (target) function, that should take only one argument - the vector of model parameters}
