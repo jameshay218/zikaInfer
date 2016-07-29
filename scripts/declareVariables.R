@@ -18,50 +18,8 @@ grid_arrange_shared_legend <- function(...) {
     heights = unit.c(unit(1, "npc") - lheight, lheight))
 }
 
-c25 <- c("dodgerblue2","#E31A1C", # red
-         "green4",
-         "#6A3D9A", # purple
-         "#FF7F00", # orange
-         "black","gold1",
-         "skyblue2","#FB9A99", # lt pink
-         "palegreen2",
-         "#CAB2D6", # lt purple
-         "#FDBF6F", # lt orange
-         "gray70", "khaki2",
-         "maroon","orchid1","deeppink1","blue1","steelblue4",
-         "darkturquoise","green1","yellow4","yellow3",
-         "darkorange4","brown")
-overallTheme <- theme_bw() 
-mycolours <-  scale_colour_manual(values=c25)
-mycolours2 <- scale_fill_manual(values=c25)
 
-mytheme <- theme(
-  axis.line=element_blank(),
-  axis.text.x=element_blank(),
-  axis.text.y=element_blank(),
-  axis.ticks=element_blank(),
-  axis.ticks.length=unit(0.3, "lines"),
-  axis.ticks.margin=unit(0.5, "lines"),
-  axis.title.x=element_blank(),
-  axis.title.y=element_blank(),
-  legend.background=element_rect(fill="white", colour=NA),
-  legend.key=element_rect(colour="white"),
-  legend.key.size=unit(1.5, "lines"),
-  legend.position="right",
-  legend.text=element_text(size=rel(1.2)),
-  legend.title=element_text(size=rel(1.4), face="bold", hjust=0),
-  panel.background=element_blank(),
-  panel.border=element_blank(),
-  panel.grid.major=element_blank(),
-  panel.grid.minor=element_blank(),
-  panel.margin=unit(0, "lines"),
-  plot.background=element_rect(fill="white"),
-  plot.margin=unit(c(1, 1, 0.5, 0.5), "lines"),
-  plot.title=element_text(size=rel(1.8), face="bold", hjust=0.5),
-  strip.background=element_rect(fill="grey90", colour="grey50"),
-  strip.text.x=element_text(size=rel(0.8)),
-  strip.text.y=element_text(size=rel(0.8), angle=-90) 
-)
+
 
 
 states <- c(

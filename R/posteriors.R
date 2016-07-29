@@ -47,9 +47,7 @@ posterior_simple_buckets <- function(t_pars, y0s, pars, startDays, endDays, buck
     lik <- 0
     
     y <- solveModelSimple(t_pars,y0s,pars)
-    
     peakTime <- y[which.max(y[,"I_H"]),"times"]
-    
     if(!is.null(incDat)){
         tmpY <- y[y[,"times"] >= min(incDat[,"startDay"]) & y[,"times"] <= max(incDat[,"endDay"]),]
         N_H <- average_buckets(rowSums(tmpY[,c("I_H","S_H","E_H","R_H")]), incDat[,"buckets"])

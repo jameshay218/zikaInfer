@@ -126,17 +126,21 @@ microceph_v1 <- function(pars){
 #' Microcephaly risk curve with 3 distinct periods
 microceph_v2 <- function(pars){
     probs <- c(rep(pars["p1"], 13),rep(pars["p2"],13),rep(pars["p3"],14))
+    probs <- rep(probs, each=pars["tstep"])
+    return(unname(probs))
 }
 
 #' Microcephaly risk curve with 6 distinct periods
 microceph_v3 <- function(pars){
- probs <- c(rep(pars["p1"], 7),rep(pars["p2"],7),rep(pars["p3"],7),rep(pars["p4"],7),rep(pars["p5"],7),rep(pars["p6"],5))
- return(probs)
- }
+    probs <- c(rep(pars["p1"], 7),rep(pars["p2"],7),rep(pars["p3"],7),rep(pars["p4"],7),rep(pars["p5"],7),rep(pars["p6"],5))
+    probs <- rep(probs, each=pars["tstep"])
+    return(unname(probs))
+}
 #' Microcephaly risk curve with 8 distinct periods
 microceph_v4 <- function(pars){
     probs <- c(rep(pars["p1"], 5),rep(pars["p2"],5),rep(pars["p3"],5),rep(pars["p4"],5),rep(pars["p5"],5),rep(pars["p6"],5),rep(pars["p7"],5),rep(pars["p8"],5))
-    return(probs)
+    probs <- rep(probs, each=pars["tstep"])
+    return(unname(probs))
 }
 
 #' Solve simple SEIR model 

@@ -313,7 +313,7 @@ plot_setup_data <- function(chain, dat, parTab, t_pars, local, runs=NULL){
     tmp <- plot_setup_data_auxiliary(bestPars,tmpDat,parTab,t_pars,local)
     bestInc <- tmp$inc
     bestMicro <- tmp$micro
-
+    
     ## Get sample indices with which to plot prediction intervals
     samples <- sample(nrow(chain),runs)
 
@@ -353,7 +353,6 @@ plot_setup_data_auxiliary <- function(pars, dat, parTab, t_pars, local){
     names(state_pars) <- parTab[parTab$local==local,"names"]
     all_pars <- pars[parTab[parTab$local=="all","names"]]
     pars <- c(state_pars, all_pars)
-
 
     ## Generate actual incidence data for these parameters
     y0s <- generate_y0s(pars["N_H"],pars["density"])
