@@ -55,6 +55,7 @@ void simpleSEIR (int *neq, double *t, double *y, double *ydot, double *yout, int
     ydot[4] = - E_H/L_H;
     ydot[5] = - I_H/L_H;
     ydot[6] = - R_H/L_H;
+    ydot[7] = 0;
 
   } else {
     ydot[0] = N_M/L_M - y[0]/L_M - lambda_M*y[0];
@@ -65,5 +66,7 @@ void simpleSEIR (int *neq, double *t, double *y, double *ydot, double *yout, int
     ydot[4] = lambda_H*S_H - E_H/L_H - E_H/D_EH;
     ydot[5] = E_H/D_EH - I_H/L_H - I_H/D_IH;
     ydot[6] = I_H/D_IH - R_H/L_H;
+
+    ydot[7] = E_H/D_EH - E_H/L_H;
   }
 }

@@ -4,11 +4,13 @@
 \alias{posterior_simple_buckets}
 \title{Posterior function for the simple SEIR model with bucketed data for a single state}
 \usage{
-posterior_simple_buckets(t_pars, y0s, pars, startDays, endDays, buckets,
-  microCeph, births, incDat = NULL, actualPeakTime = NULL,
-  allPriors = NULL)
+posterior_simple_buckets(ts, y0s, pars, startDays, endDays, buckets, microCeph,
+  births, zikv = NULL, nh = NULL, inc_buckets = NULL, inc_start = NULL,
+  inc_end = NULL, peak_start = NULL, peak_end = NULL, allPriors = NULL)
 }
 \arguments{
+\item{ts}{time vector over which to solve the ODE model}
+
 \item{y0s}{initial conditions for the ODE model}
 
 \item{pars}{ODE parameters}
@@ -23,13 +25,21 @@ posterior_simple_buckets(t_pars, y0s, pars, startDays, endDays, buckets,
 
 \item{births}{vector of total briths for each bucket}
 
-\item{incDat}{defaults to NULL. If provided, uses the incidence data to improve parameter estimates.}
+\item{zikv}{vector of ZIKV incidence}
+
+\item{nh}{vector of population sizes}
+
+\item{inc_buckets}{vector of bucket size for incidence data}
+
+\item{inc_start}{vector of inc start days}
+
+\item{inc_end}{vector of inc end days}
+
+\item{peak_start}{vector of peak time start days}
+
+\item{peak_end}{vector of peak time end days}
 
 \item{allPriors}{defaults to FALSE. Arguments for parameter priors, if desired.}
-
-\item{ts}{time vector over which to solve the ODE model}
-
-\item{actualPeakTimes}{defaults to NULL. Data frame of priors belief on incidence peak times. Provide a row for each state and three columns - the name of the state, the lower bound and the upper bound on peak time. Puts a uniform prior on this range.}
 }
 \value{
 a single value for the posterior

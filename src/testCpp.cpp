@@ -109,16 +109,17 @@ NumericVector generate_probM_aux(NumericVector riskI, NumericVector probM, doubl
   int max = riskI.size();
   int testDay = 0;
   int minDay = 0;
-  int wow = 0;
-  int week = 0;
+
+  //double * c_riskI = REAL(riskI), c_probM = REAL(probM), c_allProbs = REAL(allProbs);
+  int probM_size = probM.size();
+
   for(int i = 0; i < max; ++i){
     tmp = 0;
     testDay = i;
-    minDay = testDay-probM.size();
+    minDay = testDay - probM_size;
     if(minDay < 0) minDay = 0;
-    week = 0;
     for(int j = minDay; j < testDay; ++j){
-      tmp += riskI[j]*probM[j-(testDay-probM.size())];
+      tmp += riskI[j]*probM[j-(testDay-probM_size)];
     }
     allProbs[i] = 1 - (1-tmp)*(1-bp);
   }

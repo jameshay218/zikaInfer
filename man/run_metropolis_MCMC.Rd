@@ -4,13 +4,15 @@
 \alias{run_metropolis_MCMC}
 \title{Adaptive Metropolis-within-Gibbs Random Walk Algorithm.}
 \usage{
-run_metropolis_MCMC(data, t_pars, param_table, mcmcPars = c(iterations = 1000,
+run_metropolis_MCMC(data, ts, param_table, mcmcPars = c(iterations = 1000,
   popt = 0.44, opt_freq = 50, thin = 1, burnin = 100, adaptive_period = 100,
-  save_block = 500), filename, mvrPars = NULL, incDat = NULL,
-  peakTimes = NULL, allPriors = NULL, ...)
+  tuning_period = 100, save_block = 500), filename, mvrPars = NULL,
+  incDat = NULL, peakTimes = NULL, allPriors = NULL, ...)
 }
 \arguments{
-\item{data}{the data against which the likelihood is calculated}
+\item{data}{the microcephaly data against which the likelihood is calculated}
+
+\item{ts}{vector of times to solve the ODE model over}
 
 \item{param_table}{a table of parameter data used for information such as bounds and prior function pointers.}
 
@@ -25,10 +27,6 @@ run_metropolis_MCMC(data, t_pars, param_table, mcmcPars = c(iterations = 1000,
 \item{peakTimes}{optional parameter - data frame of peak times for Zika incidence for each state}
 
 \item{allPriors}{flag of whether or not to use priors}
-
-\item{ts}{vector of times to solve the ODE model over}
-
-\item{y0s}{starting conditions for the ODE model}
 }
 \value{
 a list with: 1) full file path at which the MCMC chain is saved as a .csv file; 2) the last used covarianec matrix; 3) the last used scale size

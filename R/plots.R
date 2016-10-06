@@ -138,14 +138,20 @@ plot_best_trajectory_multi <- function(chain, realDat, parTab, t_pars, runs=100,
     return(allPlot)
 }
 
-generate_x_labels <- function(startDay, endDay){
-    days <- getDaysPerMonth(4)
-    buckets <- rep(days, 4)
+generate_x_labels <- function(startDay, endDay, rep_=6){
+    days <- getDaysPerMonth(12)
+    buckets <- rep(days, 5)
     xpositions <- cumsum(buckets) - buckets
     indices <- which(xpositions >= startDay & xpositions <= endDay)
+    years <- c("2013","2014","2015","2016","2017")
+    months <- c("01/","02/","03/","04/","05/","06/","07/","08/","09/","10/","11/","12/")
+    labels <- apply(expand.grid(months,years),1,paste,collapse="")    
+
+    new_i <- seq(indices[1],indices[length(indices)],by=rep_)
+    #labels <- c("01/2013","04/2013","07/2013","10/2013","01/2014","04/2014","07/2014","10/2014","01/2015","04/2015","07/2015","10/2015","01/2016","04/2016","07/2016","10/2016")
     
-    labels <- c("01/2013","04/2013","07/2013","10/2013","01/2014","04/2014","07/2014","10/2014","01/2015","04/2015","07/2015","10/2015","01/2016","04/2016","07/2016","10/2016")
-    return(list("labels"=labels[indices],"positions"=xpositions[indices]))
+    
+    return(list("labels"=labels[new_i],"positions"=xpositions[new_i]))
 }
 
 
@@ -174,7 +180,7 @@ plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=
     dat <- allDat$data
 
     xlim <- c(min(dat[,"startDay"]),max(dat[,"endDay"]))
-    xlim <- c(0,1500)
+    #xlim <- c(0,1500)
 
     quantiles <- unique(microBounds[,"quantile"])
     botM <- microBounds[microBounds[,"quantile"]==quantiles[1],c("time","micro")]
@@ -185,6 +191,13 @@ plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=
     polygonM <- create_polygons(botM, topM)
     polygonI <- create_polygons(botI, topI)
 
+    tmp_p_I <- polygonI
+    tmp_p_I <- tmp_p_I[tmp_p_I$x >= xlim[1] & tmp_p_I$x <= xlim[2],]
+    polygonI <- tmp_p_I
+
+    polygonM <- polygonM[polygonM$x >= xlim[1] & polygonM <= xlim[2],]
+
+    xlim <- c(min(dat[,"startDay"]),max(dat[,"endDay"]))
     xlabs <- generate_x_labels(xlim[1],xlim[2])
     myPlot <- microceph_plot(dat,microBounds,bestMicro,polygonM,local,xlim,ylimM,xlabs)
     incPlot <- inc_plot(incBounds,bestInc,polygonI,ylimI,xlim,incDat)
@@ -204,7 +217,7 @@ microceph_plot <- function(dat, microBounds, bestMicro, polygonM, local, xlim, y
     xlabels <- xlabs$labels
     xlabBreaks <- xlabs$positions
     
-    myPlot <- ggplot() + geom_point(dat=dat,aes(y=microCeph,x=meanDay),col="black",size=2) +
+    myPlot <- ggplot() + geom_point(dat=dat,aes(y=microCeph,x=meanDay),col="black",size=1) +
         geom_line(dat=microBounds,aes(y=micro,x=time,group=quantile),lwd=0.5,linetype=2,col="blue",alpha=0.5) +
         geom_line(dat=bestMicro,aes(y=number,x=day),col="blue",lwd=0.5) +
         geom_polygon(data=polygonM,aes(x=x,y=y),alpha=0.2,fill="blue")+
@@ -215,11 +228,11 @@ microceph_plot <- function(dat, microBounds, bestMicro, polygonM, local, xlim, y
         ggtitle(get_state_name(local)) + 
         theme(
             panel.grid.minor=element_blank(),
-            plot.title=element_text(size=10),
-            axis.text.x=element_text(size=6,hjust=1,angle=45),
-            axis.text.y=element_text(size=6),
-            axis.title.x=element_text(size=8),
-            axis.title.y=element_text(size=8),
+            plot.title=element_text(size=12),
+            axis.text.x=element_text(size=8,hjust=1,angle=45),
+            axis.text.y=element_text(size=8),
+            axis.title.x=element_text(size=10),
+            axis.title.y=element_text(size=10),
             plot.margin=unit(c(0.1,0.8,0.1,0.1),"cm")
         )
     if(!is.null(ylim)) myPlot <- myPlot + scale_y_continuous(limits=c(0,ylim))
@@ -242,10 +255,10 @@ inc_plot <- function(incBounds, bestInc, polygonI, ylimI,xlim, incDat=NULL){
             panel.background=element_rect(fill=NA),
             panel.grid=element_blank(),
             axis.line.y = element_line(colour="black"),
-            axis.text.y=element_text(size=6,colour="black"),
-            axis.title.y=element_text(size=8,angle=-90),
-            axis.text.x=element_text(size=6),
-            axis.title.x=element_text(size=8),
+            axis.text.y=element_text(size=8,colour="black"),
+            axis.title.y=element_text(size=10,angle=-90),
+            axis.text.x=element_text(size=8),
+            axis.title.x=element_text(size=10),
             plot.margin=unit(c(0.1,0.8,0.1,0.1),"cm")
             
         )

@@ -4,10 +4,10 @@
 \alias{solveModelSimple}
 \title{Solve simple SEIR model}
 \usage{
-solveModelSimple(t_pars, y0s, pars)
+solveModelSimple(ts, y0s, pars, makenames = FALSE)
 }
 \arguments{
-\item{t_pars}{vector of two components - the total run time in days and the time step for the ODE solver}
+\item{ts}{vector of times to solve the ODE model over}
 
 \item{y0s}{the initial population sizes for the ODE model}
 

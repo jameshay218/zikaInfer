@@ -25,7 +25,6 @@ void initmod(void (* odeparms)(int *, double *))
 /* Derivatives and 1 output variable */
 void derivs (int *neq, double *t, double *y, double *ydot, double *yout, int *ip)
 {
-  double epsilon = 0.0001; // Constant to check for seeding event
   double B_H = L_H - D_C; // Rate of entering the first trimester class (ie. rate of getting pregnant)
 
   double S_M = y[0]; // Susceptible mosquitoes

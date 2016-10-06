@@ -16,9 +16,7 @@ generate_multiple_data(t_pars, paramTable, weeks = FALSE, dataRange = c(0,
 
 \item{dataRange}{a vector with lower and upper bounds on days for simulation data}
 
-\item{pars}{a named vector with all of the necessary parameters to solve the ODE model. See \code{\link{setupParsODE}}}
-
-\item{amount}{of noise to add (rate for normal distribution)}
+\item{noise}{bool indicating if noise should be added to the data}
 }
 \value{
 a data frame of microcephaly births, total births and corresponding times.

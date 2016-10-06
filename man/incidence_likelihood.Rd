@@ -9,7 +9,9 @@ incidence_likelihood(perCapInc, inc, N_H)
 \arguments{
 \item{perCapInc}{expected per capita incidence of Zika}
 
-\item{dat}{two column matrix. First column is observed Zika cases, second is total possible zika cases}
+\item{inc}{vector of actual incidence}
+
+\item{N_H}{vector of population sizes (ie. per capita inc)}
 }
 \value{
 a single log likelihood
