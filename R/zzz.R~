@@ -1,0 +1,4 @@
+CsimpleSEIR_rich <- NULL
+.onLoad <- function(...) {
+    getNativeSymbolInfo("simpleSEIR_rich"
+}

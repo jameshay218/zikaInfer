@@ -230,13 +230,14 @@ run_metropolis_MCMC <- function(data,
                     tmp_transform <- steps
                     tmp_i <- 1
                     for(x in non_fixed_params){
-                        message(cat(tmp_transform[x],popt,pcur[tmp_i],sep="\t"))
+                        message(cat(tmp_transform[x],popt,pcur[x],sep="\t"))
                         tmp_transform[x] <- scaletuning(tmp_transform[x],popt,pcur[x])
                         tmp_i <- tmp_i + 1
                     }
+                    steps <- tmp_transform
                     message(cat("Optimisation iteration: ", i,sep="\t"))
                     message(cat("Pcur: ", pcur[non_fixed_params],sep="\t"))
-                    message(cat("Step sizes: ", tmp_transform[non_fixed_params],sep="\t"))
+                    message(cat("Step sizes: ", steps[non_fixed_params],sep="\t"))
                     tempaccepted <- tempiter <- reset
                 }
                 ## If using multivariate proposals

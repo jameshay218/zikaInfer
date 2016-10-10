@@ -162,6 +162,13 @@ solveModelSimple <- function(ts, y0s, pars,makenames=FALSE){
     return(y)
 }
 
+solveModelSimple2 <- function(ts, y0s, pars,makenames=FALSE){
+    pars <- pars[c("L_M","L_H","D_EM","D_EH","D_IH","b","p_HM","p_MH","constSeed")]
+    rlsoda(y0s, ts, CsimpleSEIR_rich, pars, dllname="zikaProj", return_initial = TRUE)
+}
+
+ODE_ORDER <- c("S_M","E_M","I_M","S_H","E_H","I_H","R_H","incidence")
+
 #' Get days per month of the year
 #'
 #' Returns a vector of days per month
@@ -236,7 +243,7 @@ generate_microceph_dat <- function(t_pars, y0s, pars, births, weeks=FALSE){
     microDat <- probM*births*pars["propn"]
     microDat <- round(rbinom(1, births,microDat/births))
     
-    allDat <- cbind("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"microCeph"=microDat,"births"=rep(births,length(buckets)))
+    allDat <- cbind("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"microCeph"=microDat,"births"=rep(births,length(buckets),"N_H"=pars["N_H"],"L_H"=pars["L_H"]))
     return(allDat)
 }
 
@@ -396,7 +403,7 @@ generate_multiple_data <- function(t_pars, paramTable,weeks=FALSE, dataRange=c(0
     
         
         if(noise){
-            microDat <- rbinom(1, births, microDat/births)
+            microDat <- rbinom(1, births, probM*pars["propn"])
             datInc <- rbinom(1,N_H, perCapInc)
         }
 
@@ -469,10 +476,10 @@ generate_incidence_data <- function(t_pars, paramTable, dataRange=c(0,t_pars["du
         
         perCapInc <- 1-(1-(inc/N_H))*(1-pars["baselineInc"])
         
-        inc <- perCapInc*N_H*pars["incPropn"]
+        #inc <- perCapInc*N_H*pars["incPropn"]
         
         if(noise){
-            inc <- rbinom(1,N_H, inc)
+            inc <- rbinom(1,N_H, perCapInc*pars["incPropn"])
         }
         
         allDat <- data.frame("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"inc"=round(inc),"N_H"=round(N_H),"local"=place)
@@ -487,16 +494,15 @@ generate_incidence_data <- function(t_pars, paramTable, dataRange=c(0,t_pars["du
 
 
 #' @export
-generate_allowable_times <- function(peakTime=927, peakTimeRange=60,microDatFile=NULL, stateNames){
+generate_allowable_times_1<- function(peakTime=927, peakTimeRange=60,microDatFile=NULL, stateNames,parTab){
     if(file.exists("allowableTimes.csv")) allowableTimes <- read.table("allowableTimes.csv")
     else {
         realDat <- read.csv(microDatFile)
         realDat <- realDat[realDat$local %in% stateNames,]
-        parTab <- setupParTable(1,realDat,sharedProb=TRUE)
-        
+                                        #parTab <- setupParTable(1,realDat,sharedProb=TRUE)
         allowableTimes <- NULL
-        for(local in unique(realDat$local)){
-            peakTimes <- matrix(nrow=100,ncol=50)
+        peakTimes <- matrix(nrow=100,ncol=50)
+        for(local in stateNames){
             tmpTab <- parTab[parTab$local %in% c(local, "all"),]
             for(i in 1:nrow(peakTimes)){
                 for(j in 1:ncol(peakTimes)){
@@ -504,8 +510,9 @@ generate_allowable_times <- function(peakTime=927, peakTimeRange=60,microDatFile
                     names(pars) <- tmpTab$names
                     pars["density"] <- j/10
                     pars["constSeed"] <- i*10
-                    y0s <- generate_y0s(pars["N_H"],pars["density"])
-                    y <- solveModelSimple(t_pars, y0s,pars)
+                    y0s <- generate_y0s(as.numeric(pars["N_H"]),as.numeric(pars["density"]))
+                    t_pars <- seq(0,3003,by=1)
+                    y <- solveModelSimple(t_pars, y0s,pars,TRUE)
                     peakTimes[i,j] <- y[which.max(y[,"I_H"]),"times"]
                     if(peakTimes[i,j] > (peakTime - peakTimeRange/2) & peakTimes[i,j] < (peakTime + peakTimeRange/2)){
                         allowableTimes <- rbind(allowableTimes,data.frame(i*10,j/10,local,peakTimes[i,j]))
@@ -521,8 +528,7 @@ generate_allowable_times <- function(peakTime=927, peakTimeRange=60,microDatFile
 }
 
 
-
-
+#allowableStarts <- generate_allowable_times_1(peakTime,peakTimeRange,datFile,states)
 
 
 
