@@ -27,7 +27,4 @@ the vector of microcephaly probabilities
 \description{
 Given the epidemic model parameters and number of infected mosquitoes over time, calculates the probability of a birth having microcephaly at a given time
 }
-\seealso{
-\link{\code{generate_probM_aux}}
-}
 

@@ -6,9 +6,9 @@
 \usage{
 create_posterior(ts, values, names, local, startDays, endDays, buckets,
   microCeph, births, data_locals, inc_startDays = NULL, inc_endDays = NULL,
-  inc_local = NULL, inc_buckets = NULL, inc_ZIKV = NULL, inc_NH = NULL,
+  inc_locals = NULL, inc_buckets = NULL, inc_ZIKV = NULL, inc_NH = NULL,
   peak_startDays = NULL, peak_endDays = NULL, peak_locals = NULL,
-  allPriors = NULL, ...)
+  unique_states, allPriors = NULL)
 }
 \arguments{
 \item{ts}{time vector over which to solve the ODE model}
@@ -35,7 +35,7 @@ create_posterior(ts, values, names, local, startDays, endDays, buckets,
 
 \item{inc_endDays}{end day vector for incidence data}
 
-\item{inc_local}{vector of state names for incidence data}
+\item{inc_locals}{vector of state names for incidence data}
 
 \item{inc_buckets}{sampling window vector for incidence data}
 
@@ -49,9 +49,9 @@ create_posterior(ts, values, names, local, startDays, endDays, buckets,
 
 \item{peak_locals}{vector of corresponding state name}
 
-\item{allPriors}{defaults to NULL. Arguments for parameter priors, if desired.}
+\item{unique_states}{vector of all unique state names}
 
-\item{unique_states}{vector of all unique states considered here}
+\item{allPriors}{defaults to NULL. Arguments for parameter priors, if desired.}
 }
 \value{
 a single value for the posterior

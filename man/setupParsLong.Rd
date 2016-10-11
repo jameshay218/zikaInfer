@@ -6,6 +6,9 @@
 \usage{
 setupParsLong(version = 1)
 }
+\arguments{
+\item{version}{the version of the model being run}
+}
 \value{
 vector of names parameter values
 }

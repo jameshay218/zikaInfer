@@ -3,8 +3,8 @@ Title: zikaProj
 Version: 1.0.0
 Author: James Hay <james.hay13@imperial.ac.uk>
 Maintainer: James Hay <james.hay13@imperial.ac.uk> <jameshay218@gmail.com>
-Description: zikaProj
-License: GPL-2
+Description: zikaProj.
+License: GPL-3
 LazyData: true
 URL: https://github.com/jameshay218/zikaProj
 BugReports: https://github.com/jameshay218/zikaProj/issues
@@ -12,16 +12,13 @@ Suggests:
     testthat
 LinkingTo: Rcpp
 Imports:
-    Rcpp,
+    coda,
+    deSolve,
     ggplot2,
-    reshape2,
     gridExtra,
     gtable,
-    MASS,
-    data.table,
-    deSolve,
-    plyr,
-    lattice,
-    reldist,
-    coda
+    MASS,	
+    Rcpp,	
+    reshape2,
+    rlsoda
 RoxygenNote: 5.0.1

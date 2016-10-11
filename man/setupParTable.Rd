@@ -8,7 +8,15 @@ setupParTable(version = 1, realDat = NULL, sharedProb = FALSE,
   parFile = "", stateParFile = "")
 }
 \arguments{
-\item{pars}{the vector of parameters that would be used for the ODE model}
+\item{version}{which model version is being run (see \code{\link{print_version_names}})}
+
+\item{realDat}{data frame of the real microcephaly data}
+
+\item{sharedProb}{boolean indicating if all states share the same risk curve}
+
+\item{parFile}{if already specified, where to find the parameter table file without state parameters}
+
+\item{stateParFile}{as parFile, but with state specific parameters added}
 }
 \value{
 a matrix of needed settings for the MCMC algorithm. For each parameter, gives a name, lower and upper bounds, boolean for log scale, initial step sizes, log proposal and whether or not the parameter should be fixed.

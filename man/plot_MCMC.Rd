@@ -10,6 +10,8 @@ plot_MCMC(chains, parTab = NULL, filename = "mcmcplots.pdf")
 \item{chains}{list of MCMC chains}
 
 \item{parTab}{optional parameter table}
+
+\item{filename}{the name of the file to save to}
 }
 \value{
 nothing - saves plots to pdf

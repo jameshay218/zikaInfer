@@ -5,14 +5,24 @@
 \title{Plot single best trajectory}
 \usage{
 plot_best_trajectory_single(local, chain = NULL, realDat = NULL,
-  parTab = NULL, t_pars = NULL, runs = 100, incDat = NULL,
-  ylabel = TRUE, xlabel = TRUE, mcmcPars = c(burnin = 50000,
-  adaptive_period = 1e+05, thin = 50), ylimM = NULL, ylimI = NULL)
+  parTab = NULL, ts = NULL, runs = 100, incDat = NULL, ylabel = TRUE,
+  xlabel = TRUE, mcmcPars = c(burnin = 50000, adaptive_period = 1e+05, thin
+  = 50), ylimM = NULL, ylimI = NULL)
 }
 \arguments{
+\item{local}{the name of the state to be fitted}
+
+\item{chain}{the MCMC chain to use}
+
+\item{realDat}{the data frame of real data that was fitted to}
+
+\item{parTab}{the parameter table as returned by \code{\link{setupParTable}}}
+
+\item{ts}{vector of time parameters}
+
 \item{runs}{the number of runs to use for prediction intervals}
 
-\item{incDat}{optional data frame of actual incidence data}
+\item{incDat}{incidence data set, if to be included in the plot}
 
 \item{ylabel}{boolean whether or not to add y axis label}
 
@@ -23,10 +33,6 @@ plot_best_trajectory_single(local, chain = NULL, realDat = NULL,
 \item{ylimM}{ylimit for the microcephaly plot}
 
 \item{ylimI}{ylimit for the incidence plot}
-
-\item{runName}{the type of model fitting done}
-
-\item{state}{the name of the state to be fitted}
 }
 \value{
 a ggplot object with the incidence plots

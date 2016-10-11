@@ -11,7 +11,7 @@ likelihood_probM(microBirths, allBirths, probM)
 
 \item{allBirths}{the corresponding total number of births}
 
-\item{probM}{the corresponding vector of microcephaly probabilities as calculated by \link{\code{generate_probM}}.}
+\item{probM}{the corresponding vector of microcephaly probabilities as calculated by generate_probM.}
 }
 \value{
 a single likelihood value

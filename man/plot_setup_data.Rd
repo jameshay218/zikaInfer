@@ -4,7 +4,7 @@
 \alias{plot_setup_data}
 \title{Get plot data}
 \usage{
-plot_setup_data(chain, dat, parTab, t_pars, local, runs = NULL)
+plot_setup_data(chain, dat, parTab, ts, local, runs = NULL)
 }
 \arguments{
 \item{chain}{the MCMC chain}
@@ -13,11 +13,11 @@ plot_setup_data(chain, dat, parTab, t_pars, local, runs = NULL)
 
 \item{parTab}{the parameter table}
 
-\item{t_pars}{time parameters}
+\item{ts}{vector of times}
 
 \item{local}{string for state under consideration}
 
-\item{number}{the number to be appended to parameter names in the MCMC chain}
+\item{runs}{the number of samples to take}
 }
 \description{
 Given an MCMC chain and other parameters, returns a list of data frames that can be used to generate an incidence plot

@@ -8,6 +8,8 @@ setupStateParTable(stateDat, stateParFile = "stateParams.csv")
 }
 \arguments{
 \item{stateDat}{the data frame of all data}
+
+\item{stateParFile}{file name for the parameter table if exists}
 }
 \value{
 a parameter table

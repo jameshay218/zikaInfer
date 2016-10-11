@@ -13,7 +13,7 @@
 #' @param allPriors flag of whether or not to use priors
 #' @return a list with: 1) full file path at which the MCMC chain is saved as a .csv file; 2) the last used covarianec matrix; 3) the last used scale size
 #' @export
-#' @seealso \code{\link{posterior}}, \code{\link{proposalfunction}}
+#' @seealso \code{\link{posterior_complex_buckets}}, \code{\link{proposalfunction}}
 #' @useDynLib zikaProj
 run_metropolis_MCMC <- function(data,
                                 ts,
@@ -23,8 +23,7 @@ run_metropolis_MCMC <- function(data,
                                 mvrPars=NULL,
                                 incDat=NULL,
                                 peakTimes=NULL,
-                                allPriors=NULL,
-                                ...
+                                allPriors=NULL
                                 ){
     ## Allowable error in scale tuning
     TUNING_ERROR <- 0.1
@@ -389,3 +388,51 @@ proposalfunction <- function(values, lower_bounds, upper_bounds,steps, index){
     rtn[index] <- fromUnitScale(x,mn,mx)
     rtn
 }
+
+
+#' Generate allowable starting parameters
+#'
+#' Given a desirable SEIR peak time and time window, generates a set of R0 and t0 parameters that satisfy this peak time
+#' @param peakTime the desired central peak time. Defaults to 927
+#' @param peakTimeRange the desired allowable peak time range (ie. square prior)
+#' @param stateNames the set of Brazilian states for which allowable parameters should be generated. Must match those in the microDatFile
+#' @param microDatFile the location of the microcephaly data file which is needed to obtain N_H and L_H for each state. Note that this is only needed if no parTab is provided
+#' @param parTab the parameter table as returned by \code{\link{setupParTable}}
+#' @param allowableParsFile file location for the allowable parameters table, if it exists.
+#' @return a table of allowable parameters with columns for t0, mosquito density (R0), corresponding state (as this will vary by N_H and life expectancy), and corresponding peak time
+#' @export
+generate_allowable_params<- function(peakTime=927, peakTimeRange=60, stateNames,microDatFile=NULL,parTab=NULL,allowableParsFile="allowablePars.csv"){
+    if(file.exists(allowableParsFile)) allowablePars <- read.table(allowableParsFile)
+    else {
+        if(is.null(parTab)){
+            realDat <- read.csv(microDatFile)
+            realDat <- realDat[realDat$local %in% stateNames,]
+            parTab <- setupParTable(1,realDat,sharedProb=TRUE)
+        }
+        allowablePars <- NULL
+        peakTimes <- matrix(nrow=100,ncol=50)
+        for(local in stateNames){
+            tmpTab <- parTab[parTab$local %in% c(local, "all"),]
+            for(i in 1:nrow(peakTimes)){
+                for(j in 1:ncol(peakTimes)){
+                    pars <- tmpTab$values
+                    names(pars) <- tmpTab$names
+                    pars["density"] <- j/10
+                    pars["constSeed"] <- i*10
+                    y0s <- generate_y0s(as.numeric(pars["N_H"]),as.numeric(pars["density"]))
+                    t_pars <- seq(0,3003,by=1)
+                    y <- solveModelSimple_rlsoda(t_pars, y0s,pars,TRUE)
+                    peakTimes[i,j] <- y[which.max(y[,"I_H"]),"time"]
+                    if(peakTimes[i,j] > (peakTime - peakTimeRange/2) & peakTimes[i,j] < (peakTime + peakTimeRange/2)){
+                        allowablePars <- rbind(allowablePars,data.frame(i*10,j/10,local,peakTimes[i,j]))
+                    }
+                }
+            }
+        }
+        allowabledPars <- allowablePars[complete.cases(allowablePars),]
+        colnames(allowablePars) <- c("constSeed","density","local","peak")
+        write.table(allowablePars, "allowablePars.csv")
+    }
+    return(allowablePars)
+}
+

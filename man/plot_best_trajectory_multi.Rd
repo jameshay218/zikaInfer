@@ -4,7 +4,7 @@
 \alias{plot_best_trajectory_multi}
 \title{Plot all best trajectoroes}
 \usage{
-plot_best_trajectory_multi(chain, realDat, parTab, t_pars, runs = 100,
+plot_best_trajectory_multi(chain, realDat, parTab, ts, runs = 100,
   incDat = NULL, mcmcPars = c(burnin = 50000, adaptive = 1e+05, thin = 50),
   ylimM = NULL, ylimI = NULL)
 }
@@ -15,7 +15,7 @@ plot_best_trajectory_multi(chain, realDat, parTab, t_pars, runs = 100,
 
 \item{parTab}{the parameter table used for fitting}
 
-\item{t_pars}{the time parameters used for solving the ODEs}
+\item{ts}{vector of times to solve model over}
 
 \item{runs}{the number of runs to use for prediction intervals}
 

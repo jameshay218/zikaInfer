@@ -15,7 +15,7 @@ generate_foi(IM, NH, b, pMH, tstep)
 
 \item{pMH}{the probability of transmission upon bite}
 
-\item{the}{time step over which to bucket the force of infection. Best left to 1 for 1 day}
+\item{tstep}{the time step over which to bucket the force of infection. Best left to 1 for 1 day}
 }
 \value{
 the vector of FOI

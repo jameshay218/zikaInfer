@@ -8,12 +8,14 @@ setupListPars(duration = 2 * 365, version = 1)
 }
 \arguments{
 \item{duration}{Duration in years of the simulation. Defaults to 10 years}
+
+\item{version}{the version of the model that is going to be used (see \code{\link{print_version_names}})}
 }
 \value{
 list of times, initial conditions, and ODE parameters
 }
 \description{
-Sets up the default list of parameters and initial conditions to be used by \code{\link{zika.sim}}. Can specify which version of the model to use. Passing 1 gives the simple model with no age classes, otherwise gives the parameters for the model with age classes.
+Sets up the default list of parameters and initial conditions to be used by \code{\link{generate_multiple_data}}. Can specify which version of the model to use. Passing 1 gives the simple model with no age classes, otherwise gives the parameters for the model with age classes.
 }
 \seealso{
 \code{\link{setupParsLong}}

@@ -6,6 +6,9 @@
 \usage{
 setupParsODE(version = 1)
 }
+\arguments{
+\item{version}{the version of the model to be used (see \code{\link{print_version_names}})}
+}
 \value{
 vector of named parameter values
 }

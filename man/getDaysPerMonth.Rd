@@ -6,6 +6,9 @@
 \usage{
 getDaysPerMonth(breaks = 12)
 }
+\arguments{
+\item{breaks}{total number of months to consider (defaults to 12 to give raw days per each month)}
+}
 \value{
 vector of days
 }

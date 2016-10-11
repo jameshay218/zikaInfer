@@ -7,7 +7,7 @@
 run_metropolis_MCMC(data, ts, param_table, mcmcPars = c(iterations = 1000,
   popt = 0.44, opt_freq = 50, thin = 1, burnin = 100, adaptive_period = 100,
   tuning_period = 100, save_block = 500), filename, mvrPars = NULL,
-  incDat = NULL, peakTimes = NULL, allPriors = NULL, ...)
+  incDat = NULL, peakTimes = NULL, allPriors = NULL)
 }
 \arguments{
 \item{data}{the microcephaly data against which the likelihood is calculated}
@@ -35,6 +35,6 @@ a list with: 1) full file path at which the MCMC chain is saved as a .csv file; 
 The Adaptive Metropolis-within-Gibbs algorithm. Given a starting point and the necessary MCMC parameters as set out below, performs a random-walk of the posterior space to produce an MCMC chain that can be used to generate MCMC density and iteration plots. The algorithm undergoes an adaptive period, where it changes the step size of the random walk for each parameter to approach the desired acceptance rate, popt. After this, a burn in period is established, and the algorithm then uses \code{\link{proposalfunction}} to explore the parameter space, recording the value and posterior value at each step. The MCMC chain is saved in blocks as a .csv file at the location given by filename.
 }
 \seealso{
-\code{\link{posterior}}, \code{\link{proposalfunction}}
+\code{\link{posterior_complex_buckets}}, \code{\link{proposalfunction}}
 }
 

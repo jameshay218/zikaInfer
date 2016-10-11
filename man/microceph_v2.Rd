@@ -2,9 +2,15 @@
 % Please edit documentation in R/model.R
 \name{microceph_v2}
 \alias{microceph_v2}
-\title{Microcephaly risk curve with 3 distinct periods}
+\title{Microcephaly risk V1}
 \usage{
 microceph_v2(pars)
+}
+\arguments{
+\item{pars}{the model parameters}
+}
+\value{
+the vector of risks
 }
 \description{
 Microcephaly risk curve with 3 distinct periods

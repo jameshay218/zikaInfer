@@ -14,7 +14,7 @@
 #' @param data_locals corresponding vector of state names for the microcephaly data
 #' @param inc_startDays start day vector for incidence data
 #' @param inc_endDays end day vector for incidence data
-#' @param inc_local vector of state names for incidence data
+#' @param inc_locals vector of state names for incidence data
 #' @param inc_buckets sampling window vector for incidence data
 #' @param inc_ZIKV vector of ZIKV incidence for each time point
 #' @param inc_NH vector of population size over time
@@ -120,26 +120,17 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
     lik <- 0
 
     ## Solve the ODE model with current parameter values
-    y <- ode(y0s,
-             ts,
-             func="simpleSEIR",
-             dllname="zikaProj",
-             parms=pars[c("L_M","L_H","D_EM","D_EH","D_IH","b","p_HM","p_MH","constSeed")],
-             initfunc="initmodSEIR",
-             nout=0,
-             rtol=1e-5,
-             atol=1e-5
-             )
+    y <- solveModelSimple_rlsoda(ts, y0s, pars,FALSE)
+  
+    ## Extract peak time. Need to add 1 as rlsoda does not return the first time point.
+    peakTime <- y["time",which.max(y["I_H",])]
 
-
-    ## Extract peak time
-    peakTime <- y[which.max(y[,7]),1]
     
     if(!is.null(zikv)){
-        tmpY <- y[y[,1] >= min(inc_start) & y[,1] <= max(inc_end),]
-        N_H <- average_buckets(rowSums(tmpY[,5:8]), inc_buckets)
-
-        inc <- diff(tmpY[,9])
+        tmpY <- y[,which(y["time",] >= min(inc_start) & y["time",] <= max(inc_end))]
+        N_H <- average_buckets(colSums(tmpY[5:8,]), inc_buckets)
+        
+        inc <- diff(tmpY["incidence",])
         inc <- sum_n_vector(inc, 7)
         
         perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
@@ -147,8 +138,8 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
     }
 
     probs <- generate_micro_curve(pars)
-    probM <- generate_probM(y[,4], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)*pars["propn"]
-    probM <- probM[which(y[,1] >= min(startDays) & y[,1] <= max(endDays))]
+    probM <- generate_probM(y["I_M",], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)*pars["propn"]
+    probM <- probM[which(y["time",] >= min(startDays) & y["time",] <= max(endDays))]
     probM <- average_buckets(probM, buckets)
    
     lik <- lik + likelihood_probM(microCeph, births, probM)
@@ -188,21 +179,21 @@ incidence_likelihood <- function(perCapInc, inc, N_H){
 #' @param data_locals corresponding vector of state names for the microcephaly data
 #' @param inc_startDays start day vector for incidence data
 #' @param inc_endDays end day vector for incidence data
-#' @param inc_local vector of state names for incidence data
+#' @param inc_locals vector of state names for incidence data
 #' @param inc_buckets sampling window vector for incidence data
 #' @param inc_ZIKV vector of ZIKV incidence for each time point
 #' @param inc_NH vector of population size over time
 #' @param peak_startDays vector of initial allowable day of incidence peak time
 #' @param peak_endDays vector of end allowable day of incidence peak time
 #' @param peak_locals vector of corresponding state name
-#' @param unique_states vector of all unique states considered here
+#' @param unique_states vector of all unique state names
 #' @param allPriors defaults to NULL. Arguments for parameter priors, if desired.
 #' @return a single value for the posterior
 #' @export
 #' @useDynLib zikaProj
-create_posterior <- function(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays=NULL, inc_endDays=NULL,inc_local=NULL,inc_buckets=NULL,inc_ZIKV=NULL,inc_NH=NULL, peak_startDays=NULL, peak_endDays=NULL,peak_locals=NULL,allPriors=NULL,...){
+create_posterior <- function(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays=NULL, inc_endDays=NULL,inc_locals=NULL,inc_buckets=NULL,inc_ZIKV=NULL,inc_NH=NULL, peak_startDays=NULL, peak_endDays=NULL,peak_locals=NULL,unique_states, allPriors=NULL){
     f <- function(values){
-        return(posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays,inc_endDays,inc_locals,inc_buckets,inc_ZIKV,inc_NH, peak_startDays, peak_endDays,peak_locals, allPriors, ...))
+        return(posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays,inc_endDays,inc_locals,inc_buckets,inc_ZIKV,inc_NH, peak_startDays, peak_endDays,peak_locals, unique_states,allPriors))
     }
      return(f)
 }

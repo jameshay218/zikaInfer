@@ -35,6 +35,8 @@ posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets,
 
 \item{inc_endDays}{end day vector for incidence data}
 
+\item{inc_locals}{vector of state names for incidence data}
+
 \item{inc_buckets}{sampling window vector for incidence data}
 
 \item{inc_ZIKV}{vector of ZIKV incidence for each time point}
@@ -50,8 +52,6 @@ posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets,
 \item{unique_states}{vector of all unique states}
 
 \item{allPriors}{defaults to NULL. Arguments for parameter priors, if desired.}
-
-\item{inc_local}{vector of state names for incidence data}
 }
 \value{
 a single value for the posterior
