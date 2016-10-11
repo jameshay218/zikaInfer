@@ -5,6 +5,8 @@
 #' @param parTab optional parameter table
 #' @return nothing - saves plots to pdf
 #' @export
+#' @import ggplot2
+#' @import gridExtra
 #' @useDynLib zikaProj
 plot_MCMC <- function(chains, parTab=NULL,filename="mcmcplots.pdf"){
     for(i in 1:length(chains)){
@@ -16,8 +18,8 @@ plot_MCMC <- function(chains, parTab=NULL,filename="mcmcplots.pdf"){
     }
 
     pdf(filename)
+    on.exit(dev.off())
     plot(as.mcmc.list(chains))
-    dev.off()
 }
 
 #' Plot microceph curves
@@ -342,8 +344,8 @@ plot_setup_data <- function(chain, dat, parTab, t_pars, local, runs=NULL){
         allMicro <- rbind(allMicro, micro)
     }
 
-    incBounds <- as.data.frame(melt(sapply(unique(allInc$times),function(x) quantile(allInc[allInc$times==x,"I_H"],c(0.025,0.5,0.975)))[c(1,3),]))
-    microBounds <- as.data.frame(melt(sapply(unique(allMicro$day),function(x) quantile(allMicro[allMicro$day==x,"number"],c(0.025,0.5,0.975)))[c(1,3),]))
+    incBounds <- as.data.frame(reshape2::melt(sapply(unique(allInc$times),function(x) quantile(allInc[allInc$times==x,"I_H"],c(0.025,0.5,0.975)))[c(1,3),]))
+    microBounds <- as.data.frame(reshape2::melt(sapply(unique(allMicro$day),function(x) quantile(allMicro[allMicro$day==x,"number"],c(0.025,0.5,0.975)))[c(1,3),]))
     colnames(microBounds) <- c("quantile","time","micro")
     colnames(incBounds) <- c("quantile","time","inc")
     
@@ -400,156 +402,3 @@ plot_setup_data_auxiliary <- function(pars, dat, parTab, t_pars, local){
 combine_chains <- function(chains){
     return(do.call("rbind",chains))
 }
-
-#' Volcano plots
-#'
-#' Given a list of MCMC chains, produces a grid of volcano plots for the unfixed state-specific parameters
-#' @param chains the list of chains
-#' @param parTab the parameter table used for correct indexing
-#' @return a ggplot table
-#' @export
-#' @useDynLib
-volcano_plots <- function(chains, parTab){
-    allChains <- combine_chains(chains)
-
-    states <- unique(parTab$local)
-    states <- states[states != "all"]
-    tmp <- sort(states,index.return=TRUE)
-    numbers <- tmp$ix - 1
-    states <- tmp$x
-
-    country_names <- c(
-        "pernambuco"="Pernambuco",
-        "bahia"="Bahia",
-        "saopaulo"="Sao Paulo",
-        "paraiba"="Paraiba",
-        "maranhao"="Maranhao",
-        "ceara"="Ceara",
-        "sergipe"="Sergipe",
-        "riodejaneiro"="Rio de Janeiro",
-        "piaui"="Piaui",
-        "riograndedonorte"="Rio Grande Norte",
-        "minasgerais"="Minas Gerais",
-        "matogrosso"="Mato Grosso",
-        "alagoas"="Algoas",
-        "para"="Para",
-        "acre"="Acre",
-        "espiritosanto"="Espirito Santo",
-        "goias"="Goias",
-        "tocantins"="Tocantins"
-    )
-
-    allR0 <- allAttack <- allEpi <- allDensity <- allPropn <- NULL
-    
-    for(i in 1:length(states)){
-        local <- states[i]
-                                        #name <- get_state_name(local)
-        name <- as.character(states[i])
-        unfixed_pars <- parTab[parTab$local==local,"names"]
-        number <- numbers[i]
-        if(number >= 1) unfixed_pars <- paste(unfixed_pars,".",number,sep="")
-        unfixed_pars <- allChains[,unfixed_pars]
-        names(unfixed_pars) <- parTab[parTab$local==local,"names"]
-        
-        fixed_pars <- allChains[,parTab[parTab$local=="all","names"]]
-        pars <- cbind(fixed_pars, unfixed_pars, row.names=NULL)
-        pars <- pars[sample(seq(1,nrow(pars),by=1),1000,replace=FALSE),]
-        
-        R0s <- data.frame("value"=r0.vector(pars),"dat"=name, row.names=NULL)
-        attack <- data.frame("value"=sapply(R0s$value, function(x) nleqslv(0.8, zikaProj::simeq, R0=x)$x),"dat"=name, row.names=NULL)
-        tmpEpi <- data.frame("value"=pars$epiStart,"dat"=name, row.names=NULL)
-        tmpDensity <- data.frame("value"=pars$density,"dat"=name, row.names=NULL)
-        tmpPropn <- data.frame("value"=pars$propn,"dat"=name, row.names=NULL)
-
-        allR0 <- rbind(allR0, R0s,row.names=NULL)
-        allAttack <- rbind(allAttack, attack,row.names=NULL)
-        allEpi <- rbind(allEpi, tmpEpi,row.names=NULL)
-        allDensity <- rbind(allDensity, tmpDensity,row.names=NULL)
-        allPropn <- rbind(allPropn, tmpPropn,row.names=NULL)
-    }
-    
-    mytheme <- theme(
-        panel.grid.minor=element_blank(),
-        panel.grid.major.y = element_blank(),
-        panel.grid.major.x = element_line(colour="gray20",linetype="dashed",size=0.25),
-        text=element_text(size=10,colour="gray20"),
-        axis.line=element_line(colour="gray20"),
-        axis.line.y=element_line(colour="gray20"),
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank(),
-        strip.text.y=element_text(size=10,angle=0),
-        strip.text = element_blank(),
-        legend.position="none",
-        panel.margin=unit(0,"lines"),
-        plot.margin=unit(c(0.1,0.5,0.1,0.1),"cm"),
-        panel.grid = element_line(colour="gray20"),
-        panel.background=element_rect(colour="gray40"),
-        strip.background=element_rect(colour="black")
-    )
-
-    R0plot <- ggplot(allR0,aes(x=value))+
-        stat_density(aes(ymax=..density..,ymin=-..density..,fill=dat,color=dat),trim=TRUE,geom="ribbon",position="identity")+
-                                        #coord_cartesian(xlim=c(0,10))+
-        scale_x_continuous(limits=c(0,10),breaks=seq(0,10,by=1))+
-        facet_grid(dat~.,labeller=as_labeller(country_names))+
-                                        #coord_flip()+ 
-        ylab("") +
-        ggtitle("Basic Reproductive Number, R0")+
-        xlab("Value")+
-        mytheme +
-        theme(
-            plot.margin=unit(c(0.1,0.5,0.1,0),"cm")
-        )
-    
-    densityPlot <- ggplot(allDensity,aes(x=value))+
-        stat_density(aes(ymax=..density..,ymin=-..density..,fill=dat,color=dat),trim=TRUE,geom="ribbon",position="identity")+
-        scale_x_continuous(limits=c(0,15),breaks=seq(0,15,by=3))+
-        facet_grid(dat~.)+
-        ylab("") +
-        ggtitle("Mosquito Density per Person")+
-        xlab("Value")+
-        mytheme +
-        theme(
-            plot.margin=unit(c(0.1,0.5,0.1,0),"cm")
-        )
-
-    xlabels <- c("01/2014","04/2014","07/2014","10/2014","01/2015","04/2015","07/2015","10/2015","01/2016")
-    days <- getDaysPerMonth()
-    years <- cumsum(c(0,days,days,days[1:2]))
-    years <- years[seq(1,length(years),by=3)]
-    epiplot <- ggplot(allEpi,aes(x=value))+
-        stat_density(aes(ymax=..density..,ymin=-..density..,fill=dat,color=dat),trim=TRUE,geom="ribbon",position="identity")+
-        facet_grid(dat~.)+
-        scale_x_continuous(breaks=years,labels=xlabels)+
-        ylab("") +
-        ggtitle("Epidemic Start Time")+
-        xlab("Value")+
-        mytheme
-
-    propnplot <- ggplot(allPropn,aes(x=value))+
-        stat_density(aes(ymax=..density..,ymin=-..density..,fill=dat,color=dat),trim=TRUE,geom="ribbon",position="identity")+
-      #  scale_x_continuous(limits=c(0,1))+
-        facet_grid(dat~.)+
-        ylab("") +
-        ggtitle("Proportion of affected births")+
-        xlab("Value")+
-        mytheme+
-        theme(
-            plot.margin=unit(c(0.1,0.5,0.1,0),"cm")
-  )
-
-
-    #return(list(R0plot,densityPlot,epiplot, propnplot))
-    strips <- R0plot + theme(strip.text=element_text())
-    tmp <- ggplot_gtable(ggplot_build(strips))
-    tmp1 <- gtable_filter(tmp,"strip-right")
-    
-g3 <- grid.arrange(arrangeGrob(textGrob(label="State",gp=gpar(fontsize=16,colour="grey20")),
-                               tmp1,rectGrob(gp=gpar(col="white")),heights=c(0.55,7,0.8)),
-                   R0plot,densityPlot,arrangeGrob(textGrob(label="State",gp=gpar(fontsize=16,colour="grey20")),
-                                                 tmp1,rectGrob(gp=gpar(col="white")),heights=c(0.55,7,0.8)),
-                   epiplot,propnplot,ncol=3,widths=c(1.7,6,6))
-    return(g3)
-}
-
-

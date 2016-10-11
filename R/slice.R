@@ -1,5 +1,5 @@
-#' Simple MCMC algorithm
-#'
+#' Slice MCMC sampler
+#' 
 #' Typically uses a univariate slice sampler for proposal update. Performs MCMC on a given target function
 #' @param target pointer to the posterior (target) function, that should take only one argument - the vector of model parameters
 #' @param x_init initial paramter values for the target function
@@ -131,7 +131,6 @@ slice_sample <- function(f, x_init, z, r) {
 }
 
 ## utilities:
-#' 
 make_unipar <- function(f, x, i) {
   force(f)
   force(x)

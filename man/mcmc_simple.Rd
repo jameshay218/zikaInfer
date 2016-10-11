@@ -2,7 +2,7 @@
 % Please edit documentation in R/slice.R
 \name{mcmc_simple}
 \alias{mcmc_simple}
-\title{Simple MCMC algorithm}
+\title{Slice MCMC sampler}
 \usage{
 mcmc_simple(target, x_init, fixed, nsteps, w, lower = -Inf, upper = -Inf,
   print_every = 1, save_file = NULL)

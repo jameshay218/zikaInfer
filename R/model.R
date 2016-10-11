@@ -102,7 +102,6 @@ generate_y0s <- function(N_H, density){
 #' @param pars the model parameters
 #' @return a vector of risks
 #' @export
-#' @useDynLib zikaProj
 generate_micro_curve <- function(pars){
     if(!is.na(pars["mean"])) return(microceph_v1(pars))
     else if(!is.na(pars["p8"])) return(microceph_v4(pars))
