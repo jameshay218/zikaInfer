@@ -126,3 +126,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sum_buckets
+NumericVector sum_buckets(NumericVector a, NumericVector buckets);
+RcppExport SEXP zikaProj_sum_buckets(SEXP aSEXP, SEXP bucketsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type a(aSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type buckets(bucketsSEXP);
+    rcpp_result_gen = Rcpp::wrap(sum_buckets(a, buckets));
+    return rcpp_result_gen;
+END_RCPP
+}

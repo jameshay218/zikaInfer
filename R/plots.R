@@ -131,17 +131,18 @@ create_polygons <- function(lower,upper){
 #' @param mcmcPars a named vector of the burnin, adaptive period and thinning
 #' @param ylimM ylimit for the microcephaly plot
 #' @param ylimI ylimit for the incidence plot
-#
+#' @param startDay if realDat is not provided, need to provide the first day on which we want to see predicted microcephaly numbers
+#' @param months if realDat not provided, need to provide the number of months of forecasted data that we wish to see
+#' @param weeks if no incidence data provided, number of weeks over which we should plot the data
 #' @return a ggplot object with the incidence plots
 #' @export
-plot_best_trajectory_multi <- function(chain, realDat, parTab, ts, runs=100, incDat=NULL, mcmcPars=c("burnin"=50000,"adaptive"=100000,"thin"=50), ylimM=NULL,ylimI=NULL){
+plot_best_trajectory_multi <- function(chain, realDat, parTab, ts, runs=100, incDat=NULL, mcmcPars=c("burnin"=50000,"adaptive"=100000,"thin"=50), ylimM=NULL,ylimI=NULL,startDay=NULL,months=NULL,weeks=NULL){
     ps <- NULL
-    
     states <- unique(parTab$local)
     states <- states[states != "all"]
 
     for(i in 1:length(states)){
-        ps[[i]] <- plot_best_trajectory_single(states[i], chain, realDat, parTab, ts, runs, incDat=incDat, ylabel=FALSE, xlabel=FALSE, mcmcPars,ylimM,ylimI)
+        ps[[i]] <- plot_best_trajectory_single(states[i], chain, realDat, parTab, ts, runs, incDat=incDat, ylabel=FALSE, xlabel=FALSE, mcmcPars,ylimM,ylimI,startDay,months,weeks)
     }
     ncols <- ceiling(length(states)/4)
     allPlot <- do.call("grid.arrange",c(ps,ncol=ncols))
@@ -178,19 +179,22 @@ generate_x_labels <- function(startDay, endDay, rep_=6){
 #' @param mcmcPars a named vector of the burnin, adaptive period and thinning
 #' @param ylimM ylimit for the microcephaly plot
 #' @param ylimI ylimit for the incidence plot
+#' @param startDay if realDat is not provided, need to provide the first day on which we want to see predicted microcephaly numbers
+#' @param months if realDat not provided, need to provide the number of months of forecasted data that we wish to see
+#' @param weeks if no incidence data provided, number of weeks over which we should plot the data
 #' @return a ggplot object with the incidence plots
 #' @export
-plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=NULL, ts=NULL, runs=100,incDat=NULL, ylabel=TRUE,xlabel=TRUE, mcmcPars=c("burnin"=50000,"adaptive_period"=100000,"thin"=50),ylimM=NULL, ylimI=NULL){
-    allDat <- plot_setup_data(chain,realDat, parTab, ts,local,runs)
-
+plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=NULL, ts=NULL, runs=100,incDat=NULL, ylabel=TRUE,xlabel=TRUE, mcmcPars=c("burnin"=50000,"adaptive_period"=100000,"thin"=50),ylimM=NULL, ylimI=NULL, startDay=NULL,months=NULL,weeks=NULL){
+    allDat <- plot_setup_data(chain,realDat, incDat,parTab, ts,local,runs, startDay, months,weeks)
     bestMicro <- allDat$bestMicro
     bestInc <- allDat$bestInc
     incBounds <- allDat$incBounds
     microBounds <- allDat$microBounds
     dat <- allDat$data
+    incDat <- allDat$incDat
 
     xlim <- c(min(dat[,"startDay"]),max(dat[,"endDay"]))
-
+    
     quantiles <- unique(microBounds[,"quantile"])
     botM <- microBounds[microBounds[,"quantile"]==quantiles[1],c("time","micro")]
     topM <- microBounds[microBounds[,"quantile"]==quantiles[2],c("time","micro")]
@@ -206,7 +210,7 @@ plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=
 
     polygonM <- polygonM[polygonM$x >= xlim[1] & polygonM <= xlim[2],]
 
-    xlim <- c(min(dat[,"startDay"]),max(dat[,"endDay"]))
+    #xlim <- c(min(dat[,"startDay"]),max(dat[,"endDay"]))
     xlabs <- generate_x_labels(xlim[1],xlim[2])
     myPlot <- microceph_plot(dat,microBounds,bestMicro,polygonM,local,xlim,ylimM,xlabs)
     incPlot <- inc_plot(incBounds,bestInc,polygonI,ylimI,xlim,incDat)
@@ -226,7 +230,7 @@ microceph_plot <- function(dat, microBounds, bestMicro, polygonM, local, xlim, y
     xlabels <- xlabs$labels
     xlabBreaks <- xlabs$positions
     
-    myPlot <- ggplot() + geom_point(data=dat,aes_string(y="microCeph",x="meanDay"),col="black",size=1) +
+    myPlot <- ggplot() + 
         geom_line(data=microBounds,aes_string(y="micro",x="time",group="quantile"),lwd=0.5,linetype=2,col="blue",alpha=0.5) +
         geom_line(data=bestMicro,aes_string(y="number",x="day"),col="blue",lwd=0.5) +
         geom_polygon(data=polygonM,aes_string(x="x",y="y"),alpha=0.2,fill="blue")+
@@ -244,6 +248,7 @@ microceph_plot <- function(dat, microBounds, bestMicro, polygonM, local, xlim, y
             axis.title.y=element_text(size=10),
             plot.margin=unit(c(0.1,0.8,0.1,0.1),"cm")
         )
+    if(!is.null(dat$microCeph)) myPlot <- myPlot + geom_point(data=dat,aes_string(y="microCeph",x="meanDay"),col="black",size=1)
     if(!is.null(ylim)) myPlot <- myPlot + scale_y_continuous(limits=c(0,ylim))
     return(myPlot)
 }
@@ -251,7 +256,7 @@ microceph_plot <- function(dat, microBounds, bestMicro, polygonM, local, xlim, y
 inc_plot <- function(incBounds, bestInc, polygonI, ylimI,xlim, incDat=NULL){
     incPlot <- ggplot() +
         geom_line(data=incBounds,aes_string(y="inc",x="time",group="quantile"),linetype=2,col="red",size=0.5,alpha=0.5) +
-        geom_line(data=bestInc,aes_string(y="I_H",x="time"),col="red",lwd=0.5)+
+        geom_line(data=bestInc,aes_string(y="inc",x="time"),col="red",lwd=0.5)+
         geom_polygon(data=polygonI,aes_string(x="x",y="y"),alpha=0.2,fill="red")+
         scale_x_continuous(limits=xlim)
     
@@ -272,7 +277,7 @@ inc_plot <- function(incBounds, bestInc, polygonI, ylimI,xlim, incDat=NULL){
             
         )
     
-    if(!is.null(incDat)){
+    if(!is.null(incDat$inc)){
         incDat$meanDay <-rowMeans(incDat[,c("startDay","endDay")])
         incDat$perCapInc <- incDat[,"inc"]/incDat[,"N_H"]
         incPlot <- incPlot + geom_point(data=incDat,aes_string(x="meanDay",y="perCapInc"),col="black",size=1, shape=3)
@@ -319,21 +324,51 @@ overlapPlots <- function(p1,p2, centre_plot=TRUE){
 #'
 #' Given an MCMC chain and other parameters, returns a list of data frames that can be used to generate an incidence plot
 #' @param chain the MCMC chain
-#' @param dat the data frame of real data
+#' @param dat the data frame of real microcephaly data
+#' @param incDat the data frame of real ZIKV incidence data
 #' @param parTab the parameter table
 #' @param ts vector of times
 #' @param local string for state under consideration
 #' @param runs the number of samples to take
+#' @param startDay if realDat is not provided, need to provide the first day on which we want to see predicted microcephaly numbers
+#' @param noMonths if realDat not provided, need to provide the number of months of forecasted data that we wish to see
+#' @param noWeeks if no incidence data provided, number of weeks over which we should plot the data
 #' @export
-plot_setup_data <- function(chain, dat, parTab, ts, local, runs=NULL){
+plot_setup_data <- function(chain, dat=NULL, incDat=NULL, parTab, ts, local, runs=NULL,startDay=NULL, noMonths=12,noWeeks=52){
     ## Get the subset of data for this particular state and find the middle day for each month
-    tmpDat <- dat[dat$local==local,]
-    tmpDat$meanDay <- rowMeans(cbind(tmpDat[,"startDay"],tmpDat[,"endDay"]))
+    ## If not provided, generate artificial sampling times
+    tmpDat <- NULL
+    if(!is.null(dat)){
+        tmpDat <- dat[dat$local==local,]
+        tmpDat$meanDay <- rowMeans(tmpDat[,c("startDay","endDay")])
+    } else {
+        months <- rep(getDaysPerMonth(),pmax(1,noMonths/12))
+        startDays <- startDay + cumsum(months) - months[1]
+        endDays <- startDay + cumsum(months)
+        tmpDat <- data.frame(startDay=startDays,endDay=endDays)
+        tmpDat$buckets <- months
+        tmpDat$meanDay <- rowMeans(tmpDat[,c("startDay","endDay")])
+    }
+
+    # Get subset of incidence data for this state.
+    tmpInc <- NULL
+    if(!is.null(incDat)){
+        tmpInc <- incDat[incDat$local == local,]
+        tmpInc$meanDay <- rowMeans(tmpInc[,c("startDay","endDay")])
+    } else {
+        inc_weeks <- rep(7,noWeeks)
+
+        startDays <- startDay + cumsum(inc_weeks) - inc_weeks[1]
+        endDays <- startDay + cumsum(inc_weeks)
+        tmpInc <- data.frame(startDay=startDays,endDay=endDays)
+        tmpInc$buckets <- inc_weeks
+        tmpInc$meanDay <- rowMeans(tmpInc[,c("startDay","endDay")])
+    }        
 
     ## Get the set of best fitting parameters. These will be used to generate the best fit incidence and
     ## microcephaly line
     bestPars <- get_best_pars(chain)
-    tmp <- plot_setup_data_auxiliary(bestPars,tmpDat,parTab,ts,local)
+    tmp <- plot_setup_data_auxiliary(bestPars,tmpDat,tmpInc,parTab,ts,local)
     bestInc <- tmp$inc
     bestMicro <- tmp$micro
     
@@ -345,28 +380,27 @@ plot_setup_data <- function(chain, dat, parTab, ts, local, runs=NULL){
     ## For each sample, get the sample parameters from the chain and calculate the trajectory
     for(i in samples){
         pars <- get_index_pars(chain,i)
-        tmp <- plot_setup_data_auxiliary(pars,tmpDat,parTab,ts,local)
+        tmp <- plot_setup_data_auxiliary(pars,tmpDat,tmpInc,parTab,ts,local)
         inc <- tmp$inc
         micro <- tmp$micro
         allInc <- rbind(allInc, inc)
         allMicro <- rbind(allMicro, micro)
     }
 
-    incBounds <- as.data.frame(reshape2::melt(sapply(unique(allInc$time),function(x) quantile(allInc[allInc$time==x,"I_H"],c(0.025,0.5,0.975)))[c(1,3),]))
+    incBounds <- as.data.frame(reshape2::melt(sapply(unique(allInc$time),function(x) quantile(allInc[allInc$time==x,"inc"],c(0.025,0.5,0.975)))[c(1,3),]))
     microBounds <- as.data.frame(reshape2::melt(sapply(unique(allMicro$day),function(x) quantile(allMicro[allMicro$day==x,"number"],c(0.025,0.5,0.975)))[c(1,3),]))
     colnames(microBounds) <- c("quantile","time","micro")
     colnames(incBounds) <- c("quantile","time","inc")
     
     microBounds[,"time"] <- tmpDat[,"meanDay"][microBounds[,"time"]]
-
-    return(list("bestInc"=bestInc,"incBounds"=incBounds,"bestMicro"=bestMicro,"microBounds"=microBounds, "data"=tmpDat))  
+    incBounds[,"time"] <- tmpInc[,"meanDay"][incBounds[,"time"]]
+    
+    return(list("bestInc"=bestInc,"incBounds"=incBounds,"bestMicro"=bestMicro,"microBounds"=microBounds, "data"=tmpDat,"incDat"=tmpInc))
 }
 
-plot_setup_data_auxiliary <- function(pars, dat, parTab, ts, local){
+plot_setup_data_auxiliary <- function(pars, dat,incDat, parTab, ts, local){
     ## As the model has many parameters with the same name, need to find the index in the MCMC colnames
     ## that corresponds to this state
-    dat$meanDay <- rowMeans(cbind(dat[,"startDay"],dat[,"endDay"]))
-
     number <- which(unique(parTab$local)==local) - 2
   
     ## Format parameter vector correctly
@@ -388,14 +422,25 @@ plot_setup_data_auxiliary <- function(pars, dat, parTab, ts, local){
 
     probM <- average_buckets(probM, dat[,"buckets"])
 
-    predicted <- probM*dat[,"births"]*pars["propn"]
+    ## Generate predicted microcephaly cases or per birth incidence depending on what was provided
+    if(!is.null(dat$births)){
+        predicted <- probM*dat[,"births"]*pars["propn"]
+    } else {
+        predicted <- probM*pars["propn"]
+    }
     predicted <- data.frame(day=dat[,"meanDay"],number=predicted)
     
-    y[,"I_H"] <- y[,"I_H"]/rowSums(y[,c("I_H","E_H","S_H","R_H")])
-    y[,"I_H"] <- 1- (1-(y[,"I_H"]))*(1-pars["baselineInc"])
-    y[,"I_H"] <- y[,"I_H"]*pars["incPropn"]
-    y <- as.data.frame(y[,c("time","I_H")])
-    y$time <- as.integer(y$time)
+    ## Generate predicted incidence cases
+    N_H <- average_buckets(rowSums(y[,5:8]), incDat$buckets)
+    
+    tmpY <- y[which(y[,"time"] >= min(incDat[,"startDay"]) & y[,"time"] <= max(incDat[,"endDay"])),]
+    inc <- diff(tmpY[,"incidence"])
+                                     
+    ## At the moment this really needs to be in weeks
+    inc <- sum_buckets(inc, incDat$buckets)
+
+    perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
+    y <- data.frame(time=incDat$meanDay,inc=perCapInc)
     
     return(list("micro"=predicted,"inc"=y))
 }

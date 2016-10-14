@@ -112,3 +112,14 @@ average_buckets <- function(a, buckets) {
     .Call('zikaProj_average_buckets', PACKAGE = 'zikaProj', a, buckets)
 }
 
+#' Sums a vector based on bucket sizes
+#'
+#' Given a vector (a) and another vector of bucket sizes, returns the summed vector (a)
+#' @param a the vector to be bucketed
+#' @param buckets the vector of bucket sizes to sum a over
+#' @return the vector of summed a
+#' @export
+sum_buckets <- function(a, buckets) {
+    .Call('zikaProj_sum_buckets', PACKAGE = 'zikaProj', a, buckets)
+}
+

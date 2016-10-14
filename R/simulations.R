@@ -71,16 +71,18 @@ generate_multiple_data <- function(t_pars, paramTable,weeks=FALSE, dataRangeMicr
 ######################################
         ## INCIDENCE DATA
 ######################################
-        N_H <- average_buckets(rowSums(y[,c("I_H","S_H","E_H","R_H")]), inc_buckets)
+        N_H <- as.integer(average_buckets(rowSums(y[,c("I_H","S_H","E_H","R_H")]), inc_buckets))
          ## Generate simulated incidence data
         inc <- diff(y[,"incidence"])
         inc[inc < 0] <- 0
-        inc <- sum_n_vector(inc, 7)
+        inc <- sum_buckets(inc, inc_buckets)
 
         perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
         
         if(noise) inc <- rbinom(length(perCapInc),pars["N_H"], perCapInc)
         
+        ## Needs to be to the nearest integer
+        inc <- round(inc)
 ######################################
         ## PEAK TIMES
 ######################################

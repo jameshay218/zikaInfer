@@ -15,36 +15,37 @@
 #' @export
 #' @seealso \code{\link{posterior_complex_buckets}}, \code{\link{proposalfunction}}
 #' @useDynLib zikaProj
-run_metropolis_MCMC <- function(data,
+run_metropolis_MCMC <- function(data=NULL,
                                 ts,
                                 param_table,
-                                mcmcPars=c("iterations"=1000,"popt"=0.44,"opt_freq"=50,"thin"=1,"burnin"=100,"adaptive_period"=100,"tuning_period"=100,"save_block"=500),
+                                mcmcPars,
                                 filename,
                                 mvrPars=NULL,
                                 incDat=NULL,
                                 peakTimes=NULL,
-                                allPriors=NULL
+                                allPriors=NULL,
+                                truePars=NULL
                                 ){
+    message("Hiya!")
+                                        # MCMC par setup ---------------------------------------------------------- 
     ## Allowable error in scale tuning
     TUNING_ERROR <- 0.1
     OPT_TUNING  <- 0.1
-
-########################################
+    
     ## Extract MCMC parameters
     iterations <- mcmcPars["iterations"]
     popt <- mcmcPars["popt"]
     opt_freq<- mcmcPars["opt_freq"]
     thin <- mcmcPars["thin"]
-    burnin <- mcmcPars["burnin"]
     adaptive_period<- mcmcPars["adaptive_period"]
     save_block <- mcmcPars["save_block"]
     tuning_period <- mcmcPars["tuning_period"]
-########################################
     
-########################################
-## Time vector for ODE model
+    
+                                        # Parameter par setup -------------------------------------
+    ## Time vector for ODE model
     ## Extract parameter table into individual vectors for speed
-    non_fixed_params <- which(param_table$fixed==0)
+    tmp_non_fixed_params <- non_fixed_params <- which(param_table$fixed==0)
     par_names <- param_table$names
     current_params <- start_values <- param_table$values
     par_labels <- param_table$local
@@ -55,20 +56,42 @@ run_metropolis_MCMC <- function(data,
     names(current_params) <- names(start_values) <- par_names
     unique_states <- unique(par_labels)
     unique_states <- unique_states[unique_states != "all"]
-########################################
-
-########################################
+    all_states <- unique(param_table[param_table$fixed==0,"local"])
+    ## Get some parameters useful for indexing
+    non_fixed_params_length <- length(non_fixed_params)
+    all_param_length <- nrow(param_table)
+    
+    ## Arrays to store acceptance rates
+    ## If univariate proposals
+    if(is.null(mvrPars)){
+        tempaccepted <- tempiter <- integer(all_param_length)
+        reset <- integer(all_param_length)
+        reset[] <- 0
+    } else { # If multivariate proposals
+        tempaccepted <- tempiter <- 0
+        covMat <- mvrPars[[1]][non_fixed_params,non_fixed_params]
+        scale <- mvrPars[[3]]
+    }
+    
+                                        # Data extraction ---------------------------------------------------------
     ## Extract data into vectors
-    ## Microceph data
-    startDays <- data[,"startDay"]
-    endDays <- data[,"endDay"]
-    buckets <- data[,"buckets"]
-    microCeph <- data[,"microCeph"]
-    births <- data[,"births"]
-    data_locals <- data[,"local"]
-########################################
+    startDays <- NULL
+    endDays <- NULL
+    buckets <- NULL
+    microCeph <- NULL
+    births <- NULL
+    data_locals <- NULL
 
-########################################
+    ## Microceph data
+    if(!is.null(data)){
+        startDays <- data[,"startDay"]
+        endDays <- data[,"endDay"]
+        buckets <- data[,"buckets"]
+        microCeph <- data[,"microCeph"]
+        births <- data[,"births"]
+        data_locals <- data[,"local"]
+    }
+
     ## Peak times
     peak_startDays <- NULL
     peak_endDays <- NULL
@@ -78,9 +101,7 @@ run_metropolis_MCMC <- function(data,
         peak_startDays <- peakTimes$start
         peak_endDays <- peakTimes$end
     }
-########################################
 
-########################################
     ## Incidence data
     inc_startDays <- NULL
     inc_endDays <- NULL
@@ -96,45 +117,37 @@ run_metropolis_MCMC <- function(data,
         inc_ZIKV <- incDat[,"inc"]
         inc_NH <- incDat[,"N_H"]
     }
-########################################
     
-########################################
+                                        # Posterior setup ---------------------------------------------------------
     ## Create posterior function with closures for neatness
-########################################
-    posterior_simp <- create_posterior(ts, current_params, par_names, par_labels, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays,inc_endDays,inc_locals,inc_buckets,inc_ZIKV,inc_NH, peak_startDays, peak_endDays,peak_locals, unique_states, allPriors)
-########################################
+    posterior_simp <- create_posterior(ts, current_params, par_names, par_labels, 
+                                       startDays, endDays, buckets, microCeph, births, 
+                                       data_locals, inc_startDays,inc_endDays,inc_locals,
+                                       inc_buckets,inc_ZIKV,inc_NH, peak_startDays, 
+                                       peak_endDays,peak_locals, unique_states, allPriors)
     
-    ## Get some parameters useful for indexing
-    non_fixed_params_length <- length(non_fixed_params)
-    all_param_length <- nrow(param_table)
-
+                                        # Chain setups ------------------------------------------------------------
     ## Setup MCMC chain file with correct column names
     mcmc_chain_file <- paste(filename,"_chain.csv",sep="")
     chain_colnames <- c("sampno",param_table$names,"lnlike")
     
-    ## Arrays to store acceptance rates
-    # If univariate proposals
-    if(is.null(mvrPars)) tempaccepted <- tempiter <- integer(all_param_length)
-    else { # If multivariate proposals
-        tempaccepted <- tempiter <- 0
-        covMat <- mvrPars[[1]]
-        w <- mvrPars[[2]]
-        scale <- mvrPars[[3]]
-        scaledCovMat <- covMat*scale
-    }
-    reset <- integer(all_param_length)
-    reset[] <- 0
-
     ## Create empty chain to store every iteration for the adaptive period
-    opt_chain <- matrix(nrow=adaptive_period,ncol=all_param_length)
+    opt_chain <- matrix(nrow=adaptive_period,ncol=non_fixed_params_length)
     chain_index <- 1
     
     ## Create empty chain to store "save_block" iterations at a time
     save_chain <- empty_save_chain <- matrix(nrow=save_block,ncol=all_param_length+2)
-
+                                        # Initial conditions ------------------------------------------------------
     ## Initial likelihood
     probab <- posterior_simp(current_params)
     log_probab <- 0
+
+    ## If available, find the true parameter posterior for comparison
+    true_probab <- NULL
+    if(!is.null(truePars)){
+        true_probab <- posterior_simp(truePars)
+        message(cat("True parameter posterior: ",true_probab,sep="\t"))
+    }
     
     ## Set up initial csv file
     tmp_table <- array(dim=c(1,length(chain_colnames)))
@@ -148,23 +161,22 @@ run_metropolis_MCMC <- function(data,
     ## Initial indexing parameters
     no_recorded <- 1
     sampno <- 2
-    index2 <- 1
-
-    ########################################
-    ## ACTUAL CHAIN
-    ########################################
+    par_i <- 1
+                                        # Main MCMC algorithm -----------------------------------------------------
     ## Go through chain
-    for (i in 1:(iterations+adaptive_period+burnin)){
-        # If using univariate proposals
+    for (i in 1:(iterations+adaptive_period)){
+        ## If using univariate proposals
         if(is.null(mvrPars)) {
             ## For each parameter (Gibbs)
-            proposal <- current_params
-            j <- non_fixed_params[index2]
-            index2 <- index2 + 1
-            if(index2 > length(non_fixed_params)) index2 <- 1
-            proposal <- proposalfunction(proposal, lower_bounds, upper_bounds, steps,j)
-        } else{ # If using multivariate proposals
-            proposal <- mvr_proposal(current_params, non_fixed_params, scaledCovMat)
+            j <- non_fixed_params[par_i]
+            par_i <- par_i + 1
+            if(par_i > length(non_fixed_params)) par_i <- 1
+            proposal <- proposalfunction(current_params, lower_bounds, upper_bounds, steps,j)
+            tempiter[j] <- tempiter[j] + 1
+            ## If using multivariate proposals
+        } else {
+            proposal <- mvr_proposal(current_params, non_fixed_params, covMat)
+            tempiter <- tempiter + 1
         }
         names(proposal) <- names(current_params)
         
@@ -188,12 +200,11 @@ run_metropolis_MCMC <- function(data,
                 ## Store acceptances
                 if(is.null(mvrPars)){
                     tempaccepted[j] <- tempaccepted[j] + 1
-                } else tempaccepted <- tempaccepted + 1
+                } else {
+                    tempaccepted <- tempaccepted + 1
+                }
             }
         }
-        ## Record number of iterations
-        if(is.null(mvrPars)) tempiter[j] <- tempiter[j] + 1
-        else tempiter <- tempiter + 1
         
         ## If current iteration matches with recording frequency, store in the chain. If we are at the limit of the save block,
         ## save this block of chain to file and reset chain
@@ -204,62 +215,37 @@ run_metropolis_MCMC <- function(data,
             no_recorded <- no_recorded + 1
         }
         
-        ## Monitor acceptance rate during burnin
-        if(i < burnin & i%%opt_freq == 0){
+        ## If within adaptive period, need to do some adapting!
+        if(i <= adaptive_period){
+            ## Current acceptance rate
             pcur <- tempaccepted/tempiter
-            if(length(pcur) > 1){
-                message(cat("Pcur: ", pcur[non_fixed_params],sep="\t"))
-            } else {
-                message(cat("Pcur: ", pcur,sep="\t"))
-            }
-        }
-
-        ## If within adaptive period and after burn in, need to do some adapting!
-        if(i > burnin && i < (adaptive_period+burnin)){
             ## Save each step
-            opt_chain[chain_index,] <- current_params
-            chain_index <- chain_index + 1
+            opt_chain[chain_index,] <- current_params[non_fixed_params]
             
-            ## If using univariate proposals
-            if(is.null(mvrPars)){
-                ## Calculate current acceptance rate
-                pcur <- tempaccepted/tempiter
-                if((chain_index-1) %% opt_freq == 0){
+            ## If in an adaptive step
+            if(chain_index %% opt_freq == 0){
+                ## If using univariate proposals
+                if(is.null(mvrPars)){
                     ## For each non fixed parameter, scale the step size
-                    tmp_transform <- steps
-                    tmp_i <- 1
-                    for(x in non_fixed_params){
-                        message(cat(tmp_transform[x],popt,pcur[x],sep="\t"))
-                        tmp_transform[x] <- scaletuning(tmp_transform[x],popt,pcur[x])
-                        tmp_i <- tmp_i + 1
-                    }
-                    steps <- tmp_transform
+                    for(x in non_fixed_params) steps[x] <- scaletuning(steps[x],popt,pcur[x])
                     message(cat("Optimisation iteration: ", i,sep="\t"))
                     message(cat("Pcur: ", pcur[non_fixed_params],sep="\t"))
                     message(cat("Step sizes: ", steps[non_fixed_params],sep="\t"))
                     tempaccepted <- tempiter <- reset
-                }
-                ## If using multivariate proposals
-            } else {
-                ## Scale step size
-                scale <- rm_scale(scale, i-burnin, popt, log_prob, adaptive_period)
-
-                if((chain_index-1)%%opt_freq == 0 && chain_index > OPT_TUNING*(tuning_period+ burnin) && i < (burnin + tuning_period)){
-                    pcur <- tempaccepted/tempiter
-                     ## Print acceptance rate
-                    message(cat("Pcur: ", pcur,sep="\t"))
-                    message(cat("New scale: ", scale,sep="\t"))
-                    
-                    ## Update covariance matrix using all recorded rows so far, weighting by the old matrix
-                    oldCov <- covMat
-                    covMat <- cov(opt_chain[1:(chain_index-1),])
-                    covMat <- (1-w)*oldCov + w*covMat
-                    scaledCovMat <- covMat*scale
-                    
-                    ## Reset acceptance store
-                    tmpiter <- tmpaccepted <- 0
+                } else {       ## If using multivariate proposals
+                    if(chain_index > OPT_TUNING*adaptive_period){
+                        ## Print acceptance rate
+                        if(chain_index > (5*OPT_TUNING*adaptive_period))
+                        scale <- scaletuning(scale, popt,pcur)
+                        message(cat("Optimisation iteration: ", i,sep="\t"))
+                        message(cat("Pcur: ", pcur,sep="\t"))
+                        message(cat("Step size: ", scale,sep="\t"))
+                        covMat <- scale*cov(opt_chain[1:chain_index,])
+                        tempiter <- tempaccepted <- 0
+                    }
                 }
             }
+            chain_index <- chain_index + 1
         }
         if(i %% save_block == 0) message(cat("Current iteration: ", i, sep="\t"))
         if(no_recorded == save_block){
@@ -283,7 +269,7 @@ run_metropolis_MCMC <- function(data,
     } else {
         steps <- NULL
     }
-    return(list("file"=mcmc_chain_file,"covMat"=covMat,"scale"=scale, "steps"=steps))
+    return(list("file"=mcmc_chain_file,"covMat"=covMat,"scale"=scale, "steps"=steps,"truePosterior"=true_probab))
 }
 
 
@@ -321,17 +307,17 @@ scaletuning <- function(step, popt,pcur){
 #' @export
 rm_scale <- function(step_scale, mc, popt,log_prob, N_adapt)
 {
-	dd <- exp(log_prob)
-	if( dd < -30 ){ dd <- 0 }
-	dd <- min( dd, 1 )
+    dd <- exp(log_prob)
+    if( dd < -30 ){ dd <- 0 }
+    dd <- min( dd, 1 )
 
-	rm_temp <- ( dd - popt )/( (mc+1)/(0.01*N_adapt+1) )
-	
-	out <- step_scale*exp(rm_temp)
-	
-	out <- max( out, 0.02 )
-	out <- min( out, 2)
-	out
+    rm_temp <- ( dd - popt )/( (mc+1)/(0.01*N_adapt+1) )
+    
+    out <- step_scale*exp(rm_temp)
+    
+    out <- max( out, 0.02 )
+    out <- min( out, 2)
+    out
 }
 
 #' Multivariate proposal function
@@ -345,7 +331,7 @@ rm_scale <- function(step_scale, mc, popt,log_prob, N_adapt)
 #' @useDynLib zikaProj
 mvr_proposal <- function(values, fixed, covMat){
     proposed <- values
-    proposed[fixed] <- MASS::mvrnorm(n=1,mu=proposed[fixed],Sigma=covMat[fixed,fixed])
+    proposed[fixed] <- MASS::mvrnorm(n=1,mu=proposed[fixed],Sigma=5.6644*covMat/length(fixed))
     return(proposed)
 }
 
@@ -401,7 +387,7 @@ proposalfunction <- function(values, lower_bounds, upper_bounds,steps, index){
 #' @param allowableParsFile file location for the allowable parameters table, if it exists.
 #' @return a table of allowable parameters with columns for t0, mosquito density (R0), corresponding state (as this will vary by N_H and life expectancy), and corresponding peak time
 #' @export
-generate_allowable_params<- function(peakTime=927, peakTimeRange=60, stateNames,microDatFile=NULL,parTab=NULL,allowableParsFile="allowablePars.csv"){
+generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames,microDatFile=NULL,parTab=NULL,allowableParsFile="allowablePars.csv"){
     if(file.exists(allowableParsFile)) allowablePars <- read.table(allowableParsFile)
     else {
         if(is.null(parTab)){

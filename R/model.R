@@ -17,7 +17,6 @@ r0.calc <- function(params){
     b <- params["b"]
     pHM <- params["p_HM"]
     pMH <- params["p_MH"]
-   
     R0 <- (b^2*pHM*pMH*NM*sigmaM)/((sigmaM+muM)*muM*(gammaH+muH)*NH)
     return(unname(R0))
 }
@@ -121,6 +120,9 @@ microceph_v1 <- function(pars){
 
     scale <- var/mean
     shape <- mean/scale
+
+    #shape <- pars["mean"]
+    #scale <- pars["var"]
     
     probs <- dgamma(0:39,shape=shape,scale=scale)*pars["c"]
     probs[probs > 1] <- 1

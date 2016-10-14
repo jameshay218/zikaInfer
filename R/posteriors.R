@@ -48,30 +48,31 @@ posterior_complex_buckets <- function(ts, values, names, local, startDays, endDa
         tmpY0s <- generate_y0s(as.numeric(tmpPars["N_H"]),as.numeric(tmpPars["density"]))
 
         ## Optional extra data
-        
-        
-        if(!is.null(inc_ZIKV)){
-            indices_inc <- inc_locals == local
+        tmpInc_ZIKV <- NULL
+        tmpInc_NH<- NULL
+        tmpInc_buckets <- NULL
+        tmpInc_start <- NULL
+        tmpInc_end <- NULL
 
-            tmpInc_ZIKV<- inc_ZIKV[indices_inc]
-            tmpInc_NH<- inc_NH[indices_inc]
-            tmpInc_buckets <- inc_buckets[indices_inc]
-            tmpInc_start <- inc_startDays[indices_inc]
-            tmpInc_end <- inc_endDays[indices_inc]
-        } else {
-            tmpInc_ZIKV <- NULL
-            tmpInc_NH<- NULL
-            tmpInc_buckets <- NULL
-            tmpInc_start <- NULL
-            tmpInc_end <- NULL
-        }
+        peak_start <- NULL
+        peak_end <- NULL
+
+        if(!is.null(inc_ZIKV)){
+            indices_inc <- which(inc_locals == place)
+            if(length(indices_inc) > 0){
+                tmpInc_ZIKV<- inc_ZIKV[indices_inc]
+                tmpInc_NH<- inc_NH[indices_inc]
+                tmpInc_buckets <- inc_buckets[indices_inc]
+                tmpInc_start <- inc_startDays[indices_inc]
+                tmpInc_end <- inc_endDays[indices_inc]
+            }
+        } 
         if(!is.null(peak_startDays)){
-            indices_peak <- peak_locals == place
-            peak_start <- peak_startDays[indices_peak]
-            peak_end <- peak_endDays[indices_peak]
-        } else {
-            peak_start <- NULL
-            peak_end <- NULL
+            indices_peak <- which(peak_locals == place)
+            if(length(indices_peak) > 0){
+                peak_start <- peak_startDays[indices_peak]
+                peak_end <- peak_endDays[indices_peak]
+            }
         }
         
         lik <- lik + posterior_simple_buckets(ts,
@@ -115,7 +116,6 @@ posterior_complex_buckets <- function(ts, values, names, local, startDays, endDa
 #' @param allPriors defaults to FALSE. Arguments for parameter priors, if desired.
 #' @return a single value for the posterior
 #' @export
-#' @useDynLib zikaProj
 posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets, microCeph, births, zikv=NULL,nh=NULL,inc_buckets=NULL,inc_start=NULL,inc_end=NULL,peak_start=NULL,peak_end=NULL, allPriors=NULL){
     lik <- 0
 
@@ -131,7 +131,7 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
         N_H <- average_buckets(colSums(tmpY[5:8,]), inc_buckets)
         
         inc <- diff(tmpY["incidence",])
-        inc <- sum_n_vector(inc, 7)
+        inc <- sum_buckets(inc,inc_buckets)
         
         perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
         lik <- lik + incidence_likelihood(perCapInc, zikv,nh)
@@ -149,6 +149,62 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
     
     return(lik)
 }
+
+#' Posterior function for the simple SEIR model with incidence only
+#'
+#' Given the time vector, initial conditions ODE parameters and deconstructed matrix of incidence data, calculates the posterior value for a given data set. 
+#' @param ts time vector over which to solve the ODE model
+#' @param values model parameters
+#' @param names names of the model parameters
+#' @param local the vector of state names corresponding to the parameter table
+#' @param inc_startDays vector of all starting days for reporting buckets
+#' @param inc_endDays vector of all end days for reporting buckets
+#' @param inc_local vector of all state names corresponding to the incidence table
+#' @param inc_buckets vector of all reporting bucket sizes
+#' @param inc_ZIKV vector of reported ZIKV caes
+#' @param inc_NH vector of all population sizes
+#' @param unique_states vector of all unique states to be tested
+#' @param allPriors defaults to FALSE. Arguments for parameter priors, if desired.
+#' @return a single value for the posterior
+#' @export
+posterior_inc <- function(ts, values, names, local,inc_startDays,inc_endDays,inc_locals,
+                          inc_buckets,inc_ZIKV,inc_NH, unique_states, allPriors=NULL){
+    lik <- 0
+
+    ## For each state considered here
+    for(place in unique_states){
+        indices_pars <- local == place | local == "all"
+        indices_inc <- which(inc_locals == place)
+        
+        tmpPars <- values[indices_pars]
+        names(tmpPars) <- names[indices_pars]
+
+        ## Generate starting y0 for the current parameter values
+        tmpY0s <- generate_y0s(as.numeric(tmpPars["N_H"]),as.numeric(tmpPars["density"]))
+
+        tmpInc_ZIKV<- inc_ZIKV[indices_inc]
+        tmpInc_NH<- inc_NH[indices_inc]
+        tmpInc_buckets <- inc_buckets[indices_inc]
+        tmpInc_start <- inc_startDays[indices_inc]
+        tmpInc_end <- inc_endDays[indices_inc]
+        
+        ## Solve the ODE model with current parameter values
+        y <- solveModelSimple_rlsoda(ts, tmpY0s, tmpPars,FALSE)
+        
+        tmpY <- y[,which(y["time",] >= min(tmpInc_start) & y["time",] <= max(tmpInc_end))]
+        N_H <- average_buckets(colSums(tmpY[5:8,]), tmpInc_buckets)
+        
+        inc <- diff(tmpY["incidence",])
+        inc <- sum_buckets(inc,tmpInc_buckets)
+        
+        perCapInc <- (1-(1-(inc/N_H))*(1-tmpPars["baselineInc"]))*tmpPars["incPropn"]
+        lik <- lik + incidence_likelihood(perCapInc, tmpInc_ZIKV,tmpInc_NH)
+    }
+
+    if(!is.null(allPriors)) lik <- lik + allPriors(values)
+    return(lik)
+}
+
 
 #' Incidence likelihood
 #'
@@ -192,9 +248,16 @@ incidence_likelihood <- function(perCapInc, inc, N_H){
 #' @export
 #' @useDynLib zikaProj
 create_posterior <- function(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays=NULL, inc_endDays=NULL,inc_locals=NULL,inc_buckets=NULL,inc_ZIKV=NULL,inc_NH=NULL, peak_startDays=NULL, peak_endDays=NULL,peak_locals=NULL,unique_states, allPriors=NULL){
-    f <- function(values){
-        return(posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays,inc_endDays,inc_locals,inc_buckets,inc_ZIKV,inc_NH, peak_startDays, peak_endDays,peak_locals, unique_states,allPriors))
+    if(!is.null(microCeph)){
+        f <- function(values){
+            return(posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays,inc_endDays,inc_locals,inc_buckets,inc_ZIKV,inc_NH, peak_startDays, peak_endDays,peak_locals, unique_states,allPriors))
+        }
+    } else {
+        f <- function(values){
+            return(posterior_inc(ts, values, names, local, inc_startDays,inc_endDays,inc_locals,inc_buckets,inc_ZIKV,inc_NH, unique_states,allPriors))
+            
+        }
     }
-     return(f)
+    return(f)
 }
-    
+

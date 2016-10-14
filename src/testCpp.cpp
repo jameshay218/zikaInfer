@@ -180,3 +180,23 @@ NumericVector average_buckets(NumericVector a, NumericVector buckets){
   }
   return(results);
 }
+
+//' Sums a vector based on bucket sizes
+//'
+//' Given a vector (a) and another vector of bucket sizes, returns the summed vector (a)
+//' @param a the vector to be bucketed
+//' @param buckets the vector of bucket sizes to sum a over
+//' @return the vector of summed a
+//' @export
+//[[Rcpp::export]]
+NumericVector sum_buckets(NumericVector a, NumericVector buckets){
+  NumericVector results(buckets.size());
+  int index = 0;
+  for(int i = 0; i < buckets.size(); ++i){
+    results[i] = 0;
+    for(int j = 0; j < buckets[i]; ++j){
+      results[i] += a[index++];
+    }
+  }
+  return(results);
+}
