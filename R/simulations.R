@@ -49,8 +49,8 @@ generate_multiple_data <- function(t_pars, paramTable,weeks=FALSE, dataRangeMicr
         ## MICROCEPHALY DATA
         ######################################
         ## Generate simulated microcephaly data using solved ODE model and pregnancy risk curve
-        y[y[,"I_M" < 0],"I_M"] <- 0
-        probM <- generate_probM(y[,"I_M"], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)
+        y[y[,"I_M"] < 0,"I_M"] <- 0
+        probM <- generate_probM(y[,"I_M"], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)*pars["propn"]
         probM <- average_buckets(probM, buckets)
         ## Total number of births each observation point is from populatoin size
         yearBirths <- pars["N_H"]/(pars["L_H"]/365)
@@ -61,9 +61,9 @@ generate_multiple_data <- function(t_pars, paramTable,weeks=FALSE, dataRangeMicr
         births <- round(births)
 
         ## Certain proportion of all births are microcephaly, but only a given proportion of those are observed
-        microDat <- probM*births*pars["propn"]
+        microDat <- probM*births
 
-        if(noise) microDat <- rbinom(length(probM), births, probM*pars["propn"])
+        if(noise) microDat <- rbinom(length(probM), births, probM)
 
         ## Needs to be to the nearest integer
         microDat <- round(microDat)

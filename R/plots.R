@@ -49,7 +49,7 @@ plot_random_microceph_curves <- function(chain, runs){
     names(bestPars) <- colnames(chain)
     bestPars["tstep"] <- 1
     probs <- generate_micro_curve(bestPars)
-    bestProbs <- data.frame(prob=probs,week=seq(0,39,by=1))
+    bestProbs <- data.frame(prob=probs,week=seq(0,279,by=1))
 
     myPlot <- ggplot() +
         geom_line(data=bestProbs, aes_string(x="week",y="prob"),col="blue",lwd=1) +
@@ -74,7 +74,7 @@ plot_random_microceph_curves <- function(chain, runs){
         names(tmpPars) <- colnames(chain)
         tmpPars["tstep"] <- 1
         probs <- generate_micro_curve(tmpPars)
-        allProbs[[index]] <- probs <- data.frame(prob=probs,week=seq(0,39,by=1))
+        allProbs[[index]] <- probs <- data.frame(prob=probs,week=seq(0,279,by=1))
         myPlot <- myPlot + geom_line(data=probs, aes_string(x="week",y="prob"),alpha=0.3,lwd=0.5,col="red")
         index <- index+1
     }

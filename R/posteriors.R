@@ -121,7 +121,6 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
 
     ## Solve the ODE model with current parameter values
     y <- solveModelSimple_rlsoda(ts, y0s, pars,FALSE)
-  
     ## Extract peak time. Need to add 1 as rlsoda does not return the first time point.
     peakTime <- y["time",which.max(y["I_H",])]
 
@@ -149,6 +148,8 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
     
     return(lik)
 }
+
+
 
 #' Posterior function for the simple SEIR model with incidence only
 #'

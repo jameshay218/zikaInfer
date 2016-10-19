@@ -331,7 +331,7 @@ rm_scale <- function(step_scale, mc, popt,log_prob, N_adapt)
 #' @useDynLib zikaProj
 mvr_proposal <- function(values, fixed, covMat){
     proposed <- values
-    proposed[fixed] <- MASS::mvrnorm(n=1,mu=proposed[fixed],Sigma=5.6644*covMat/length(fixed))
+    proposed[fixed] <- MASS::mvrnorm(n=1,mu=proposed[fixed],Sigma=(5.6644/length(fixed))*covMat)
     return(proposed)
 }
 

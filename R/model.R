@@ -124,9 +124,10 @@ microceph_v1 <- function(pars){
     #shape <- pars["mean"]
     #scale <- pars["var"]
     
-    probs <- dgamma(0:39,shape=shape,scale=scale)*pars["c"]
+    #probs <- dgamma(0:39,shape=shape,scale=scale)*pars["c"]
+    probs <- dgamma(0:279,shape=shape,scale=scale)*pars["c"]
     probs[probs > 1] <- 1
-    probs <- rep(probs, each=pars["tstep"])
+    #probs <- rep(probs, each=pars["tstep"])
     return(probs)
 }
 
