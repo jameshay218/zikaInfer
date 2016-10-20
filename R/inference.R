@@ -26,7 +26,6 @@ run_metropolis_MCMC <- function(data=NULL,
                                 allPriors=NULL,
                                 truePars=NULL
                                 ){
-    message("Hiya!")
                                         # MCMC par setup ---------------------------------------------------------- 
     ## Allowable error in scale tuning
     TUNING_ERROR <- 0.1
@@ -39,7 +38,6 @@ run_metropolis_MCMC <- function(data=NULL,
     thin <- mcmcPars["thin"]
     adaptive_period<- mcmcPars["adaptive_period"]
     save_block <- mcmcPars["save_block"]
-    tuning_period <- mcmcPars["tuning_period"]
     
     
                                         # Parameter par setup -------------------------------------
@@ -125,7 +123,7 @@ run_metropolis_MCMC <- function(data=NULL,
                                        data_locals, inc_startDays,inc_endDays,inc_locals,
                                        inc_buckets,inc_ZIKV,inc_NH, peak_startDays, 
                                        peak_endDays,peak_locals, unique_states, allPriors)
-    
+  
                                         # Chain setups ------------------------------------------------------------
     ## Setup MCMC chain file with correct column names
     mcmc_chain_file <- paste(filename,"_chain.csv",sep="")

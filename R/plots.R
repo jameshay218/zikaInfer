@@ -50,7 +50,6 @@ plot_random_microceph_curves <- function(chain, runs){
     bestPars["tstep"] <- 1
     probs <- generate_micro_curve(bestPars)
     bestProbs <- data.frame(prob=probs,week=seq(0,279,by=1))
-
     myPlot <- ggplot() +
         geom_line(data=bestProbs, aes_string(x="week",y="prob"),col="blue",lwd=1) +
         ylab("Probability of microcephaly given infection")+

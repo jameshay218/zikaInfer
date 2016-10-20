@@ -131,39 +131,36 @@ microceph_v1 <- function(pars){
     return(probs)
 }
 
-#' Microcephaly risk V1
+#' Microcephaly risk V2
 #'
 #' Microcephaly risk curve with 3 distinct periods
 #' @param pars the model parameters
 #' @return the vector of risks
 #' @export
 microceph_v2 <- function(pars){
-    probs <- c(rep(pars["p1"], 14),rep(pars["p2"],14),rep(pars["p3"],12))
-    probs <- rep(probs, each=pars["tstep"])
+    probs <- c(rep(pars["p1"], 14*7),rep(pars["p2"],14*7),rep(pars["p3"],12*7))
     return(unname(probs))
 }
 
-#' Microcephaly risk V1
+#' Microcephaly risk V3
 #'
 #' Microcephaly risk curve with 6 distinct periods
 #' @param pars the model parameters
 #' @return the vector of risks
 #' @export
 microceph_v3 <- function(pars){
-    probs <- c(rep(pars["p1"], 7),rep(pars["p2"],7),rep(pars["p3"],7),rep(pars["p4"],7),rep(pars["p5"],7),rep(pars["p6"],5))
-    probs <- rep(probs, each=pars["tstep"])
+    probs <- c(rep(pars["p1"], 7*7),rep(pars["p2"],7*7),rep(pars["p3"],7*7),rep(pars["p4"],7*7),rep(pars["p5"],7*7),rep(pars["p6"],5*7))
     return(unname(probs))
 }
 
-#' Microcephaly risk V1
+#' Microcephaly risk V4
 #'
 #' Microcephaly risk curve with 8 distinct periods
 #' @param pars the model parameters
 #' @return the vector of risks
 #' @export
 microceph_v4 <- function(pars){
-    probs <- c(rep(pars["p1"], 5),rep(pars["p2"],5),rep(pars["p3"],5),rep(pars["p4"],5),rep(pars["p5"],5),rep(pars["p6"],5),rep(pars["p7"],5),rep(pars["p8"],5))
-    probs <- rep(probs, each=pars["tstep"])
+    probs <- c(rep(pars["p1"], 5*7),rep(pars["p2"],5*7),rep(pars["p3"],5*7),rep(pars["p4"],5*7),rep(pars["p5"],5*7),rep(pars["p6"],5*7),rep(pars["p7"],5*7),rep(pars["p8"],5*7))
     return(unname(probs))
 }
 
@@ -372,9 +369,9 @@ createParTable <- function(version=1,realDat=NULL, saveFile=NULL){
     paramTable[paramTable[,"names"]=="p_HM",2:ncol(paramTable)] <- c(0.5,"all",0,1,0.1,1,0,1)
     paramTable[paramTable[,"names"]=="p_MH",2:ncol(paramTable)] <- c(0.5,"all",0,1,0.1,1,0,1)
     paramTable[paramTable[,"names"]=="constSeed",2:ncol(paramTable)] <- c(0,"all",0,1000,0.1,1,400,600)
-    paramTable[paramTable[,"names"]=="mean",2:ncol(paramTable)] <- c(5,"all",0,100,0.1,0,8,20)
-    paramTable[paramTable[,"names"]=="var",2:ncol(paramTable)] <- c(3,"all",0,100,0.1,0,1,5)
-    paramTable[paramTable[,"names"]=="c",2:ncol(paramTable)] <- c(1,"all",0,100,0.1,0,0.1,0.5)
+    paramTable[paramTable[,"names"]=="mean",2:ncol(paramTable)] <- c(100,"all",0,10000,0.1,0,20,200)
+    paramTable[paramTable[,"names"]=="var",2:ncol(paramTable)] <- c(500,"all",0,100000,0.1,0,10,1000)
+    paramTable[paramTable[,"names"]=="c",2:ncol(paramTable)] <- c(3,"all",0,100,0.1,0,0.1,5)
     paramTable[paramTable[,"names"]=="tstep",2:ncol(paramTable)] <- c(7,"all",0,100,0.1,1,0,7)
     paramTable[paramTable[,"names"]=="p1",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0,0.01,0.1)
     paramTable[paramTable[,"names"]=="p2",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0,0.01,0.1)
@@ -414,35 +411,35 @@ createStateParTable <- function(stateDat, saveFile = NULL){
         index <- index + 1
         paramTable[index,] <- c("density",3,place,0,100,0.1,0,3,6)
         index <- index + 1
-        paramTable[index,] <- c("propn",1,place,0,1,0.1,1,0.01,0.2)
+        paramTable[index,] <- c("propn",1,place,0,1,0.1,0,0.01,0.2)
         index <- index + 1
         paramTable[index,] <- c("constSeed",400,place,0,2000,0.1,0,400,600)
         index <- index + 1
-        paramTable[index,] <- c("mean",17,place,0,100,0.1,0,8,20)
+        paramTable[index,] <- c("mean",100,place,0,2000,0.1,0,20,200)
         index <- index + 1
-        paramTable[index,] <- c("var", 3, place, 0,1000,0.1,0,1,5)
+        paramTable[index,] <- c("var", 500, place, 0,100000,0.1,0,50,10000)
         index <- index + 1
-        paramTable[index,] <- c("c",0.15,place,0,100,0.1,0,0.1,0.3)
+        paramTable[index,] <- c("c",3,place,0,100,0.1,0,0.1,5)
         index <- index + 1
         paramTable[index,] <- c("incPropn",0.0025,place,0,1,0.1,0,0.001,0.005)
         index <- index + 1
-        paramTable[index,] <- c("baselineInc",0.0001,place,0,1,0.1,0,0.00005,0.0005)
+        paramTable[index,] <- c("baselineInc",0.0001,place,0,1,0.1,0,0.00005,0.001)
         index <- index + 1
-        paramTable[index,] <- c("p1",0.1,place,0,1,0.1,1,0.01,0.1)
+        paramTable[index,] <- c("p1",0.1,place,0,1,0.1,0,0.01,0.1)
         index <- index + 1
-        paramTable[index,] <- c("p2",0.1,place,0,1,0.1,1,0.01,0.1)
+        paramTable[index,] <- c("p2",0.1,place,0,1,0.1,0,0.01,0.1)
         index <- index + 1
-        paramTable[index,] <- c("p3",0.1,place,0,1,0.1,1,0.01,0.1)
+        paramTable[index,] <- c("p3",0.1,place,0,1,0.1,0,0.01,0.1)
         index <- index + 1
-        paramTable[index,] <- c("p4",0.1,place,0,1,0.1,1,0.01,0.1)
+        paramTable[index,] <- c("p4",0.1,place,0,1,0.1,0,0.01,0.1)
         index <- index + 1
-        paramTable[index,] <- c("p5",0.1,place,0,1,0.1,1,0.01,0.1)
+        paramTable[index,] <- c("p5",0.1,place,0,1,0.1,0,0.01,0.1)
         index <- index + 1
-        paramTable[index,] <- c("p6",0.1,place,0,1,0.1,1,0.01,0.1)
+        paramTable[index,] <- c("p6",0.1,place,0,1,0.1,0,0.01,0.1)
         index <- index + 1
-        paramTable[index,] <- c("p7",0.1,place,0,1,0.1,1,0.01,0.1)
+        paramTable[index,] <- c("p7",0.1,place,0,1,0.1,0,0.01,0.1)
         index <- index + 1
-        paramTable[index,] <- c("p8",0.1,place,0,1,0.1,1,0.01,0.1)
+        paramTable[index,] <- c("p8",0.1,place,0,1,0.1,0,0.01,0.1)
         index <- index + 1
     }
     if(!is.null(saveFile)) write.table(paramTable,saveFile,row.names=FALSE,sep=",")
