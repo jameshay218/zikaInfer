@@ -199,6 +199,7 @@ posterior_inc <- function(ts, values, names, local,inc_startDays,inc_endDays,inc
         
         inc <- diff(tmpY["incidence",])
         inc <- sum_buckets(inc,tmpInc_buckets)
+        inc[inc < 0] <- 0
         
         perCapInc <- (1-(1-(inc/N_H))*(1-tmpPars["baselineInc"]))*tmpPars["incPropn"]
         lik <- lik + incidence_likelihood(perCapInc, tmpInc_ZIKV,tmpInc_NH)

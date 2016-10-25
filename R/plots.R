@@ -87,26 +87,15 @@ plot_random_microceph_curves <- function(chain, runs){
 #' @return a string
 #' @export
 get_state_name <- function(state){
-    country_names <- c(
-        "pernambuco"="Pernambuco",
-        "bahia"="Bahia",
-        "saopaulo"="Sao Paulo",
-        "paraiba"="Paraiba",
-        "maranhao"="Maranhao",
-        "ceara"="Ceara",
-        "sergipe"="Sergipe",
-        "riodejaneiro"="Rio de Janeiro",
-        "piaui"="Piaui",
-        "riograndedonorte"="Rio Grande Norte",
-        "minasgerais"="Minas Gerais",
-        "matogrosso"="Mato Grosso",
-        "alagoas"="Algoas",
-        "para"="Para",
-        "acre"="Acre",
-        "espiritosanto"="Espirito Santo",
-        "goias"="Goias",
-        "tocantins"="Tocantins"
-    )
+    country_names <- c("pernambuco"="Pernambuco","amapa"="Amapá","amazonas" ="Amazonas",
+                     "distritofederal" = "Distrito Federal","bahia"="Bahia","saopaulo"="São Paulo",
+                     "paraiba"="Paraíba","maranhao"="Maranhão","ceara"="Ceará","sergipe"="Sergipe",
+                     "riodejaneiro"="Rio de Janeiro","piaui"="Piauí","riograndedonorte"="Rio Grande Norte",
+                     "minasgerais"="Minas Gerais", "matogrosso"="Mato Grosso","alagoas"="Alagoas",
+                     "para"="Pará","acre"="Acre","espiritosanto"="Espírito Santo","goias"="Goiás",
+                     "tocantins"="Tocantins","matogrossodosul"="Mato Grosso do Sul",
+                     "matogrossdosul"="Mato Grosso do Sul","parana"="Paraná","riograndedosul"="Rio Grande do Sul",
+                     "rondonia"="Rondônia","roraima"="Roraima","santacatarina"="Santa Catarina")
     return(country_names[state])
 }
 
