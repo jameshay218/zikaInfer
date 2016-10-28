@@ -133,7 +133,7 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
         inc <- diff(tmpY["incidence",])
         inc <- sum_buckets(inc,inc_buckets)
         inc[inc < 0] <- 0
-        
+
         perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
         lik <- lik + incidence_likelihood(perCapInc, zikv,nh)
     }

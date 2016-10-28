@@ -191,7 +191,11 @@ run_metropolis_MCMC <- function(data=NULL,
 
             ## Accept with probability 1 if better, or proportional to
             ## difference if now
-            if(log(runif(1)) < log_prob){
+            if(!is.finite(log_prob)){
+                print("Not finite")
+               # print(proposal)
+            }
+            if(is.finite(log_prob) && log(runif(1)) < log_prob){
                 current_params <- proposal
                 probab <- new_probab
                 
@@ -401,14 +405,14 @@ generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames
                 for(j in 1:ncol(peakTimes)){
                     pars <- tmpTab$values
                     names(pars) <- tmpTab$names
-                    pars["density"] <- j/10
+                    pars["density"] <- j/5
                     pars["constSeed"] <- i*10
                     y0s <- generate_y0s(as.numeric(pars["N_H"]),as.numeric(pars["density"]))
                     t_pars <- seq(0,3003,by=1)
                     y <- solveModelSimple_rlsoda(t_pars, y0s,pars,TRUE)
                     peakTimes[i,j] <- y[which.max(y[,"I_H"]),"time"]
                     if(peakTimes[i,j] > (peakTime - peakTimeRange/2) & peakTimes[i,j] < (peakTime + peakTimeRange/2)){
-                        allowablePars <- rbind(allowablePars,data.frame(i*10,j/10,local,peakTimes[i,j]))
+                        allowablePars <- rbind(allowablePars,data.frame(i*10,j/5,local,peakTimes[i,j]))
                     }
                 }
             }
