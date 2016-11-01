@@ -130,12 +130,12 @@ run_metropolis_MCMC <- function(data=NULL,
     
                                         # Posterior setup ---------------------------------------------------------
     ## Create posterior function with closures for neatness
-    posterior_simp <- create_posterior(ts, current_params, par_names, par_labels, 
+    posterior_new <- create_posterior(ts, current_params, par_names, par_labels, 
                                        startDays, endDays, buckets, microCeph, births, 
                                        data_locals, inc_startDays,inc_endDays,inc_locals,
                                        inc_buckets,inc_ZIKV,inc_NH, peak_startDays, 
                                        peak_endDays,peak_locals, unique_states, allPriors)
-    posterior_simp <- protect(posterior_simp)
+   posterior_simp <- protect(posterior_new)
   
                                         # Chain setups ------------------------------------------------------------
     ## Setup MCMC chain file with correct column names

@@ -25,10 +25,10 @@
 #' @param allPriors defaults to NULL. Arguments for parameter priors, if desired.
 #' @return a single value for the posterior
 #' @export
-#' @useDynLib zikaProj
+#' @useDynLib zikaProj 
 posterior_complex_buckets <- function(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals,inc_startDays=NULL,inc_endDays=NULL,inc_locals=NULL,inc_buckets=NULL,inc_ZIKV=NULL,inc_NH=NULL, peak_startDays=NULL, peak_endDays=NULL,peak_locals=NULL, unique_states, allPriors=NULL){
     lik <- 0
-
+   
     ## For each state considered here
     for(place in unique_states){
         ## Get the indices for this state in the data and parameter table
