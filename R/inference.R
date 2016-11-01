@@ -1,3 +1,15 @@
+#' Protect function
+#'
+#' Wrapper function to protect calls to the posterior function. If posterior does not compute correctly, returns -Inf.
+#' @param f the function to be protected
+#' @return the protected function
+#' @export
+protect <- function(f){
+    function(...){
+        tryCatch(f(...),error=function(e) -Inf)
+    }
+}
+
 
 #' Adaptive Metropolis-within-Gibbs Random Walk Algorithm.
 #'
@@ -123,6 +135,7 @@ run_metropolis_MCMC <- function(data=NULL,
                                        data_locals, inc_startDays,inc_endDays,inc_locals,
                                        inc_buckets,inc_ZIKV,inc_NH, peak_startDays, 
                                        peak_endDays,peak_locals, unique_states, allPriors)
+    posterior_simp <- protect(posterior_simp)
   
                                         # Chain setups ------------------------------------------------------------
     ## Setup MCMC chain file with correct column names
