@@ -135,7 +135,7 @@ run_metropolis_MCMC <- function(data=NULL,
                                        data_locals, inc_startDays,inc_endDays,inc_locals,
                                        inc_buckets,inc_ZIKV,inc_NH, peak_startDays, 
                                        peak_endDays,peak_locals, unique_states, allPriors)
-   posterior_simp <- protect(posterior_new)
+    posterior_simp <- protect(posterior_new)
   
                                         # Chain setups ------------------------------------------------------------
     ## Setup MCMC chain file with correct column names
@@ -204,10 +204,6 @@ run_metropolis_MCMC <- function(data=NULL,
 
             ## Accept with probability 1 if better, or proportional to
             ## difference if now
-            if(!is.finite(log_prob)){
-                print("Not finite")
-               # print(proposal)
-            }
             if(is.finite(log_prob) && log(runif(1)) < log_prob){
                 current_params <- proposal
                 probab <- new_probab
