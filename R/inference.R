@@ -204,7 +204,7 @@ run_metropolis_MCMC <- function(data=NULL,
 
             if(!is.finite(log_prob)){
                 message("Posterior not finite")
-                message(proposal)
+                message(cat(proposal," "))
             }
             
             ## Accept with probability 1 if better, or proportional to
