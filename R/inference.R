@@ -202,6 +202,11 @@ run_metropolis_MCMC <- function(data=NULL,
             new_probab <- posterior_simp(proposal)
             log_prob <- min(new_probab-probab,0)
 
+            if(!is.finite(log_prob)){
+                message("Posterior not finite")
+                message(proposal)
+            }
+            
             ## Accept with probability 1 if better, or proportional to
             ## difference if now
             if(is.finite(log_prob) && log(runif(1)) < log_prob){
