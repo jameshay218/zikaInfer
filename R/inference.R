@@ -6,11 +6,14 @@
 #' @export
 protect <- function(f){
     function(...){
-        tryCatch(f(...),error=function(e) -Inf)
+        tryCatch(f(...),error=function(e){
+            message("caught error: ", e$message)
+            -Inf
+        })
     }
 }
 
-
+    
 #' Adaptive Metropolis-within-Gibbs Random Walk Algorithm.
 #'
 #' The Adaptive Metropolis-within-Gibbs algorithm. Given a starting point and the necessary MCMC parameters as set out below, performs a random-walk of the posterior space to produce an MCMC chain that can be used to generate MCMC density and iteration plots. The algorithm undergoes an adaptive period, where it changes the step size of the random walk for each parameter to approach the desired acceptance rate, popt. After this, a burn in period is established, and the algorithm then uses \code{\link{proposalfunction}} to explore the parameter space, recording the value and posterior value at each step. The MCMC chain is saved in blocks as a .csv file at the location given by filename.
@@ -152,7 +155,6 @@ run_metropolis_MCMC <- function(data=NULL,
     ## Initial likelihood
     probab <- posterior_simp(current_params)
     log_probab <- 0
-
     ## If available, find the true parameter posterior for comparison
     true_probab <- NULL
     if(!is.null(truePars)){
@@ -190,7 +192,7 @@ run_metropolis_MCMC <- function(data=NULL,
             tempiter <- tempiter + 1
         }
         names(proposal) <- names(current_params)
-        
+        message(cat(proposal," "))
         ## Propose new parameters and calculate posterior
         ## Check that all proposed parameters are in allowable range
         if(!any(
@@ -200,14 +202,12 @@ run_metropolis_MCMC <- function(data=NULL,
            ){
             ## Calculate new likelihood and find difference to old likelihood
             new_probab <- posterior_simp(proposal)
+            message("Out of posterior")
             log_prob <- min(new_probab-probab,0)
-
-            if(!is.finite(new_prob)){
-                message("Posterior not finite")
-                message(log_prob)
-                message(cat(proposal," "))
+            if(!is.finite(log_prob)){
+                message("Not finite")
+                message(cat(proposal[c("density","constSeed")]," "))
             }
-            
             ## Accept with probability 1 if better, or proportional to
             ## difference if now
             if(is.finite(log_prob) && log(runif(1)) < log_prob){
@@ -413,7 +413,7 @@ generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames
             parTab <- setupParTable(1,realDat,sharedProb=TRUE)
         }
         allowablePars <- NULL
-        peakTimes <- matrix(nrow=100,ncol=50)
+        peakTimes <- matrix(nrow=100,ncol=100)
         for(local in stateNames){
             tmpTab <- parTab[parTab$local %in% c(local, "all"),]
             for(i in 1:nrow(peakTimes)){
@@ -434,7 +434,7 @@ generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames
         }
         allowabledPars <- allowablePars[complete.cases(allowablePars),]
         colnames(allowablePars) <- c("constSeed","density","local","peak")
-        write.table(allowablePars, "allowablePars.csv")
+        write.table(allowablePars, "allowablePars.csv",sep=",",row.names=FALSE)
     }
     return(allowablePars)
 }

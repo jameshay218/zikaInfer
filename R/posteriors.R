@@ -74,23 +74,12 @@ posterior_complex_buckets <- function(ts, values, names, local, startDays, endDa
                 peak_end <- peak_endDays[indices_peak]
             }
         }
-        
-        lik <- lik + posterior_simple_buckets(ts,
-                                              tmpY0s,
-                                              tmpPars,
-                                              tmpStart,
-                                              tmpEnd,
-                                              tmpBuckets,
-                                              tmpMicro,
-                                              tmpBirths,
-                                              tmpInc_ZIKV,
-                                              tmpInc_NH,
-                                              tmpInc_buckets,
-                                              tmpInc_start,
-                                              tmpInc_end,
-                                              peak_start,
-                                              peak_end,
-                                              allPriors)
+        tmpLik <- posterior_simple_buckets(
+                         ts,tmpY0s,tmpPars,tmpStart,tmpEnd,tmpBuckets,tmpMicro,
+                         tmpBirths,tmpInc_ZIKV,tmpInc_NH,tmpInc_buckets,tmpInc_start,
+                         tmpInc_end,peak_start,peak_end,allPriors,place)
+     
+        lik <- lik + tmpLik
     }
     return(lik)
 }
@@ -116,11 +105,18 @@ posterior_complex_buckets <- function(ts, values, names, local, startDays, endDa
 #' @param allPriors defaults to FALSE. Arguments for parameter priors, if desired.
 #' @return a single value for the posterior
 #' @export
-posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets, microCeph, births, zikv=NULL,nh=NULL,inc_buckets=NULL,inc_start=NULL,inc_end=NULL,peak_start=NULL,peak_end=NULL, allPriors=NULL){
+posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets, microCeph, births, zikv=NULL,nh=NULL,inc_buckets=NULL,inc_start=NULL,inc_end=NULL,peak_start=NULL,peak_end=NULL, allPriors=NULL,place){
     lik <- 0
 
     ## Solve the ODE model with current parameter values
+    message("pre-lsoda")
+    message(cat(pars," "))
     y <- solveModelSimple_rlsoda(ts, y0s, pars,FALSE)
+                                        #y <- solveModelSimple_lsoda(ts, y0s, pars,FALSE)
+    message("post-lsoda")
+    #names <- colnames(y)
+    #y <- t(y)
+    #row.names(y) <- names
     y["I_M",][y["I_M",] < 0] <- 0
     
     ## Extract peak time. Need to add 1 as rlsoda does not return the first time point.
@@ -137,17 +133,14 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
         perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
         lik <- lik + incidence_likelihood(perCapInc, zikv,nh)
     }
-
     probs <- generate_micro_curve(pars)
     probM <- generate_probM(y["I_M",], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)*pars["propn"]
     probM <- probM[which(y["time",] >= min(startDays) & y["time",] <= max(endDays))]
     probM <- average_buckets(probM, buckets)
-   
     lik <- lik + likelihood_probM(microCeph, births, probM)
-
     if(!is.null(allPriors)) lik <- lik + allPriors(pars)
     if(!is.null(peak_start)) lik <- lik + log(dunif(peakTime, peak_start,peak_end))
-    
+    message("bye!")
     return(lik)
 }
 
@@ -204,7 +197,6 @@ posterior_inc <- function(ts, values, names, local,inc_startDays,inc_endDays,inc
         perCapInc <- (1-(1-(inc/N_H))*(1-tmpPars["baselineInc"]))*tmpPars["incPropn"]
         lik <- lik + incidence_likelihood(perCapInc, tmpInc_ZIKV,tmpInc_NH)
     }
-
     if(!is.null(allPriors)) lik <- lik + allPriors(values)
     return(lik)
 }

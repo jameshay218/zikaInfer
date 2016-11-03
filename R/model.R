@@ -192,7 +192,7 @@ solveModelSimple_lsoda<- function(ts, y0s, pars,makenames=FALSE){
 #' @export
 solveModelSimple_rlsoda<- function(ts, y0s, pars,compatible=FALSE){
     pars <- pars[c("L_M","L_H","D_EM","D_EH","D_IH","b","p_HM","p_MH","constSeed")]
-    rlsoda::rlsoda(y0s, ts, CsimpleSEIR_rich, pars, dllname="zikaProj", deSolve_compatible = compatible,return_time=TRUE,return_initial=TRUE,atol=1e-5,rtol=1e-5)
+    rlsoda::rlsoda(y0s, ts, CsimpleSEIR_rich, pars, dllname="zikaProj", deSolve_compatible = compatible,return_time=TRUE,return_initial=TRUE,atol=1e-6,rtol=1e-6)
 }
 
 
