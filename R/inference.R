@@ -203,8 +203,8 @@ run_metropolis_MCMC <- function(data=NULL,
             new_probab <- posterior_simp(proposal)
             log_prob <- min(new_probab-probab,0)
             if(!is.finite(log_prob)){
-                message("Not finite")
-                message(cat(proposal[c("density","constSeed")]," "))
+                #message("Not finite")
+                #message(cat(proposal[c("density","constSeed")]," "))
             }
             ## Accept with probability 1 if better, or proportional to
             ## difference if now

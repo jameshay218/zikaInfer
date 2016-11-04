@@ -6,7 +6,12 @@ to.pdf <- function(expr, filename, ..., verbose=TRUE) {
   on.exit(dev.off())
   eval.parent(substitute(expr))
 }
-## PNG - Rich's function to print to device without potential for bad errors
+#' PNG - Rich's function to print to device without potential for bad errors
+#'
+#' Prints to png, but turns dev off if fails
+#' @param expr expression to give plot
+#' @param filename filename to print to
+#' @export
 to.png <- function(expr, filename, ..., verbose=TRUE) {
     if ( verbose )
         cat(sprintf("Creating %s\n", filename))
