@@ -4,10 +4,9 @@
 \alias{run_metropolis_MCMC}
 \title{Adaptive Metropolis-within-Gibbs Random Walk Algorithm.}
 \usage{
-run_metropolis_MCMC(data, ts, param_table, mcmcPars = c(iterations = 1000,
-  popt = 0.44, opt_freq = 50, thin = 1, burnin = 100, adaptive_period = 100,
-  tuning_period = 100, save_block = 500), filename, mvrPars = NULL,
-  incDat = NULL, peakTimes = NULL, allPriors = NULL)
+run_metropolis_MCMC(data = NULL, ts, param_table, mcmcPars, filename,
+  mvrPars = NULL, incDat = NULL, peakTimes = NULL, allPriors = NULL,
+  truePars = NULL)
 }
 \arguments{
 \item{data}{the microcephaly data against which the likelihood is calculated}

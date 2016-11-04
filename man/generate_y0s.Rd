@@ -4,7 +4,7 @@
 \alias{generate_y0s}
 \title{Generates y0s}
 \usage{
-generate_y0s(N_H, density)
+generate_y0s(N_H, density, iniI = 10)
 }
 \arguments{
 \item{N_H}{human population size}

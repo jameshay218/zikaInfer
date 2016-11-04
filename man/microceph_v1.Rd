@@ -13,6 +13,6 @@ microceph_v1(pars)
 the vector of risks
 }
 \description{
-Microcephaly risk curve under gamma distribution
+Microcephaly risk curve under gamma distribution. 0 - 279 (all days)
 }
 

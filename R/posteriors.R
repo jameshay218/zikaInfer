@@ -109,18 +109,13 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
     lik <- 0
 
     ## Solve the ODE model with current parameter values
-    message("pre-lsoda")
     message(cat(pars," "))
     y <- solveModelSimple_rlsoda(ts, y0s, pars,FALSE)
-                                        #y <- solveModelSimple_lsoda(ts, y0s, pars,FALSE)
-    message("post-lsoda")
-    #names <- colnames(y)
-    #y <- t(y)
-    #row.names(y) <- names
+
     y["I_M",][y["I_M",] < 0] <- 0
     
-    ## Extract peak time. Need to add 1 as rlsoda does not return the first time point.
-    peakTime <- y["time",which.max(y["I_H",])]
+    ## Extract peak time.
+    peakTime <- y["time",which.max(y["incidence",])]
     
     if(!is.null(zikv)){
         tmpY <- y[,which(y["time",] >= min(inc_start) & y["time",] <= max(inc_end))]
@@ -138,9 +133,10 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
     probM <- probM[which(y["time",] >= min(startDays) & y["time",] <= max(endDays))]
     probM <- average_buckets(probM, buckets)
     lik <- lik + likelihood_probM(microCeph, births, probM)
+    
     if(!is.null(allPriors)) lik <- lik + allPriors(pars)
-    if(!is.null(peak_start)) lik <- lik + log(dunif(peakTime, peak_start,peak_end))
-    message("bye!")
+    if(!is.null(peak_start)) lik <- lik + dunif(peakTime, peak_start,peak_end,1)
+
     return(lik)
 }
 
@@ -186,7 +182,6 @@ posterior_inc <- function(ts, values, names, local,inc_startDays,inc_endDays,inc
         
         ## Solve the ODE model with current parameter values
         y <- solveModelSimple_rlsoda(ts, tmpY0s, tmpPars,FALSE)
-        
         tmpY <- y[,which(y["time",] >= min(tmpInc_start) & y["time",] <= max(tmpInc_end))]
         N_H <- average_buckets(colSums(tmpY[5:8,]), tmpInc_buckets)
         
@@ -196,8 +191,10 @@ posterior_inc <- function(ts, values, names, local,inc_startDays,inc_endDays,inc
         
         perCapInc <- (1-(1-(inc/N_H))*(1-tmpPars["baselineInc"]))*tmpPars["incPropn"]
         lik <- lik + incidence_likelihood(perCapInc, tmpInc_ZIKV,tmpInc_NH)
+        
+        if(!is.null(allPriors)) lik <- lik + allPriors(tmpPars)
     }
-    if(!is.null(allPriors)) lik <- lik + allPriors(values)
+
     return(lik)
 }
 

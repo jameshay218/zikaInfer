@@ -5,8 +5,7 @@
 \title{Generate allowable starting parameters}
 \usage{
 generate_allowable_params(peakTime = 927, peakTimeRange = 60, stateNames,
-  microDatFile = NULL, parTab = NULL,
-  allowableParsFile = "allowablePars.csv")
+  parTab = NULL, allowableParsFile = "allowablePars.csv")
 }
 \arguments{
 \item{peakTime}{the desired central peak time. Defaults to 927}
@@ -15,11 +14,11 @@ generate_allowable_params(peakTime = 927, peakTimeRange = 60, stateNames,
 
 \item{stateNames}{the set of Brazilian states for which allowable parameters should be generated. Must match those in the microDatFile}
 
-\item{microDatFile}{the location of the microcephaly data file which is needed to obtain N_H and L_H for each state. Note that this is only needed if no parTab is provided}
-
 \item{parTab}{the parameter table as returned by \code{\link{setupParTable}}}
 
 \item{allowableParsFile}{file location for the allowable parameters table, if it exists.}
+
+\item{microDatFile}{the location of the microcephaly data file which is needed to obtain N_H and L_H for each state. Note that this is only needed if no parTab is provided}
 }
 \value{
 a table of allowable parameters with columns for t0, mosquito density (R0), corresponding state (as this will vary by N_H and life expectancy), and corresponding peak time

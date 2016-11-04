@@ -2,7 +2,7 @@
 % Please edit documentation in R/model.R
 \name{microceph_v4}
 \alias{microceph_v4}
-\title{Microcephaly risk V1}
+\title{Microcephaly risk V4}
 \usage{
 microceph_v4(pars)
 }

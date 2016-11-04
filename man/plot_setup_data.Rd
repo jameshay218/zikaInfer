@@ -4,12 +4,15 @@
 \alias{plot_setup_data}
 \title{Get plot data}
 \usage{
-plot_setup_data(chain, dat, parTab, ts, local, runs = NULL)
+plot_setup_data(chain, dat = NULL, incDat = NULL, parTab, ts, local,
+  runs = NULL, startDay = NULL, noMonths = 12, noWeeks = 52)
 }
 \arguments{
 \item{chain}{the MCMC chain}
 
-\item{dat}{the data frame of real data}
+\item{dat}{the data frame of real microcephaly data}
+
+\item{incDat}{the data frame of real ZIKV incidence data}
 
 \item{parTab}{the parameter table}
 
@@ -18,6 +21,12 @@ plot_setup_data(chain, dat, parTab, ts, local, runs = NULL)
 \item{local}{string for state under consideration}
 
 \item{runs}{the number of samples to take}
+
+\item{startDay}{if realDat is not provided, need to provide the first day on which we want to see predicted microcephaly numbers}
+
+\item{noMonths}{if realDat not provided, need to provide the number of months of forecasted data that we wish to see}
+
+\item{noWeeks}{if no incidence data provided, number of weeks over which we should plot the data}
 }
 \description{
 Given an MCMC chain and other parameters, returns a list of data frames that can be used to generate an incidence plot

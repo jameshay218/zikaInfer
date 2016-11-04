@@ -6,7 +6,8 @@
 \usage{
 plot_best_trajectory_multi(chain, realDat, parTab, ts, runs = 100,
   incDat = NULL, mcmcPars = c(burnin = 50000, adaptive = 1e+05, thin = 50),
-  ylimM = NULL, ylimI = NULL)
+  ylimM = NULL, ylimI = NULL, startDay = NULL, months = NULL,
+  weeks = NULL)
 }
 \arguments{
 \item{chain}{the MCMC chain of estimated parameters}
@@ -26,6 +27,12 @@ plot_best_trajectory_multi(chain, realDat, parTab, ts, runs = 100,
 \item{ylimM}{ylimit for the microcephaly plot}
 
 \item{ylimI}{ylimit for the incidence plot}
+
+\item{startDay}{if realDat is not provided, need to provide the first day on which we want to see predicted microcephaly numbers}
+
+\item{months}{if realDat not provided, need to provide the number of months of forecasted data that we wish to see}
+
+\item{weeks}{if no incidence data provided, number of weeks over which we should plot the data}
 }
 \value{
 a ggplot object with the incidence plots

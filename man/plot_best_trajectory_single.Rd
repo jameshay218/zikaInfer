@@ -7,7 +7,8 @@
 plot_best_trajectory_single(local, chain = NULL, realDat = NULL,
   parTab = NULL, ts = NULL, runs = 100, incDat = NULL, ylabel = TRUE,
   xlabel = TRUE, mcmcPars = c(burnin = 50000, adaptive_period = 1e+05, thin
-  = 50), ylimM = NULL, ylimI = NULL)
+  = 50), ylimM = NULL, ylimI = NULL, startDay = NULL, months = NULL,
+  weeks = NULL)
 }
 \arguments{
 \item{local}{the name of the state to be fitted}
@@ -33,6 +34,12 @@ plot_best_trajectory_single(local, chain = NULL, realDat = NULL,
 \item{ylimM}{ylimit for the microcephaly plot}
 
 \item{ylimI}{ylimit for the incidence plot}
+
+\item{startDay}{if realDat is not provided, need to provide the first day on which we want to see predicted microcephaly numbers}
+
+\item{months}{if realDat not provided, need to provide the number of months of forecasted data that we wish to see}
+
+\item{weeks}{if no incidence data provided, number of weeks over which we should plot the data}
 }
 \value{
 a ggplot object with the incidence plots

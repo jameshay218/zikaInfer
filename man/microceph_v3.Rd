@@ -2,7 +2,7 @@
 % Please edit documentation in R/model.R
 \name{microceph_v3}
 \alias{microceph_v3}
-\title{Microcephaly risk V1}
+\title{Microcephaly risk V3}
 \usage{
 microceph_v3(pars)
 }
@@ -13,6 +13,6 @@ microceph_v3(pars)
 the vector of risks
 }
 \description{
-Microcephaly risk curve with 6 distinct periods
+Microcephaly risk curve with 6 distinct periods (7, 7, 7, 7, 7 and 5 weeks)
 }
 

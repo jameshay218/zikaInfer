@@ -404,14 +404,9 @@ proposalfunction <- function(values, lower_bounds, upper_bounds,steps, index){
 #' @param allowableParsFile file location for the allowable parameters table, if it exists.
 #' @return a table of allowable parameters with columns for t0, mosquito density (R0), corresponding state (as this will vary by N_H and life expectancy), and corresponding peak time
 #' @export
-generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames,microDatFile=NULL,parTab=NULL,allowableParsFile="allowablePars.csv"){
-    if(file.exists(allowableParsFile)) allowablePars <- read.table(allowableParsFile)
+generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames,parTab=NULL,allowableParsFile="allowablePars.csv"){
+    if(!is.null(allowableParsFile) & file.exists(allowableParsFile)) allowablePars <- read.table(allowableParsFile)
     else {
-        if(is.null(parTab)){
-            realDat <- read.csv(microDatFile)
-            realDat <- realDat[realDat$local %in% stateNames,]
-            parTab <- setupParTable(1,realDat,sharedProb=TRUE)
-        }
         allowablePars <- NULL
         peakTimes <- matrix(nrow=100,ncol=100)
         for(local in stateNames){
@@ -425,7 +420,7 @@ generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames
                     y0s <- generate_y0s(as.numeric(pars["N_H"]),as.numeric(pars["density"]))
                     t_pars <- seq(0,3003,by=1)
                     y <- solveModelSimple_rlsoda(t_pars, y0s,pars,TRUE)
-                    peakTimes[i,j] <- y[which.max(y[,"I_H"]),"time"]
+                    peakTimes[i,j] <- y[which.max(y[,"incidence"]),"time"]
                     if(peakTimes[i,j] > (peakTime - peakTimeRange/2) & peakTimes[i,j] < (peakTime + peakTimeRange/2)){
                         allowablePars <- rbind(allowablePars,data.frame(i*10,j/5,local,peakTimes[i,j]))
                     }
