@@ -135,8 +135,7 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
 
     if(!is.null(allPriors)) lik <- lik + allPriors(pars)
     if(!is.null(peak_start)){
-        #lik <- lik + dunif(peakTime, peak_start,peak_end,1)
-        if(peakTime < peak_start || peakTime > peak_end) lik <- lik - 999999
+        lik <- lik + dunif(peakTime, peak_start,peak_end,1)
     }
 
     return(lik)
