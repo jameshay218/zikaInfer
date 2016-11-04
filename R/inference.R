@@ -192,7 +192,6 @@ run_metropolis_MCMC <- function(data=NULL,
             tempiter <- tempiter + 1
         }
         names(proposal) <- names(current_params)
-        message(cat(proposal," "))
         ## Propose new parameters and calculate posterior
         ## Check that all proposed parameters are in allowable range
         if(!any(
@@ -202,7 +201,6 @@ run_metropolis_MCMC <- function(data=NULL,
            ){
             ## Calculate new likelihood and find difference to old likelihood
             new_probab <- posterior_simp(proposal)
-            message("Out of posterior")
             log_prob <- min(new_probab-probab,0)
             if(!is.finite(log_prob)){
                 message("Not finite")
@@ -420,7 +418,7 @@ generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames
                     y0s <- generate_y0s(as.numeric(pars["N_H"]),as.numeric(pars["density"]))
                     t_pars <- seq(0,3003,by=1)
                     y <- solveModelSimple_rlsoda(t_pars, y0s,pars,TRUE)
-                    peakTimes[i,j] <- y[which.max(y[,"incidence"]),"time"]
+                    peakTimes[i,j] <- y[which.max(diff(y[,"incidence"])),"time"]
                     if(peakTimes[i,j] > (peakTime - peakTimeRange/2) & peakTimes[i,j] < (peakTime + peakTimeRange/2)){
                         allowablePars <- rbind(allowablePars,data.frame(i*10,j/5,local,peakTimes[i,j]))
                     }
@@ -429,7 +427,6 @@ generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames
         }
         allowabledPars <- allowablePars[complete.cases(allowablePars),]
         colnames(allowablePars) <- c("constSeed","density","local","peak")
-        write.table(allowablePars, "allowablePars.csv",sep=",",row.names=FALSE)
     }
     return(allowablePars)
 }

@@ -283,7 +283,7 @@ find_peak_times <- function(parTab){
         y0s <- generate_y0s(as.numeric(pars["N_H"]),as.numeric(pars["density"]))
         y <- solveModelSimple_rlsoda(ts,y0s,pars,TRUE)
         ## Extract peak time
-        peakTime <- y[which.max(y[,"incidence"]),1]
+        peakTime <- y[which.max(diff(y[,"incidence"])),1]
         message(peakTime)
         peakTimes[place=peakTime]
     }

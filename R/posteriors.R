@@ -109,14 +109,13 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
     lik <- 0
 
     ## Solve the ODE model with current parameter values
-    message(cat(pars," "))
     y <- solveModelSimple_rlsoda(ts, y0s, pars,FALSE)
 
     y["I_M",][y["I_M",] < 0] <- 0
     
     ## Extract peak time.
-    peakTime <- y["time",which.max(y["incidence",])]
-    
+    peakTime <- y["time",which.max(diff(y["incidence",]))]
+
     if(!is.null(zikv)){
         tmpY <- y[,which(y["time",] >= min(inc_start) & y["time",] <= max(inc_end))]
         N_H <- average_buckets(colSums(tmpY[5:8,]), inc_buckets)
@@ -133,9 +132,12 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
     probM <- probM[which(y["time",] >= min(startDays) & y["time",] <= max(endDays))]
     probM <- average_buckets(probM, buckets)
     lik <- lik + likelihood_probM(microCeph, births, probM)
-    
+
     if(!is.null(allPriors)) lik <- lik + allPriors(pars)
-    if(!is.null(peak_start)) lik <- lik + dunif(peakTime, peak_start,peak_end,1)
+    if(!is.null(peak_start)){
+        #lik <- lik + dunif(peakTime, peak_start,peak_end,1)
+        if(peakTime < peak_start || peakTime > peak_end) lik <- lik - 999999
+    }
 
     return(lik)
 }
