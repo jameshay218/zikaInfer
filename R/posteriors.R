@@ -132,8 +132,9 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
     probM <- probM[which(y["time",] >= min(startDays) & y["time",] <= max(endDays))]
     probM <- average_buckets(probM, buckets)
     lik <- lik + likelihood_probM(microCeph, births, probM)
-
-    if(!is.null(allPriors)) lik <- lik + allPriors(pars)
+    if(!is.null(allPriors)){
+        lik <- lik + allPriors(pars)
+    }
     if(!is.null(peak_start)){
         lik <- lik + dunif(peakTime, peak_start,peak_end,1)
     }

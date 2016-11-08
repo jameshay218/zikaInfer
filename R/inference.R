@@ -413,7 +413,7 @@ generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames
                 for(j in 1:ncol(peakTimes)){
                     pars <- tmpTab$values
                     names(pars) <- tmpTab$names
-                    pars["density"] <- j/5
+                    pars["density"] <- j/10
                     pars["constSeed"] <- i*10
                     y0s <- generate_y0s(as.numeric(pars["N_H"]),as.numeric(pars["density"]))
                     t_pars <- seq(0,3003,by=1)
@@ -421,7 +421,7 @@ generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames
                     peakTimes[i,j] <- y[which.max(diff(y[,"incidence"])),"time"]
                     R0 <- r0.calc(pars)
                     if(R0 > 1 & peakTimes[i,j] > (peakTime - peakTimeRange/2) & peakTimes[i,j] < (peakTime + peakTimeRange/2)){
-                        allowablePars <- rbind(allowablePars,data.frame(i*10,j/5,local,peakTimes[i,j]))
+                        allowablePars <- rbind(allowablePars,data.frame(i*10,j/10,local,peakTimes[i,j]))
                     }
                 }
             }
