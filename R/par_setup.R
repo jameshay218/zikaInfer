@@ -39,6 +39,11 @@ partab_setup <- function(stateNames, version, realDat, useInc,allowablePars=NULL
     if(length(stateNames) == 1) parTab[parTab$names=="propn" & parTab$local== stateNames[1],c("fixed","values")] <- c(1,1)
     if(!is.null(allowablePars)){
         for(state in stateNames){
+            tmpTab <- parTab[parTab$local %in% c("all",state),c("values","names")]
+            pars <- tmpTab$values
+            names(pars) <- tmpTab$names
+            min_density <- density.calc(pars,1)
+            parTab[parTab$local == state & parTab$names == "density",c("lower_bounds","start_lower")] <- min_density
             tmpAllowable <- allowablePars[allowablePars$local == state,]
             index <- as.integer(runif(1,1,nrow(tmpAllowable)))
             parTab[parTab$names == "constSeed" & parTab$local == state,"values"] <- as.numeric(tmpAllowable[index,"constSeed"])
@@ -176,8 +181,8 @@ createParTable <- function(version=1,realDat=NULL, saveFile=NULL){
     paramTable[paramTable[,"names"]=="p_HM",2:ncol(paramTable)] <- c(0.5,"all",0,1,0.1,1,0,1)
     paramTable[paramTable[,"names"]=="p_MH",2:ncol(paramTable)] <- c(0.5,"all",0,1,0.1,1,0,1)
     paramTable[paramTable[,"names"]=="constSeed",2:ncol(paramTable)] <- c(0,"all",0,1000,0.1,1,400,600)
-    paramTable[paramTable[,"names"]=="mean",2:ncol(paramTable)] <- c(100,"all",0,10000,0.1,0,20,200)
-    paramTable[paramTable[,"names"]=="var",2:ncol(paramTable)] <- c(500,"all",0,100000,0.1,0,10,1000)
+    paramTable[paramTable[,"names"]=="mean",2:ncol(paramTable)] <- c(100,"all",0,10000,0.1,0,60,200)
+    paramTable[paramTable[,"names"]=="var",2:ncol(paramTable)] <- c(500,"all",0,100000,0.1,0,100,1000)
     paramTable[paramTable[,"names"]=="c",2:ncol(paramTable)] <- c(3,"all",0,100,0.1,0,0.1,5)
     paramTable[paramTable[,"names"]=="tstep",2:ncol(paramTable)] <- c(7,"all",0,100,0.1,1,0,7)
     paramTable[paramTable[,"names"]=="p1",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0,0.01,0.1)

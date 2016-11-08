@@ -419,7 +419,8 @@ generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames
                     t_pars <- seq(0,3003,by=1)
                     y <- solveModelSimple_rlsoda(t_pars, y0s,pars,TRUE)
                     peakTimes[i,j] <- y[which.max(diff(y[,"incidence"])),"time"]
-                    if(peakTimes[i,j] > (peakTime - peakTimeRange/2) & peakTimes[i,j] < (peakTime + peakTimeRange/2)){
+                    R0 <- r0.calc(pars)
+                    if(R0 > 1 & peakTimes[i,j] > (peakTime - peakTimeRange/2) & peakTimes[i,j] < (peakTime + peakTimeRange/2)){
                         allowablePars <- rbind(allowablePars,data.frame(i*10,j/5,local,peakTimes[i,j]))
                     }
                 }

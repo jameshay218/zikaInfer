@@ -71,6 +71,38 @@ b.calc <- function(params,R0){
     
 }
 
+
+#' Density calculation
+#'
+#' Calculates the density needed to generate a given R0 value, assuming that all other parameters are fixed.
+#' @param params Vector of parameters matching those returned by \code{\link{setupListPars}}
+#' @param R0 desired R0 value
+#' @return A single value for mosquito density
+#' @export
+#' @seealso \code{\link{r0.calc}}
+density.calc <- function(params,R0){
+    NH <- params["N_H"]
+    NM <- params["N_H"]*params["density"]
+    muM <- 1/params["L_M"]
+    sigmaM <- 1/params["D_EM"]
+
+    muH <- 1/params["L_H"]
+    gammaH <- 1/params["D_IH"]
+
+    b <- params["b"]
+    pHM <- params["p_HM"]
+    pMH <- params["p_MH"]
+
+    bot <- muM*(sigmaM+muM)*(gammaH + muH)*NH
+    top <- (b^2)*pMH*pHM*sigmaM
+
+    NM <- R0*bot/top
+    density <- NM/NH
+
+    return(unname(density))
+    
+}
+
 #' Generates y0s
 #'
 #' Generates initial values for the simple SEIR model given population size and mosquito density

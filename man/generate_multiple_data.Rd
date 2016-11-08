@@ -4,13 +4,10 @@
 \alias{generate_multiple_data}
 \title{Simulation multi-state microcephaly data}
 \usage{
-generate_multiple_data(t_pars, paramTable, weeks = FALSE,
-  dataRangeMicro = c(0, t_pars["dur"]), dataRangeInc = c(0, t_pars["dur"]),
-  noise = NULL, peakTimeRange = NULL)
+generate_multiple_data(ts = seq(0, 3003, by = 1), paramTable, weeks = FALSE,
+  dataRangeMicro, dataRangeInc, noise = NULL, peakTimeRange = NULL)
 }
 \arguments{
-\item{t_pars}{vector of two components - the total run time in days and the time step for the ODE solver}
-
 \item{paramTable}{Table of all parameters needed to solve the SEIR model and microcephaly simulation for each unique state. See \code{\link{setupParTable}}}
 
 \item{weeks}{Defaults to FALSE. If true. returns weekly microcephaly births rather than by month.}
@@ -22,6 +19,8 @@ generate_multiple_data(t_pars, paramTable, weeks = FALSE,
 \item{noise}{bool indicating if noise should be added to the data}
 
 \item{peakTimeRange}{the allowable prior range for ZIKV incidence peak time}
+
+\item{t_pars}{vector of two components - the total run time in days and the time step for the ODE solver}
 }
 \value{
 a data frame of microcephaly births, total births and corresponding times.

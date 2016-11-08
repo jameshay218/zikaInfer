@@ -12,15 +12,15 @@
 #' @return a data frame of microcephaly births, total births and corresponding times.
 #' @export
 #' @useDynLib zikaProj
-generate_multiple_data <- function(t_pars, paramTable,weeks=FALSE, dataRangeMicro=c(0,t_pars["dur"]), dataRangeInc=c(0,t_pars["dur"]),noise=NULL, peakTimeRange=NULL){
-    ## Get duration in years
-    length <- t_pars["dur"]/365
-    ts <- seq(0,t_pars["dur"],by=t_pars["step"])
-    
+generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, dataRangeMicro, dataRangeInc,noise=NULL, peakTimeRange=NULL){
+    if(is.null(dataRangeMicro)) dataRangeMicro <- c(0,max(ts))
+    if(is.null(dataRangeInc)) dataRangeInc <- c(0,max(ts))
+
+    noYears <- floor(max(ts)/365)
     ## Create vector of how big the buckets should be - weeks or months
-    if(!weeks) buckets <- rep(getDaysPerMonth(),length)
-    else buckets <- rep(7, t_pars["dur"]/7)
-    inc_buckets <- rep(7, t_pars["dur"]/7)
+    if(!weeks) buckets <- rep(getDaysPerMonth(),noYears)
+    else buckets <- rep(7, max(ts)/7)
+    inc_buckets <- rep(7, max(ts)/7)
     
     ## Get all unique places that data should be created for
     places <- unique(paramTable$local)
@@ -29,6 +29,7 @@ generate_multiple_data <- function(t_pars, paramTable,weeks=FALSE, dataRangeMicr
     overallMicroDat <- NULL
     incDat <- NULL
     peakTimes <- NULL
+
     
     ## For each place
     for(place in places){
@@ -87,7 +88,7 @@ generate_multiple_data <- function(t_pars, paramTable,weeks=FALSE, dataRangeMicr
         ## PEAK TIMES
 ######################################
         if(!is.null(peakTimeRange)){
-            peakTime <- y[which.max(y[,"I_H"]),"time"]
+            peakTime <- y[which.max(diff(y[,"incidence"])),"time"]
             lowerPeakTime <- peakTime - peakTimeRange/2
             upperPeakTime <- peakTime + peakTimeRange/2
             tmpPeakTime <- data.frame("actual"=peakTime,"start"=lowerPeakTime,"end"=upperPeakTime,"local"=as.character(place), stringsAsFactors=FALSE,row.names=NULL)
