@@ -5,7 +5,7 @@
 \title{Generate allowable starting parameters}
 \usage{
 generate_allowable_params(peakTime = 927, peakTimeRange = 60, stateNames,
-  parTab = NULL, allowableParsFile = "allowablePars.csv")
+  parTab = NULL, allowableParsFile = "allowablePars.csv", R0max = 6.5)
 }
 \arguments{
 \item{peakTime}{the desired central peak time. Defaults to 927}

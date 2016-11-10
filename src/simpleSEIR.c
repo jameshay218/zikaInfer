@@ -40,7 +40,7 @@ void simpleSEIR (int *neq, double *t, double *y, double *ydot, double *yout, int
   double N_M = S_M + E_M + I_M;
     
   double lambda_M = b*p_HM*(I_H)/N_H;
-  double lambda_H = b*p_MH*I_M/N_H;
+  double lambda_H = b*p_MH*I_M/N_H + 1.0/(7.0*N_H);
 
   
   // Changes in mosquito population

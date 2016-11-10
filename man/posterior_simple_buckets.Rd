@@ -6,8 +6,7 @@
 \usage{
 posterior_simple_buckets(ts, y0s, pars, startDays, endDays, buckets, microCeph,
   births, zikv = NULL, nh = NULL, inc_buckets = NULL, inc_start = NULL,
-  inc_end = NULL, peak_start = NULL, peak_end = NULL, allPriors = NULL,
-  place)
+  inc_end = NULL, peak_start = NULL, peak_end = NULL, allPriors = NULL)
 }
 \arguments{
 \item{ts}{time vector over which to solve the ODE model}

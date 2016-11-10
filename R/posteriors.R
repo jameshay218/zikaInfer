@@ -77,7 +77,7 @@ posterior_complex_buckets <- function(ts, values, names, local, startDays, endDa
         tmpLik <- posterior_simple_buckets(
                          ts,tmpY0s,tmpPars,tmpStart,tmpEnd,tmpBuckets,tmpMicro,
                          tmpBirths,tmpInc_ZIKV,tmpInc_NH,tmpInc_buckets,tmpInc_start,
-                         tmpInc_end,peak_start,peak_end,allPriors,place)
+                         tmpInc_end,peak_start,peak_end,allPriors)
      
         lik <- lik + tmpLik
     }
@@ -105,25 +105,27 @@ posterior_complex_buckets <- function(ts, values, names, local, startDays, endDa
 #' @param allPriors defaults to FALSE. Arguments for parameter priors, if desired.
 #' @return a single value for the posterior
 #' @export
-posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets, microCeph, births, zikv=NULL,nh=NULL,inc_buckets=NULL,inc_start=NULL,inc_end=NULL,peak_start=NULL,peak_end=NULL, allPriors=NULL,place){
+posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets, microCeph, births, zikv=NULL,nh=NULL,inc_buckets=NULL,inc_start=NULL,inc_end=NULL,peak_start=NULL,peak_end=NULL, allPriors=NULL){
     lik <- 0
 
     ## Solve the ODE model with current parameter values
     y <- solveModelSimple_rlsoda(ts, y0s, pars,FALSE)
+    #y <- solveModelSimple_lsoda(ts, y0s, pars,TRUE)
+    #y <- t(y)
 
     y["I_M",][y["I_M",] < 0] <- 0
     
     ## Extract peak time.
     peakTime <- y["time",which.max(diff(y["incidence",]))]
-
+   
     if(!is.null(zikv)){
         tmpY <- y[,which(y["time",] >= min(inc_start) & y["time",] <= max(inc_end))]
         N_H <- average_buckets(colSums(tmpY[5:8,]), inc_buckets)
         
         inc <- diff(tmpY["incidence",])
-        inc <- sum_buckets(inc,inc_buckets)
         inc[inc < 0] <- 0
-
+        inc <- sum_buckets(inc,inc_buckets)
+        
         perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
         lik <- lik + incidence_likelihood(perCapInc, zikv,nh)
     }
@@ -131,6 +133,7 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
     probM <- generate_probM(y["I_M",], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)*pars["propn"]
     probM <- probM[which(y["time",] >= min(startDays) & y["time",] <= max(endDays))]
     probM <- average_buckets(probM, buckets)
+
     lik <- lik + likelihood_probM(microCeph, births, probM)
     if(!is.null(allPriors)){
         lik <- lik + allPriors(pars)

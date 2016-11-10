@@ -34,8 +34,8 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, 
     ## For each place
     for(place in places){
         ## Get state specific and universal parameters out of param table
-        pars <- paramTable$values[paramTable$local== "all" | paramTable$local==place]
-        names(pars) <- paramTable$names[paramTable$local== "all" | paramTable$local==place]
+        pars <- paramTable[paramTable$local %in% c("all",place),"values"]
+        names(pars) <- paramTable[paramTable$local %in% c("all",place),"names"]
 
         ## Generate microcephaly curve
         probs <- generate_micro_curve(pars)
@@ -44,6 +44,7 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, 
         y0s <- generate_y0s(pars["N_H"], pars["density"])
         ## Solve the ODE model
         y <- solveModelSimple_rlsoda(ts, y0s, pars, TRUE)
+        #y <- solveModelSimple_lsoda(ts, y0s, pars, TRUE)
 
 
         ######################################
@@ -53,6 +54,7 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, 
         y[y[,"I_M"] < 0,"I_M"] <- 0
         probM <- generate_probM(y[,"I_M"], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)*pars["propn"]
         probM <- average_buckets(probM, buckets)
+
         ## Total number of births each observation point is from populatoin size
         yearBirths <- pars["N_H"]/(pars["L_H"]/365)
         
@@ -100,8 +102,8 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, 
 ######################################
         
         ## Add in times etc
-        tmpMicroDat <- data.frame("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"microCeph"=microDat,"births"=rep(births,length(buckets)),"local"=place)
-        tmpIncDat <- data.frame("startDay" = cumsum(inc_buckets)-inc_buckets,"endDay" =cumsum(inc_buckets),"buckets"=inc_buckets,"inc"=inc,"N_H"=N_H,"local"=place)
+        tmpMicroDat <- data.frame("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"microCeph"=microDat,"births"=rep(births,length(buckets)),"local"=place,stringsAsFactors=FALSE)
+        tmpIncDat <- data.frame("startDay" = cumsum(inc_buckets)-inc_buckets,"endDay" =cumsum(inc_buckets),"buckets"=inc_buckets,"inc"=inc,"N_H"=N_H,"local"=place,stringsAsFactors=FALSE)
 
         
         ## Only return data in the desired range

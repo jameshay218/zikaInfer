@@ -44,7 +44,7 @@ run_metropolis_MCMC <- function(data=NULL,
                                         # MCMC par setup ---------------------------------------------------------- 
     ## Allowable error in scale tuning
     TUNING_ERROR <- 0.1
-    OPT_TUNING  <- 0.1
+    OPT_TUNING  <- 0.5
     
     ## Extract MCMC parameters
     iterations <- mcmcPars["iterations"]
@@ -73,6 +73,8 @@ run_metropolis_MCMC <- function(data=NULL,
     ## Get some parameters useful for indexing
     non_fixed_params_length <- length(non_fixed_params)
     all_param_length <- nrow(param_table)
+
+  
     
     ## Arrays to store acceptance rates
     ## If univariate proposals
@@ -175,6 +177,8 @@ run_metropolis_MCMC <- function(data=NULL,
     no_recorded <- 1
     sampno <- 2
     par_i <- 1
+    
+    
                                         # Main MCMC algorithm -----------------------------------------------------
     ## Go through chain
     for (i in 1:(iterations+adaptive_period)){
@@ -207,7 +211,7 @@ run_metropolis_MCMC <- function(data=NULL,
                 #message(cat(proposal[c("density","constSeed")]," "))
             }
             ## Accept with probability 1 if better, or proportional to
-            ## difference if now
+            ## difference if not
             if(is.finite(log_prob) && log(runif(1)) < log_prob){
                 current_params <- proposal
                 probab <- new_probab
@@ -250,7 +254,6 @@ run_metropolis_MCMC <- function(data=NULL,
                 } else {       ## If using multivariate proposals
                     if(chain_index > OPT_TUNING*adaptive_period){
                         ## Print acceptance rate
-                        if(chain_index > (5*OPT_TUNING*adaptive_period))
                         scale <- scaletuning(scale, popt,pcur)
                         message(cat("Optimisation iteration: ", i,sep="\t"))
                         message(cat("Pcur: ", pcur,sep="\t"))
@@ -402,7 +405,7 @@ proposalfunction <- function(values, lower_bounds, upper_bounds,steps, index){
 #' @param allowableParsFile file location for the allowable parameters table, if it exists.
 #' @return a table of allowable parameters with columns for t0, mosquito density (R0), corresponding state (as this will vary by N_H and life expectancy), and corresponding peak time
 #' @export
-generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames,parTab=NULL,allowableParsFile="allowablePars.csv"){
+generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames,parTab=NULL,allowableParsFile="allowablePars.csv", R0max=6.5){
     if(!is.null(allowableParsFile) & file.exists(allowableParsFile)) allowablePars <- read.table(allowableParsFile)
     else {
         allowablePars <- NULL
@@ -413,6 +416,7 @@ generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames
                 for(j in 1:ncol(peakTimes)){
                     pars <- tmpTab$values
                     names(pars) <- tmpTab$names
+#                    print(pars)
                     pars["density"] <- j/10
                     pars["constSeed"] <- i*10
                     y0s <- generate_y0s(as.numeric(pars["N_H"]),as.numeric(pars["density"]))
@@ -420,14 +424,14 @@ generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames
                     y <- solveModelSimple_rlsoda(t_pars, y0s,pars,TRUE)
                     peakTimes[i,j] <- y[which.max(diff(y[,"incidence"])),"time"]
                     R0 <- r0.calc(pars)
-                    if(R0 > 1 & peakTimes[i,j] > (peakTime - peakTimeRange/2) & peakTimes[i,j] < (peakTime + peakTimeRange/2)){
-                        allowablePars <- rbind(allowablePars,data.frame(i*10,j/10,local,peakTimes[i,j]))
+                    if(R0 > 1 & R0 < R0max & peakTimes[i,j] > (peakTime - peakTimeRange/2) & peakTimes[i,j] < (peakTime + peakTimeRange/2)){
+                        allowablePars <- rbind(allowablePars,data.frame(i*10,j/10,local,peakTimes[i,j],R0))
                     }
                 }
             }
         }
         allowabledPars <- allowablePars[complete.cases(allowablePars),]
-        colnames(allowablePars) <- c("constSeed","density","local","peak")
+        colnames(allowablePars) <- c("constSeed","density","local","peak","r0")
     }
     return(allowablePars)
 }
