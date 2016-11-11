@@ -36,14 +36,24 @@ partab_setup <- function(stateNames, version, realDat, useInc,allowablePars=NULL
     }
     ## Arbritrarily fix one state's reporting proportion
     parTab[parTab$names=="propn" & parTab$local== norm_state,c("fixed","values")] <- c(1,0.8)
+    ## If there's only one state, fix propn, as this is the same as 'c'
     if(length(stateNames) == 1) parTab[parTab$names=="propn" & parTab$local== stateNames[1],c("fixed","values")] <- c(1,1)
+
+   
+    
+    ## If there's a data frame of allowable starting parameters, use these to seed density and constSeed
     if(!is.null(allowablePars)){
         for(state in stateNames){
             tmpTab <- parTab[parTab$local %in% c("all",state),c("values","names")]
             pars <- tmpTab$values
             names(pars) <- tmpTab$names
+
+            ## Limit density to give an R0 between 1 and 10 - anything above around 6 just gives the same likelihood
             min_density <- density.calc(pars,1)
+            max_density <- density.calc(pars,10)
             parTab[parTab$local == state & parTab$names == "density",c("lower_bounds","start_lower")] <- min_density
+            parTab[parTab$local == state & parTab$names == "density",c("upper_bounds","start_upper")] <- max_density
+                
             tmpAllowable <- allowablePars[allowablePars$local == state,]
             index <- as.integer(runif(1,1,nrow(tmpAllowable)))
             parTab[parTab$names == "constSeed" & parTab$local == state,"values"] <- as.numeric(tmpAllowable[index,"constSeed"])
