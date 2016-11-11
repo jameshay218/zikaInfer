@@ -6,9 +6,10 @@
 #' @param realDat the data frame of actual microcephaly data. Need this to generate N_H and L_H
 #' @param useInc bool indicating whether or not ZIKV incidence data is considered here
 #' @param allowablePars data frame of allowable parameters for density and constSeed
+#' @param sharedProb bool if the version with shared microcephaly parameters should be used
 #' @return the modified parameter table
 #' @export
-partab_setup <- function(stateNames, version, realDat, useInc,allowablePars=NULL){
+partab_setup <- function(stateNames, version, realDat, useInc,allowablePars=NULL,sharedProb=TRUE){
     correct_order <- c("pernambuco", "sergipe", "paraiba", "bahia", "riograndedonorte", 
                        "acre", "piaui", "alagoas", "matogrosso", "maranhao", "rondonia", 
                        "ceara", "tocantins", "espiritosanto", "roraima", "riodejaneiro", 
@@ -20,7 +21,7 @@ partab_setup <- function(stateNames, version, realDat, useInc,allowablePars=NULL
     norm_state <- correct_order[correct_order %in% stateNames][1]
     message(cat("Reference state: ",norm_state,"\n",sep=""))
     
-    parTab <- setupParTable(version,realDat,sharedProb=TRUE)
+    parTab <- setupParTable(version,realDat,sharedProb=sharedProb)
 
     ## If not using incidence data, need to fix incidence proportion and baseline inc parameters
 

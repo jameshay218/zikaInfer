@@ -4,7 +4,8 @@
 \alias{partab_setup}
 \title{Parameter setup}
 \usage{
-partab_setup(stateNames, version, realDat, useInc, allowablePars = NULL)
+partab_setup(stateNames, version, realDat, useInc, allowablePars = NULL,
+  sharedProb = TRUE)
 }
 \arguments{
 \item{stateNames}{the vector of states to include}
@@ -16,6 +17,8 @@ partab_setup(stateNames, version, realDat, useInc, allowablePars = NULL)
 \item{useInc}{bool indicating whether or not ZIKV incidence data is considered here}
 
 \item{allowablePars}{data frame of allowable parameters for density and constSeed}
+
+\item{sharedProb}{bool if the version with shared microcephaly parameters should be used}
 }
 \value{
 the modified parameter table
