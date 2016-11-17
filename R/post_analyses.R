@@ -222,12 +222,17 @@ load_mcmc_chains <- function(location="",asList=FALSE, convertMCMC=FALSE,unfixed
     read_chains <- lapply(read_chains, function(x) x[seq(1,nrow(x),by=thin),])
     read_chains <- lapply(read_chains,function(x) x[x$sampno > burnin,])
 
+  
+    
     ## Use names of a read.csv chain
     if(unique_names){
         tmpChain <- read.csv(chains[1])
         for(i in 1:length(read_chains)){
             colnames(read_chains[[i]]) <- colnames(tmpChain)
         }
+    }
+    for(i in 1:length(read_chains)){
+        read_chains[[i]]$chain <- i
     }
     ## Get the estimated parameters only
     if(unfixed){
@@ -316,23 +321,21 @@ convert_name_to_state <- function(name){
 #' @param chain the full MCMC chain to do post analysis on
 #' @param version the version of the model run here
 #' @param microceph_limit the probability of microcephaly given infection to use as the cut off
-#' @param runs the number of samples to take
 #' @return an MCMC chain of the added analyses
 #' @export
-extra_microceph_calculations <- function(chain,version=1,microceph_limit=0.001,runs=100){
+extra_microceph_calculations <- function(chain,version=1,microceph_limit=0.001){
     if(version == 1) {
         ## Get break days as trimesters
         break1 <- 14*7
         break2 <- 14*7+ break1
         break3 <- break2 + 12*7
 
-        samples <- sample(nrow(chain),runs)
-
-        ## Calculate microcephaly stats for each sample     
-        allProbs <- matrix(nrow=runs,ncol=280)
         
-        for(i in 1:length(samples)){
-            pars <- get_index_pars(chain,samples[i])
+        ## Calculate microcephaly stats for each sample     
+        allProbs <- matrix(nrow=nrow(chain),ncol=280)
+        
+        for(i in 1:nrow(chain)){
+            pars <- get_index_pars(chain,i)
             probs <- allProbs[i,] <- generate_micro_curve(pars)
         }      
         tr1 <- rowMeans(allProbs[,1:break1])
@@ -465,20 +468,21 @@ summarise_chain <- function(chain){
 #' @param i the index of the state used for indexing the right column (for example, first state in the table is 0, second is 1 etc...)
 #' @param chains the MCMC chain to extract from
 #' @param parTab the parameter table used to generate this MCMC chain. This is needed to ensure that parameter names are correct
+#' @param extraNames vector of additional names in the MCMC chain
 #' @return an MCMC chain for just this state, with R0 and attack rate calculated
 #' @export
-isolate_state <- function(local, i, chains, parTab){
+isolate_state <- function(local, i, chains, parTab,extraNames=NULL){
     ## Create a vector of the parameter names associated with this state
     state_pars <- parTab[parTab$local==local,"names"]
     if(i >= 1) state_pars <- paste(state_pars,".",i,sep="")
-    stateNames <- c(names(state_pars),parTab[parTab$local=="all","names"])
+    stateNames <- c(state_pars,parTab[parTab$local=="all","names"],extraNames)
 
     ## Create vector of non-indexed names to name the final chain
     blankNames <- parTab[parTab$local==local,"names"]
-    blankNames <- c(blankNames,parTab[parTab$local=="all","names"])
-
+    blankNames <- c(blankNames,parTab[parTab$local=="all","names"],extraNames)
+    
     ## Get only those parameters related to this state and rename the chain
-    tmpChain <- chains[,stateNames]
+    tmpChain <- tmpChain[,stateNames]
     colnames(tmpChain) <- blankNames
 
     ## Calculate RO and attack rate

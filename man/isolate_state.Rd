@@ -4,7 +4,7 @@
 \alias{isolate_state}
 \title{Isolate state from chain}
 \usage{
-isolate_state(local, i, chains, parTab)
+isolate_state(local, i, chains, parTab, extraNames = NULL)
 }
 \arguments{
 \item{local}{the name of the state}
@@ -14,6 +14,8 @@ isolate_state(local, i, chains, parTab)
 \item{chains}{the MCMC chain to extract from}
 
 \item{parTab}{the parameter table used to generate this MCMC chain. This is needed to ensure that parameter names are correct}
+
+\item{extraNames}{vector of additional names in the MCMC chain}
 }
 \value{
 an MCMC chain for just this state, with R0 and attack rate calculated
