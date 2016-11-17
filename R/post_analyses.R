@@ -221,8 +221,6 @@ load_mcmc_chains <- function(location="",asList=FALSE, convertMCMC=FALSE,unfixed
     ## Thin and remove burn in
     read_chains <- lapply(read_chains, function(x) x[seq(1,nrow(x),by=thin),])
     read_chains <- lapply(read_chains,function(x) x[x$sampno > burnin,])
-
-  
     
     ## Use names of a read.csv chain
     if(unique_names){
@@ -236,7 +234,7 @@ load_mcmc_chains <- function(location="",asList=FALSE, convertMCMC=FALSE,unfixed
     }
     ## Get the estimated parameters only
     if(unfixed){
-        fixed <- read_inipars()$fixed
+        fixed <- read_inipars(location)$fixed
         read_chains <- lapply(read_chains, function(x) x[,c(which(fixed==0)+1,ncol(x))])
     }
 
