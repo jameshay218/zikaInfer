@@ -13,11 +13,13 @@ Suggests:
 LinkingTo: Rcpp
 Imports:
     coda,
+    data.table,	
     deSolve,
     ggplot2,
     gridExtra,
     gtable,
-    MASS,	
+    MASS,
+    nleqslv,		
     Rcpp,	
     reshape2,
     rlsoda

@@ -20,6 +20,20 @@ to.png <- function(expr, filename, ..., verbose=TRUE) {
     eval.parent(substitute(expr))
 }
 
+#' SVG - Rich's function to print to device without potential for bad errors
+#'
+#' Prints to SVG, but turns dev off if fails
+#' @param expr expression to give plot
+#' @param filename filename to print to
+#' @export
+to.svg <- function(expr, filename, ..., verbose=TRUE) {
+    if ( verbose )
+        cat(sprintf("Creating %s\n", filename))
+    svg(filename, ...)
+    on.exit(dev.off())
+    eval.parent(substitute(expr))
+}
+
 
 #' Plot MCMC chains
 #'
@@ -54,20 +68,21 @@ plot_random_microceph_curves <- function(chain, runs){
     names(bestPars) <- colnames(chain)
     bestPars["tstep"] <- 1
     probs <- generate_micro_curve(bestPars)
-    bestProbs <- data.frame(prob=probs,week=seq(0,279,by=1))
+    probs <- average_buckets(probs,rep(7,40))
+    bestProbs <- data.frame(prob=probs,week=seq(0,279/7,by=1))
     myPlot <- ggplot() +
         geom_line(data=bestProbs, aes_string(x="week",y="prob"),col="blue",lwd=1) +
         ylab("Probability of microcephaly given infection")+
         xlab("Week of gestation at infection") +
         ggtitle("Microcephaly Risk Curve") +
         theme_bw()+
-        theme(axis.text.x=element_text(size=6),
+        theme(axis.text.x=element_text(size=10),
               panel.grid.minor=element_blank(),
               plot.title=element_text(size=10),
-              axis.text.x=element_text(size=6),
-              axis.text.y=element_text(size=6),
-              axis.title.x=element_text(size=8),
-              axis.title.y=element_text(size=8))
+              axis.text.x=element_text(size=10),
+              axis.text.y=element_text(size=10),
+              axis.title.x=element_text(size=10),
+              axis.title.y=element_text(size=10))
    
     ## Add some random lines
     samples <- sample(nrow(chain),runs)
@@ -78,7 +93,8 @@ plot_random_microceph_curves <- function(chain, runs){
         names(tmpPars) <- colnames(chain)
         tmpPars["tstep"] <- 1
         probs <- generate_micro_curve(tmpPars)
-        allProbs[[index]] <- probs <- data.frame(prob=probs,week=seq(0,279,by=1))
+        probs <- average_buckets(probs,rep(7,40))
+        allProbs[[index]] <- probs <- data.frame(prob=probs,week=seq(0,279/7,by=1))
         myPlot <- myPlot + geom_line(data=probs, aes_string(x="week",y="prob"),alpha=0.3,lwd=0.5,col="red")
         index <- index+1
     }
@@ -203,7 +219,6 @@ plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=
 
     polygonM <- polygonM[polygonM$x >= xlim[1] & polygonM <= xlim[2],]
 
-    #xlim <- c(min(dat[,"startDay"]),max(dat[,"endDay"]))
     xlabs <- generate_x_labels(xlim[1],xlim[2])
     myPlot <- microceph_plot(dat,microBounds,bestMicro,polygonM,local,xlim,ylimM,xlabs)
     incPlot <- inc_plot(incBounds,bestInc,polygonI,ylimI,xlim,incDat)
@@ -281,18 +296,18 @@ inc_plot <- function(incBounds, bestInc, polygonI, ylimI,xlim, incDat=NULL){
 
 overlapPlots <- function(p1,p2, centre_plot=TRUE){
     
-                                        # extract gtable
+    ## extract gtable
     g1 <- ggplot_gtable(ggplot_build(p1))
     g2 <- ggplot_gtable(ggplot_build(p2))
     
-                                        # overlap the panel of 2nd plot on that of 1st plot
+    ## overlap the panel of 2nd plot on that of 1st plot
     name=se=t=r=NULL
     pp <- c(subset(g1$layout, name == "panel", se = t:r))
     g <- gtable_add_grob(g1, g2$grobs[[which(g2$layout$name == "panel")]], pp$t, 
                          pp$l, pp$b, pp$l)
     if(centre_plot) return(g)
     
-                                        # axis tweaks
+    ## axis tweaks
     ia <- which(g2$layout$name == "axis-l")
     ga <- g2$grobs[[ia]]
     ax <- ga$children[[2]]
@@ -308,7 +323,7 @@ overlapPlots <- function(p1,p2, centre_plot=TRUE){
     g <- gtable_add_grob(g, ax, pp$t, length(g$widths)-1, pp$b)
     g <- gtable_add_grob(g, g2$grobs[[7]], pp$t, length(g$widths), pp$b)
     
-                                        # draw it
+    ## draw it
     return(g)
 }
 
@@ -438,12 +453,139 @@ plot_setup_data_auxiliary <- function(pars, dat,incDat, parTab, ts, local){
     return(list("micro"=predicted,"inc"=y))
 }
 
-#' Combine MCMC chains
+#' Microcephaly parameter density plot
 #'
-#' Given a list of MCMC chains, rbinds them all to give one big chain
-#' @param chains the list of chains
-#' @return a single data frame
+#' Given a melted MCMC chain with a column for variable name, plots the posterior density with shaded regions for 95% CI.
+#' @param varName the name of the variable to plot
+#' @param dat the melted MCMC chain
+#' @param xlabtext optional x-axis title
+#' @param weeks if set, this divides everything by this amount. ie. if we want value in weeks rather than days
+#' @param xlim optional vector of lower and upper x axis limits
+#' @param xbreaks optional vector of x axis break points
+#' @return a ggplot object density plot
 #' @export
-combine_chains <- function(chains){
-    return(do.call("rbind",chains))
+density_plot_func <- function(varName, dat,xlabtext="",weeks=1,xlim=NULL,xbreaks=NULL){
+  ## Mode plot - note that this isn't the same as the calculated
+    ## "peak week"
+    var <- varName
+    x <- dat[,"value"]/weeks
+    q5 <- quantile(x,.025)
+    q95 <- quantile(x,.975)
+    medx <- median(x)
+    x.dens <- density(x)
+    df.dens <- data.frame(x = x.dens$x, y = x.dens$y)
+    
+    p1 <- ggplot(data =dat) + 
+        theme_bw() + 
+        geom_density(aes(x=value/weeks, y = ..density..), color = 'black',alpha=0.3,fill="blue")+ 
+        geom_area(data = subset(df.dens, x >= q5 & x <= q95), aes(x=x,y=y), fill = 'blue',alpha=0.5) +
+        geom_vline(xintercept = medx)+
+        theme(axis.text.y=element_blank(),axis.title.y=element_blank(),axis.ticks.y=element_blank(),
+              axis.text.x=element_text(size=10),axis.title.x=element_text(size=10),panel.grid.minor=element_blank()) +
+        xlab(xlabtext)
+    
+    if(!is.null(xlim)){
+        p1 <- p1 + coord_cartesian(xlim=xlim)+
+            scale_x_continuous(breaks=xbreaks)
+    }
+    p1
 }
+
+
+#' Posterior density plot
+#'
+#' Plots posterior density of a given variable, facetted by state
+#' @param meltedChain the melted MCMC chain
+#' @param variableName the variable to plot
+#' @param xlimits optional vector of lower and upper x axis range
+#' @param title the title to give to the plot
+#' @param breaks option x axis breaks
+#' @param optional x axis labels. Must match breaks length
+#' @return a ggplot object of posterior density
+#' @export
+density_plot_state <- function(meltedChain, variableName, xlimits=NULL, title="",breaks=NULL,labels=NULL){
+    tmpDat <- meltedChain[meltedChain$variable==variableName,]
+    plot <- ggplot(tmpDat,aes(x=value))+
+        stat_density(aes(ymax=..density..,ymin=-..density..,fill=state,color=state),trim=TRUE,geom="ribbon",position="identity")+
+        facet_grid(state~.)+
+
+    ylab("") +
+    ggtitle(title)+
+    xlab("Value")+
+    theme_bw() +
+    theme(
+        plot.margin=unit(c(0.1,0.5,0.1,0),"cm"),
+        legend.position="none",
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()
+    )
+    if(!is.null(xlimits)){
+        if(!is.null(breaks) & !is.null(labels)) plot <- plot + scale_x_continuous(limits=xlimits,breaks=breaks,labels=labels)+
+                                                    theme(plot.margin=unit(c(0.1,0.5,0.1,0),"cm"),
+                                                          legend.position="none",
+                                                          axis.text.y=element_blank(),
+                                                          axis.ticks.y=element_blank(),
+                                                          axis.text.x=element_text(angle=45,hjust=1))
+        else plot <- plot +
+                 scale_x_continuous(limits=xlimits)
+    }
+    return(plot)
+}
+
+
+#' Generate date labels
+#'
+#' Given a data frame of microcephaly data, generates a vector of x-labels that represent dates
+#' @param birth_dat the data frame of microcephaly data
+#' @return the vector of labels
+#' @export
+generate_plot_date_labels <- function(birth_dat){
+    x <- (unique(birth_dat$startDay) + unique(birth_dat$endDay))/2 - 365
+    months <- c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+    labels <- unlist(lapply(c("2014","2015","2016"), function(x) paste(months,x,sep=" ")))
+    return(labels)
+}
+
+
+#' @export
+generate_country_boundaries <- function(country="Brazil"){
+    brazil1 <- raster::getData("GADM",country=country,level=1)
+    map <- ggplot2::fortify(brazil1)
+    
+    map$id <- as.integer(map$id)
+    dat <- data.frame(id=1:(length(brazil1@data$NAME_1)),state=brazil1@data$NAME_1)
+    map_df <- dplyr::inner_join(map,dat,by="id")
+    map_df$state <- get_states()[as.character(map_df$state)]
+    return(map_df)
+}
+
+#' @export
+generate_country_plot <- function(var,map_df,centers, title){
+  brazil1 <- raster::getData("GADM",country="Brazil",level=1)
+  map <- ggplot2::fortify(brazil1)
+  
+  map$id <- as.integer(map$id)
+                                        # centers[,var] <- signif(centers[,var],3)
+  plot <- ggplot() + 
+    geom_map(data=map_df,map=map,aes_string(x="long",y="lat",map_id="id",group="group",fill=var),col="black")+
+    ggtitle(title)+
+    geom_text(data = centers, aes_string(label = var, x = "x", y = "y"), size = 3)+
+    mytheme + theme(plot.title=element_text(size=14),legend.text=element_text(size=16))
+}
+
+#' @export
+generate_centroids <- function(country="Brazil",map_df,plotLabels){
+  brazil1 <- raster::getData("GADM",country=country,level=1)
+  ggplot2::map <- fortify(brazil1)
+  
+  map$id <- as.integer(map$id)
+  dat <- data.frame(id=1:(length(brazil1@data$NAME_1)),state=brazil1@data$NAME_1)
+  dat$state <- get_states()[as.character(dat$state)]
+  
+  # Finding centroids of each state as location for labels
+  centers <- data.frame(gCentroid(brazil1, byid = TRUE))
+  centers$state <- dat$state
+  centers <- join(centers,plotLabels,by="state")
+  return(centers)
+}
+
