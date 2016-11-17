@@ -10,6 +10,8 @@ get_correct_order(named = TRUE, normalised = FALSE)
 \item{named}{if TRUE, converts the state names to full names}
 
 \item{normalised}{if TRUE, orders by per birth microcephaly rate}
+
+\item{birth_dat}{the data frame of data}
 }
 \value{
 a vector of ordered state names

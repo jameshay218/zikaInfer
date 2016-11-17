@@ -256,7 +256,7 @@ load_mcmc_chains <- function(location="",asList=FALSE, convertMCMC=FALSE,unfixed
 #' @export
 read_inipars <- function(location=""){
     pars <- Sys.glob(file.path(location,"*inipars.csv"))
-    read_pars <- fread(pars[1],data.table=FALSE)       
+    read_pars <- data.table::fread(pars[1],data.table=FALSE)       
 }
 
 #' Attack rate simeq
@@ -356,7 +356,7 @@ extra_microceph_calculations <- function(chain,version=1,microceph_limit=0.001){
         tr3 <- 0
         lower <- upper <- range <- 0
     }
-    chain <- cbind(mode=mode,maxWeek=maxWeek,lower=lower,upper=upper,range=range,max=maxP,tr1=tr1,tr2=tr2,tr3=tr3)
+    chain <- cbind(mode=mode,maxWeek=maxWeek,lower=lower,upper=upper,range=range,mode=mode,max=maxP,tr1=tr1,tr2=tr2,tr3=tr3)
     return(chain)
 }
 
@@ -480,7 +480,7 @@ isolate_state <- function(local, i, chains, parTab,extraNames=NULL){
     blankNames <- c(blankNames,parTab[parTab$local=="all","names"],extraNames)
     
     ## Get only those parameters related to this state and rename the chain
-    tmpChain <- tmpChain[,stateNames]
+    tmpChain <- chains[,stateNames]
     colnames(tmpChain) <- blankNames
 
     ## Calculate RO and attack rate
@@ -568,10 +568,10 @@ read_all_data <- function(microCephFile="~/net/home/zika/data/microcephaly_data.
                           incDatFile="~/net/home/zika/data/inc_data.csv",
                           epidemicStates=FALSE, order=TRUE, convert=TRUE){
     ## Read in microcephaly data
-    allDat <- read.csv(microCephFile)
+    allDat <- read.csv(microCephFile,stringsAsFactors=FALSE)
 
     ## Read in incidence data
-    incDat <- read.csv(incDatFile)
+    incDat <- read.csv(incDatFile,stringsAsFactors=FALSE)
 
     if(epidemicStates){
         states <- get_epidemic_states()
@@ -587,7 +587,7 @@ read_all_data <- function(microCephFile="~/net/home/zika/data/microcephaly_data.
         incDat$local <- convert_name_to_state_factor(incDat$local)
     }
     if(order){
-        order <- get_correct_order(normalised=TRUE)
+        order <- get_correct_order(named=convert,normalised=TRUE)
         allDat$local <- factor(allDat$local,levels=order)
         incDat$local <- factor(incDat$local,levels=order)
     }
@@ -620,20 +620,20 @@ cumul_true <- function(x)  {
 #' State order
 #'
 #' Gets the correct state order for all plots, sorted by number of microcephaly cases
+#' @param birth_dat the data frame of data
 #' @param named if TRUE, converts the state names to full names
 #' @param normalised if TRUE, orders by per birth microcephaly rate
 #' @return a vector of ordered state names
 #' @export
 get_correct_order <- function(named=TRUE,normalised=FALSE){
-  birth_dat <- read.csv("~/net/home/zika/data/microcephaly_data.csv",stringsAsFactors=FALSE)
-  if(named) birth_dat$local <- convert_name_to_state(birth_dat$local)
-
-  if(normalised){
-    order <- names(sort(sapply(unique(birth_dat$local),function(x) sum(birth_dat[birth_dat$local==x,"microCeph"]/birth_dat[birth_dat$local==x,"births"])),decreasing = TRUE))
-  } else {
-    order <- names(sort(sapply(unique(birth_dat$local),function(x) sum(birth_dat[birth_dat$local==x,"microCeph"])),decreasing = TRUE))
-  }
-  return(order)
+    birth_dat <- read.csv("~/net/home/zika/data/microcephaly_data.csv",stringsAsFactors=FALSE)
+    if(named) birth_dat$local <- convert_name_to_state(birth_dat$local)
+    if(normalised){
+        order <- names(sort(sapply(unique(birth_dat$local),function(x) sum(birth_dat[birth_dat$local==x,"microCeph"]/birth_dat[birth_dat$local==x,"births"])),decreasing = TRUE))
+    } else {
+        order <- names(sort(sapply(unique(birth_dat$local),function(x) sum(birth_dat[birth_dat$local==x,"microCeph"])),decreasing = TRUE))
+    }
+    return(order)
 }
 
 ## Converts the simplified state to its full name as a character
