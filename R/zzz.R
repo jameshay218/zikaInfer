@@ -1,5 +1,6 @@
 CsimpleSEIR_rich <- NULL
 #' @useDynLib zikaProj
+#' @importFrom cowplot plot_grid
 #' @importFrom Rcpp evalCpp
 #' @import stats
 #' @import utils

@@ -79,7 +79,6 @@ plot_random_microceph_curves <- function(chain, runs){
         theme(axis.text.x=element_text(size=10),
               panel.grid.minor=element_blank(),
               plot.title=element_text(size=10),
-              axis.text.x=element_text(size=10),
               axis.text.y=element_text(size=10),
               axis.title.x=element_text(size=10),
               axis.title.y=element_text(size=10))
@@ -154,8 +153,8 @@ plot_best_trajectory_multi <- function(chain, realDat, parTab, ts, runs=100, inc
         ps[[i]] <- plot_best_trajectory_single(states[i], chain, realDat, parTab, ts, runs, incDat=incDat, ylabel=FALSE, xlabel=FALSE, mcmcPars,ylimM,ylimI,startDay,months,weeks)
     }
     ncols <- ceiling(length(states)/4)
-    allPlot <- do.call("grid.arrange",c(ps,ncol=ncols))
-    return(allPlot)
+    allPlot <- do.call("plot_grid",c(ps,ncol=ncols))
+    return(plot(allPlot))
 }
 
 generate_x_labels <- function(startDay, endDay, rep_=6){
@@ -201,7 +200,6 @@ plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=
     microBounds <- allDat$microBounds
     dat <- allDat$data
     incDat <- allDat$incDat
-
     xlim <- c(min(dat[,"startDay"]),max(dat[,"endDay"]))
     
     quantiles <- unique(microBounds[,"quantile"])
@@ -220,6 +218,7 @@ plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=
     polygonM <- polygonM[polygonM$x >= xlim[1] & polygonM <= xlim[2],]
 
     xlabs <- generate_x_labels(xlim[1],xlim[2])
+
     myPlot <- microceph_plot(dat,microBounds,bestMicro,polygonM,local,xlim,ylimM,xlabs)
     incPlot <- inc_plot(incBounds,bestInc,polygonI,ylimI,xlim,incDat)
 
@@ -229,9 +228,12 @@ plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=
     }
     if(!xlabel) myPlot <- myPlot + xlab("")
     
-    combined <- overlapPlots(myPlot,incPlot,FALSE)
-    
-    return(combined)
+    if(is.null(ylimM)) ylimM <- max(microBounds$micro)
+    if(is.null(ylimI)) ylimI <- max(incBounds$inc)
+    ylabInc <- NULL
+    if(ylabel) ylabInc <- "Per capita incidence"
+    myPlot <- add_inc_plot(myPlot, ylimM, incBounds,bestInc,polygonI,ylimI,ylabInc,incDat)
+    return(myPlot)
 }
 
 microceph_plot <- function(dat, microBounds, bestMicro, polygonM, local, xlim, ylim, xlabs){
@@ -249,7 +251,7 @@ microceph_plot <- function(dat, microBounds, bestMicro, polygonM, local, xlim, y
         ggtitle(get_state_name(local)) + 
         theme(
             panel.grid.minor=element_blank(),
-            plot.title=element_text(size=12),
+            plot.title=element_text(size=12,hjust=0.5),
             axis.text.x=element_text(size=8,hjust=1,angle=45),
             axis.text.y=element_text(size=8),
             axis.title.x=element_text(size=10),
@@ -259,6 +261,37 @@ microceph_plot <- function(dat, microBounds, bestMicro, polygonM, local, xlim, y
     if(!is.null(dat$microCeph)) myPlot <- myPlot + geom_point(data=dat,aes_string(y="microCeph",x="meanDay"),col="black",size=1)
     if(!is.null(ylim)) myPlot <- myPlot + scale_y_continuous(limits=c(0,ylim))
     return(myPlot)
+}
+
+add_inc_plot <- function(p1, ylimMicro,incBounds, bestInc, polygonI, ylimI,ylab=NULL,incDat=NULL){
+    modscale <- ylimI/ylimMicro
+
+    tmpInc <- bestInc
+    tmpInc$inc <- tmpInc$inc/modscale
+
+    tmpBounds <- incBounds
+    tmpBounds$inc <- tmpBounds$inc/modscale
+
+    tmpPoly <- polygonI
+    tmpPoly$y <- tmpPoly$y/modscale
+
+    p2 <- p1 +  geom_line(data=tmpBounds,aes_string(y="inc",x="time",group="quantile"),linetype=2,col="red",size=0.5,alpha=0.5)+  
+        geom_line(data=tmpInc,aes_string(y="inc",x="time"),col="red",lwd=0.5)+
+        geom_polygon(data=tmpPoly,aes_string(x="x",y="y"),alpha=0.2,fill="red")
+    if(!is.null(ylab)){
+        p2 <- p2 +        
+            scale_y_continuous(limits=c(0,ylimMicro),sec.axis=sec_axis(~.*modscale,name=ylab))
+    } else {
+        p2 <- p2 + scale_y_continuous(limits=c(0,ylimMicro),sec.axis=sec_axis(~.*modscale))
+
+    }
+    if(!is.null(incDat$inc)){
+        incDat$meanDay <- rowMeans(incDat[,c("startDay","endDay")])
+        incDat$perCapInc <- incDat[,"inc"]/incDat[,"N_H"]
+        incDat$perCapInc <- incDat$perCapInc/modscale
+        p2 <- p2 + geom_point(data=incDat,aes_string(x="meanDay",y="perCapInc"),col="black",size=1, shape=3)
+    }
+    return(p2)
 }
 
 inc_plot <- function(incBounds, bestInc, polygonI, ylimI,xlim, incDat=NULL){
@@ -279,7 +312,7 @@ inc_plot <- function(incBounds, bestInc, polygonI, ylimI,xlim, incDat=NULL){
             axis.line.y = element_line(colour="black"),
             axis.text.y=element_text(size=8,colour="black"),
             axis.title.y=element_text(size=10,angle=-90),
-            axis.text.x=element_text(size=8),
+            axis.text.x=element_blank(),
             axis.title.x=element_text(size=10),
             plot.margin=unit(c(0.1,0.8,0.1,0.1),"cm")
             
@@ -296,34 +329,33 @@ inc_plot <- function(incBounds, bestInc, polygonI, ylimI,xlim, incDat=NULL){
 
 overlapPlots <- function(p1,p2, centre_plot=TRUE){
     
-    ## extract gtable
+                                        # extract gtable
     g1 <- ggplot_gtable(ggplot_build(p1))
     g2 <- ggplot_gtable(ggplot_build(p2))
     
-    ## overlap the panel of 2nd plot on that of 1st plot
+                                        # overlap the panel of 2nd plot on that of 1st plot
+    
     name=se=t=r=NULL
     pp <- c(subset(g1$layout, name == "panel", se = t:r))
     g <- gtable_add_grob(g1, g2$grobs[[which(g2$layout$name == "panel")]], pp$t, 
                          pp$l, pp$b, pp$l)
     if(centre_plot) return(g)
     
-    ## axis tweaks
+                                        # axis tweaks
     ia <- which(g2$layout$name == "axis-l")
-    ga <- g2$grobs[[ia]]
-    ax <- ga$children[[2]]
-    ax$widths <- rev(ax$widths)
-    ax$grobs <- rev(ax$grobs)
-    ax$grobs[[1]]$x <- ax$grobs[[1]]$x - unit(1, "npc") + unit(0.1, "cm")
-    
-    ib <- which(g2$layout$name=="ylab")
-    
-    gb <- g2$grobs[[ib]]
-    
+    if(!is.null(ia) & !is.null(ia)){
+        ga <- g2$grobs[[ia]]
+        ax <- ga$children[[2]]
+        ax$widths <- rev(ax$widths)
+        ax$grobs <- rev(ax$grobs)
+        ax$grobs[[1]]$x <- ax$grobs[[1]]$x - unit(1, "npc") + unit(0.1, "cm")
+    }
+
     g <- gtable_add_cols(g, g2$widths[g2$layout[ia, ]$l], length(g$widths) - 1)
     g <- gtable_add_grob(g, ax, pp$t, length(g$widths)-1, pp$b)
     g <- gtable_add_grob(g, g2$grobs[[7]], pp$t, length(g$widths), pp$b)
     
-    ## draw it
+                                        # draw it
     return(g)
 }
 
@@ -449,7 +481,6 @@ plot_setup_data_auxiliary <- function(pars, dat,incDat, parTab, ts, local){
 
     perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
     y <- data.frame(time=incDat$meanDay,inc=perCapInc)
-    
     return(list("micro"=predicted,"inc"=y))
 }
 

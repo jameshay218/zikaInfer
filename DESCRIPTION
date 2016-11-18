@@ -13,6 +13,7 @@ Suggests:
 LinkingTo: Rcpp
 Imports:
     coda,
+    cowplot,
     data.table,	
     deSolve,
     ggplot2,
