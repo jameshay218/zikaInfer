@@ -7,7 +7,7 @@
 plot_best_trajectory_multi(chain, realDat, parTab, ts, runs = 100,
   incDat = NULL, mcmcPars = c(burnin = 50000, adaptive = 1e+05, thin = 50),
   ylimM = NULL, ylimI = NULL, startDay = NULL, months = NULL,
-  weeks = NULL)
+  weeks = NULL, ncol = 4)
 }
 \arguments{
 \item{chain}{the MCMC chain of estimated parameters}

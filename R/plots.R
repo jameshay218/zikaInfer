@@ -144,7 +144,7 @@ create_polygons <- function(lower,upper){
 #' @param weeks if no incidence data provided, number of weeks over which we should plot the data
 #' @return a ggplot object with the incidence plots
 #' @export
-plot_best_trajectory_multi <- function(chain, realDat, parTab, ts, runs=100, incDat=NULL, mcmcPars=c("burnin"=50000,"adaptive"=100000,"thin"=50), ylimM=NULL,ylimI=NULL,startDay=NULL,months=NULL,weeks=NULL){
+plot_best_trajectory_multi <- function(chain, realDat, parTab, ts, runs=100, incDat=NULL, mcmcPars=c("burnin"=50000,"adaptive"=100000,"thin"=50), ylimM=NULL,ylimI=NULL,startDay=NULL,months=NULL,weeks=NULL,ncol=4){
     ps <- NULL
     states <- unique(parTab$local)
     states <- states[states != "all"]
@@ -152,7 +152,7 @@ plot_best_trajectory_multi <- function(chain, realDat, parTab, ts, runs=100, inc
     for(i in 1:length(states)){
         ps[[i]] <- plot_best_trajectory_single(states[i], chain, realDat, parTab, ts, runs, incDat=incDat, ylabel=FALSE, xlabel=FALSE, mcmcPars,ylimM,ylimI,startDay,months,weeks)
     }
-    ncols <- ceiling(length(states)/4)
+    ncols <- ceiling(length(states)/ncol)
     allPlot <- do.call("plot_grid",c(ps,ncol=ncols))
     return(plot(allPlot))
 }
@@ -512,7 +512,7 @@ density_plot_func <- function(varName, dat,xlabtext="",weeks=1,xlim=NULL,xbreaks
         geom_area(data = subset(df.dens, x >= q5 & x <= q95), aes(x=x,y=y), fill = 'blue',alpha=0.5) +
         geom_vline(xintercept = medx)+
         theme(axis.text.y=element_blank(),axis.title.y=element_blank(),axis.ticks.y=element_blank(),
-              axis.text.x=element_text(size=10),axis.title.x=element_text(size=10),panel.grid.minor=element_blank()) +
+              axis.text.x=element_text(size=8),axis.title.x=element_text(size=10),panel.grid.minor=element_blank()) +
         xlab(xlabtext)
     
     if(!is.null(xlim)){
