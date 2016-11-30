@@ -144,7 +144,7 @@ create_polygons <- function(lower,upper){
 #' @param weeks if no incidence data provided, number of weeks over which we should plot the data
 #' @return a ggplot object with the incidence plots
 #' @export
-plot_best_trajectory_multi1 <- function(chain, realDat, parTab, ts, runs=100, incDat=NULL, mcmcPars=c("burnin"=50000,"adaptive"=100000,"thin"=50), ylimM=NULL,ylimI=NULL,startDay=NULL,months=NULL,weeks=NULL,ncol=4){
+plot_best_trajectory_multi <- function(chain, realDat, parTab, ts, runs=100, incDat=NULL, mcmcPars=c("burnin"=50000,"adaptive"=100000,"thin"=50), ylimM=NULL,ylimI=NULL,startDay=NULL,months=NULL,weeks=NULL,ncol=4){
     ps <- NULL
     states <- unique(parTab$local)
     states <- states[states != "all"]
