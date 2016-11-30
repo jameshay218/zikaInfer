@@ -153,6 +153,10 @@ plot_best_trajectory_multi <- function(chain, realDat, parTab, ts, runs=100, inc
         ps[[i]] <- plot_best_trajectory_single(states[i], chain, realDat, parTab, ts, runs, incDat=incDat, ylabel=FALSE, xlabel=FALSE, mcmcPars,ylimM,ylimI,startDay,months,weeks)
     }
     ncols <- ceiling(length(states)/ncol)
+    order <- get_correct_order(FALSE,TRUE)
+    order1 <- as.numeric(sapply(order, function(x) which(x == states)))
+    order1 <- order1[!is.na(order1)]
+    ps <- ps[order1]
     allPlot <- do.call("plot_grid",c(ps,ncol=ncols))
     return(allPlot)
 }
@@ -248,7 +252,7 @@ microceph_plot <- function(dat, microBounds, bestMicro, polygonM, local, xlim, y
         theme_bw() +
         ylab("Microcephaly cases (blue)") +
         xlab("Date") +
-        ggtitle(get_state_name(local)) + 
+        ggtitle(convert_name_to_state(local)) + 
         theme(
             panel.grid.minor=element_blank(),
             plot.title=element_text(size=12,hjust=0.5),
