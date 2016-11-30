@@ -133,7 +133,7 @@ get_lower_micro_bound <- function(chain,limit=0.001){
     if(length(tmp) > 0){
       lower[i] <- tmp[1] -1
     }
-    else lower[i] <- NA
+    else lower[i] <- 0
   }
   return(lower)
 }

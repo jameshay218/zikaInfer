@@ -44,7 +44,7 @@ run_metropolis_MCMC <- function(data=NULL,
                                         # MCMC par setup ---------------------------------------------------------- 
     ## Allowable error in scale tuning
     TUNING_ERROR <- 0.1
-    OPT_TUNING  <- 0.5
+    OPT_TUNING  <- 0.2
     
     ## Extract MCMC parameters
     iterations <- mcmcPars["iterations"]
@@ -178,7 +178,6 @@ run_metropolis_MCMC <- function(data=NULL,
     sampno <- 2
     par_i <- 1
     
-    
                                         # Main MCMC algorithm -----------------------------------------------------
     ## Go through chain
     for (i in 1:(iterations+adaptive_period)){
@@ -235,6 +234,7 @@ run_metropolis_MCMC <- function(data=NULL,
         }
         
         ## If within adaptive period, need to do some adapting!
+
         if(i <= adaptive_period){
             ## Current acceptance rate
             pcur <- tempaccepted/tempiter
@@ -252,14 +252,17 @@ run_metropolis_MCMC <- function(data=NULL,
                     message(cat("Step sizes: ", steps[non_fixed_params],sep="\t"))
                     tempaccepted <- tempiter <- reset
                 } else {       ## If using multivariate proposals
-                    if(chain_index > OPT_TUNING*adaptive_period){
-                        ## Print acceptance rate
-                        scale <- scaletuning(scale, popt,pcur)
-                        message(cat("Optimisation iteration: ", i,sep="\t"))
-                        message(cat("Pcur: ", pcur,sep="\t"))
-                        message(cat("Step size: ", scale,sep="\t"))
+                    if(chain_index > OPT_TUNING*adaptive_period & chain_index < (0.9*adaptive_period)){
                         covMat <- scale*cov(opt_chain[1:chain_index,])
                         tempiter <- tempaccepted <- 0
+                        message(cat("Optimisation iteration: ", i,sep="\t"))
+                        ## Print acceptance rate
+                        message(cat("Pcur: ", pcur,sep="\t"))
+                        message(cat("Step size: ", scale,sep="\t"))
+                    }
+                    if(chain_index > (0.9)*adaptive_period){
+                        scale <- scaletuning(scale, popt,pcur)
+                        message(cat("Scale: ",scale,sep=""))
                     }
                 }
             }

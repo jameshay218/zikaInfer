@@ -154,7 +154,7 @@ plot_best_trajectory_multi <- function(chain, realDat, parTab, ts, runs=100, inc
     }
     ncols <- ceiling(length(states)/ncol)
     allPlot <- do.call("plot_grid",c(ps,ncol=ncols))
-    return(plot(allPlot))
+    return(allPlot)
 }
 
 generate_x_labels <- function(startDay, endDay, rep_=6){
@@ -229,7 +229,7 @@ plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=
     if(!xlabel) myPlot <- myPlot + xlab("")
     
     if(is.null(ylimM)) ylimM <- max(microBounds$micro)
-    if(is.null(ylimI)) ylimI <- max(incBounds$inc)
+    if(is.null(ylimI)) ylimI <- max(1.1*incBounds$inc)
     ylabInc <- NULL
     if(ylabel) ylabInc <- "Per capita incidence"
     myPlot <- add_inc_plot(myPlot, ylimM, incBounds,bestInc,polygonI,ylimI,ylabInc,incDat)
@@ -252,8 +252,8 @@ microceph_plot <- function(dat, microBounds, bestMicro, polygonM, local, xlim, y
         theme(
             panel.grid.minor=element_blank(),
             plot.title=element_text(size=12,hjust=0.5),
-            axis.text.x=element_text(size=8,hjust=1,angle=45),
-            axis.text.y=element_text(size=8),
+            axis.text.x=element_text(size=10,hjust=1,angle=45),
+            axis.text.y=element_text(size=10),
             axis.title.x=element_text(size=10),
             axis.title.y=element_text(size=10),
             plot.margin=unit(c(0.1,0.8,0.1,0.1),"cm")

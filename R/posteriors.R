@@ -109,6 +109,7 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
     lik <- 0
 
     ## Solve the ODE model with current parameter values
+    #pars["constSeed"] <- pars["constSeed"]/pars["density"]
     y <- solveModelSimple_rlsoda(ts, y0s, pars,FALSE)
     #y <- solveModelSimple_lsoda(ts, y0s, pars,TRUE)
     #y <- t(y)
