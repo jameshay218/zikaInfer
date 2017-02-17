@@ -8,7 +8,9 @@ posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets,
   microCeph, births, data_locals, inc_startDays = NULL, inc_endDays = NULL,
   inc_locals = NULL, inc_buckets = NULL, inc_ZIKV = NULL, inc_NH = NULL,
   peak_startDays = NULL, peak_endDays = NULL, peak_locals = NULL,
-  unique_states, allPriors = NULL)
+  unique_states, allPriors = NULL, microceph_valid_days = NULL,
+  microceph_valid_local = NULL, inc_valid_days = NULL,
+  inc_valid_local = NULL)
 }
 \arguments{
 \item{ts}{time vector over which to solve the ODE model}
@@ -52,6 +54,14 @@ posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets,
 \item{unique_states}{vector of all unique states}
 
 \item{allPriors}{defaults to NULL. Arguments for parameter priors, if desired.}
+
+\item{microceph_valid_days}{vector of all days included in the microcephaly data}
+
+\item{microceph_valid_local}{vector of locals corresponding to the days in microceph_valid_days}
+
+\item{inc_valid_days}{vector of all days included in the incidence data}
+
+\item{inc_valid_local}{vector of locals corresponding to the days in inc_valid_days}
 }
 \value{
 a single value for the posterior

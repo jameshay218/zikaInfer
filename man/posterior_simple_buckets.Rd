@@ -6,7 +6,8 @@
 \usage{
 posterior_simple_buckets(ts, y0s, pars, startDays, endDays, buckets, microCeph,
   births, zikv = NULL, nh = NULL, inc_buckets = NULL, inc_start = NULL,
-  inc_end = NULL, peak_start = NULL, peak_end = NULL, allPriors = NULL)
+  inc_end = NULL, peak_start = NULL, peak_end = NULL,
+  valid_days_micro = NULL, valid_days_inc = NULL)
 }
 \arguments{
 \item{ts}{time vector over which to solve the ODE model}
@@ -39,7 +40,9 @@ posterior_simple_buckets(ts, y0s, pars, startDays, endDays, buckets, microCeph,
 
 \item{peak_end}{vector of peak time end days}
 
-\item{allPriors}{defaults to FALSE. Arguments for parameter priors, if desired.}
+\item{valid_days_micro}{a vector of days for which data were collected, allowing non-contiguous comparisons. Microcephaly}
+
+\item{valid_days_inc}{a vector of days for which data were collected, allowing non-contiguous comparisons. Incidence}
 }
 \value{
 a single value for the posterior

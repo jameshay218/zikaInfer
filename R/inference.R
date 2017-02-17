@@ -25,7 +25,7 @@ protect <- function(f){
 #' @param mvrPars a list of parameters if using a multivariate proposal. Must contain an initial covariance matrix, weighting for adapting cov matrix, and an initial scaling parameter (0-1)
 #' @param incDat optional data frame of incidence data if including incidence data in the likelihood function
 #' @param peakTimes optional parameter - data frame of peak times for Zika incidence for each state
-#' @param allPriors flag of whether or not to use priors
+#' @param allPriors user function of prior for model parameters. Should take values, names and local from param_table
 #' @return a list with: 1) full file path at which the MCMC chain is saved as a .csv file; 2) the last used covarianec matrix; 3) the last used scale size
 #' @export
 #' @seealso \code{\link{posterior_complex_buckets}}, \code{\link{proposalfunction}}
@@ -135,11 +135,12 @@ run_metropolis_MCMC <- function(data=NULL,
     
                                         # Posterior setup ---------------------------------------------------------
     ## Create posterior function with closures for neatness
+ 
     posterior_new <- create_posterior(ts, current_params, par_names, par_labels, 
                                        startDays, endDays, buckets, microCeph, births, 
                                        data_locals, inc_startDays,inc_endDays,inc_locals,
                                        inc_buckets,inc_ZIKV,inc_NH, peak_startDays, 
-                                       peak_endDays,peak_locals, unique_states, allPriors)
+                                       peak_endDays,peak_locals, unique_states, allPriors, microDat, incDat)
     posterior_simp <- protect(posterior_new)
   
                                         # Chain setups ------------------------------------------------------------
@@ -408,7 +409,7 @@ proposalfunction <- function(values, lower_bounds, upper_bounds,steps, index){
 #' @param allowableParsFile file location for the allowable parameters table, if it exists.
 #' @return a table of allowable parameters with columns for t0, mosquito density (R0), corresponding state (as this will vary by N_H and life expectancy), and corresponding peak time
 #' @export
-generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames,parTab=NULL,allowableParsFile="allowablePars.csv", R0max=6.5){
+generate_allowable_params <- function(peakTimings=927, peakTimeRange=60, stateNames,parTab=NULL,allowableParsFile="allowablePars.csv", R0max=6.5){
     if(!is.null(allowableParsFile) & file.exists(allowableParsFile)) allowablePars <- read.table(allowableParsFile)
     else {
         allowablePars <- NULL
@@ -427,7 +428,7 @@ generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames
                     y <- solveModelSimple_rlsoda(t_pars, y0s,pars,TRUE)
                     peakTimes[i,j] <- y[which.max(diff(y[,"incidence"])),"time"]
                     R0 <- r0.calc(pars)
-                    if(R0 > 1 & R0 < R0max & peakTimes[i,j] > (peakTime - peakTimeRange/2) & peakTimes[i,j] < (peakTime + peakTimeRange/2)){
+                    if(R0 > 1 & R0 < R0max & peakTimes[i,j] > (peakTimings[local] - peakTimeRange/2) & peakTimes[i,j] < (peakTimings[local] + peakTimeRange/2)){
                         allowablePars <- rbind(allowablePars,data.frame(i*10,j/10,local,peakTimes[i,j],R0))
                     }
                 }

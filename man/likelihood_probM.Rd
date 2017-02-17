@@ -17,6 +17,6 @@ likelihood_probM(microBirths, allBirths, probM)
 a single likelihood value
 }
 \description{
-Calculates the likelihood of observing a vector of microcephaly births given the total number of births and microcephaly probabilities. Note that all vectors must be equal lengths.
+Calculates the likelihood of observing a vector of microcephaly births given the total number of births and microcephaly probabilities. Note that all vectors must be equal lengths.. Assuming binomial distribution.
 }
 

@@ -114,6 +114,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// likelihood_probM_norm
+double likelihood_probM_norm(NumericVector microBirths, NumericVector allBirths, NumericVector probM, double lik_sd);
+RcppExport SEXP zikaProj_likelihood_probM_norm(SEXP microBirthsSEXP, SEXP allBirthsSEXP, SEXP probMSEXP, SEXP lik_sdSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type microBirths(microBirthsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type allBirths(allBirthsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type probM(probMSEXP);
+    Rcpp::traits::input_parameter< double >::type lik_sd(lik_sdSEXP);
+    rcpp_result_gen = Rcpp::wrap(likelihood_probM_norm(microBirths, allBirths, probM, lik_sd));
+    return rcpp_result_gen;
+END_RCPP
+}
 // average_buckets
 NumericVector average_buckets(NumericVector a, NumericVector buckets);
 RcppExport SEXP zikaProj_average_buckets(SEXP aSEXP, SEXP bucketsSEXP) {

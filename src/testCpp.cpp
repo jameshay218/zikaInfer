@@ -143,7 +143,7 @@ NumericVector generate_probM(NumericVector IM, double NH, NumericVector probM, d
 
 //' Likelihood function for time-varying microcephaly
 //'
-//' Calculates the likelihood of observing a vector of microcephaly births given the total number of births and microcephaly probabilities. Note that all vectors must be equal lengths.
+//' Calculates the likelihood of observing a vector of microcephaly births given the total number of births and microcephaly probabilities. Note that all vectors must be equal lengths.. Assuming binomial distribution.
 //' @param microBirths the vector of observed microcephaly cases over time
 //' @param allBirths the corresponding total number of births
 //' @param probM the corresponding vector of microcephaly probabilities as calculated by generate_probM.
@@ -155,6 +155,25 @@ double likelihood_probM(NumericVector microBirths, NumericVector allBirths, Nume
   int max = probM.length();
   for(int i = 0; i < max; ++i){
     lnlik += R::dbinom(microBirths[i],allBirths[i],probM[i],1);
+  }
+  return(lnlik);
+}
+
+//' Likelihood function for time-varying microcephaly
+//'
+//' Calculates the likelihood of observing a vector of microcephaly births given the total number of births and microcephaly probabilities. Note that all vectors must be equal lengths. Assuming normal distribution.
+//' @param microBirths the vector of observed microcephaly cases over time
+//' @param allBirths the corresponding total number of births
+//' @param probM the corresponding vector of microcephaly probabilities as calculated by generate_probM.
+//' @param lik_sd assumed standard deviation of the likelihood function
+//' @return a single likelihood value
+//' @export
+//[[Rcpp::export]]
+double likelihood_probM_norm(NumericVector microBirths, NumericVector allBirths, NumericVector probM, double lik_sd){
+  double lnlik = 0;
+  int max = probM.length();
+  for(int i = 0; i < max; ++i){
+    lnlik += R::dnorm(microBirths[i]/allBirths[i],probM[i],lik_sd,1);
   }
   return(lnlik);
 }

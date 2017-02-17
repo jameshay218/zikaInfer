@@ -91,7 +91,7 @@ generate_probM <- function(IM, NH, probM, b, pMH, bp, tstep) {
 
 #' Likelihood function for time-varying microcephaly
 #'
-#' Calculates the likelihood of observing a vector of microcephaly births given the total number of births and microcephaly probabilities. Note that all vectors must be equal lengths.
+#' Calculates the likelihood of observing a vector of microcephaly births given the total number of births and microcephaly probabilities. Note that all vectors must be equal lengths.. Assuming binomial distribution.
 #' @param microBirths the vector of observed microcephaly cases over time
 #' @param allBirths the corresponding total number of births
 #' @param probM the corresponding vector of microcephaly probabilities as calculated by generate_probM.
@@ -99,6 +99,19 @@ generate_probM <- function(IM, NH, probM, b, pMH, bp, tstep) {
 #' @export
 likelihood_probM <- function(microBirths, allBirths, probM) {
     .Call('zikaProj_likelihood_probM', PACKAGE = 'zikaProj', microBirths, allBirths, probM)
+}
+
+#' Likelihood function for time-varying microcephaly
+#'
+#' Calculates the likelihood of observing a vector of microcephaly births given the total number of births and microcephaly probabilities. Note that all vectors must be equal lengths. Assuming normal distribution.
+#' @param microBirths the vector of observed microcephaly cases over time
+#' @param allBirths the corresponding total number of births
+#' @param probM the corresponding vector of microcephaly probabilities as calculated by generate_probM.
+#' @param lik_sd assumed standard deviation of the likelihood function
+#' @return a single likelihood value
+#' @export
+likelihood_probM_norm <- function(microBirths, allBirths, probM, lik_sd) {
+    .Call('zikaProj_likelihood_probM_norm', PACKAGE = 'zikaProj', microBirths, allBirths, probM, lik_sd)
 }
 
 #' Averages a vector based on bucket sizes

@@ -17,6 +17,6 @@ incidence_likelihood(perCapInc, inc, N_H)
 a single log likelihood
 }
 \description{
-Given time-varying probabilities of observing Zika incidence and actual data, returns a single likelihood
+Given time-varying probabilities of observing Zika incidence and actual data, returns a single likelihood assuming binomially distributed observations
 }
 
