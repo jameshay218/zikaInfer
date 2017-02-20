@@ -66,9 +66,17 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, 
         ## Certain proportion of all births are microcephaly, but only a given proportion of those are observed
         microDat <- probM*births
 
-        if(noise) microDat <- rbinom(length(probM), births, probM)
+        if(noise){
+            if(!any(paramTable$names == "micro_sd")){
+                microDat <- rbinom(length(probM), births, probM)
+            } else {
+                microDat <- rnorm(length(probM), births*probM, pars["micro_sd"])
+                #microDat <- probM*births + err
+            }
+        }
 
         ## Needs to be to the nearest integer
+        microDat <- sapply(microDat, function(x) max(0,x))
         microDat <- round(microDat)
 
 ######################################
@@ -82,7 +90,14 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, 
 
         perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
         
-        if(noise) inc <- rbinom(length(perCapInc),pars["N_H"], perCapInc)
+        if(noise){
+            if(!any(paramTable$names=="inc_sd")){
+                inc <- rbinom(length(perCapInc),pars["N_H"], perCapInc)
+            } else {
+                tmp <- rnorm(length(perCapInc),perCapInc*pars["N_H"],pars["inc_sd"])
+                inc <- sapply(tmp, function(x) max(0,x))
+            }
+        }
         
         ## Needs to be to the nearest integer
         inc <- round(inc)

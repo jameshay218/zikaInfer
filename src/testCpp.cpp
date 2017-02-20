@@ -173,7 +173,8 @@ double likelihood_probM_norm(NumericVector microBirths, NumericVector allBirths,
   double lnlik = 0;
   int max = probM.length();
   for(int i = 0; i < max; ++i){
-    lnlik += R::dnorm(microBirths[i]/allBirths[i],probM[i],lik_sd,1);
+    //Rcpp::Rcout << microBirths[i]/allBirths[i] << " " << probM[i] << std::endl;
+    lnlik += R::dnorm(microBirths[i],probM[i]*allBirths[i],lik_sd,1);
   }
   return(lnlik);
 }

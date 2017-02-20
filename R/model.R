@@ -303,7 +303,7 @@ find_peak_times <- function(parTab){
     ts <- seq(0,3003,by=1)
     unique_states <- unique(parTab$local)
     unique_states <- unique_states[unique_states != "all"]
-    peakTimes <- character(length(unique_states))
+    peakTimes <- NULL
     for(place in unique_states){
         ## Get the indices for this state in the data and parameter table
         indices_pars <- parTab$local == place | parTab$local == "all"
@@ -318,7 +318,7 @@ find_peak_times <- function(parTab){
         ## Extract peak time
         peakTime <- y[which.max(diff(y[,"incidence"])),1]
         message(peakTime)
-        peakTimes[place=peakTime]
+        peakTimes[place] <- peakTime
     }
     peakTimes
     

@@ -53,7 +53,7 @@ run_metropolis_MCMC <- function(data=NULL,
     thin <- mcmcPars["thin"]
     adaptive_period<- mcmcPars["adaptive_period"]
     save_block <- mcmcPars["save_block"]
-    
+
     
                                         # Parameter par setup -------------------------------------
     ## Time vector for ODE model
@@ -135,12 +135,11 @@ run_metropolis_MCMC <- function(data=NULL,
     
                                         # Posterior setup ---------------------------------------------------------
     ## Create posterior function with closures for neatness
- 
     posterior_new <- create_posterior(ts, current_params, par_names, par_labels, 
                                        startDays, endDays, buckets, microCeph, births, 
                                        data_locals, inc_startDays,inc_endDays,inc_locals,
                                        inc_buckets,inc_ZIKV,inc_NH, peak_startDays, 
-                                       peak_endDays,peak_locals, unique_states, allPriors, microDat, incDat)
+                                       peak_endDays,peak_locals, unique_states, allPriors)
     posterior_simp <- protect(posterior_new)
   
                                         # Chain setups ------------------------------------------------------------
@@ -157,6 +156,7 @@ run_metropolis_MCMC <- function(data=NULL,
                                         # Initial conditions ------------------------------------------------------
     ## Initial likelihood
     probab <- posterior_simp(current_params)
+
     log_probab <- 0
     ## If available, find the true parameter posterior for comparison
     true_probab <- NULL
@@ -164,10 +164,10 @@ run_metropolis_MCMC <- function(data=NULL,
         true_probab <- posterior_simp(truePars)
         message(cat("True parameter posterior: ",true_probab,sep="\t"))
     }
-    
     ## Set up initial csv file
     tmp_table <- array(dim=c(1,length(chain_colnames)))
     tmp_table <- as.data.frame(tmp_table)
+  
     tmp_table[1,] <- c(1,as.numeric(current_params),probab)
     colnames(tmp_table) <- chain_colnames
     
@@ -178,7 +178,6 @@ run_metropolis_MCMC <- function(data=NULL,
     no_recorded <- 1
     sampno <- 2
     par_i <- 1
-    
                                         # Main MCMC algorithm -----------------------------------------------------
     ## Go through chain
     for (i in 1:(iterations+adaptive_period)){

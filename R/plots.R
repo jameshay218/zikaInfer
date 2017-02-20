@@ -194,9 +194,10 @@ generate_x_labels <- function(startDay, endDay, rep_=6){
 #' @param startDay if realDat is not provided, need to provide the first day on which we want to see predicted microcephaly numbers
 #' @param months if realDat not provided, need to provide the number of months of forecasted data that we wish to see
 #' @param weeks if no incidence data provided, number of weeks over which we should plot the data
+#' @param xlim OPTIONAL x coordinate limits
 #' @return a ggplot object with the incidence plots
 #' @export
-plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=NULL, ts=NULL, runs=100,incDat=NULL, ylabel=TRUE,xlabel=TRUE, mcmcPars=c("burnin"=50000,"adaptive_period"=100000,"thin"=50),ylimM=NULL, ylimI=NULL, startDay=NULL,months=NULL,weeks=NULL){
+plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=NULL, ts=NULL, runs=100,incDat=NULL, ylabel=TRUE,xlabel=TRUE, mcmcPars=c("burnin"=50000,"adaptive_period"=100000,"thin"=50),ylimM=NULL, ylimI=NULL, startDay=NULL,months=NULL,weeks=NULL, xlim=NULL){
     allDat <- plot_setup_data(chain,realDat, incDat,parTab, ts,local,runs, startDay, months,weeks)
     bestMicro <- allDat$bestMicro
     bestInc <- allDat$bestInc
@@ -204,7 +205,7 @@ plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=
     microBounds <- allDat$microBounds
     dat <- allDat$data
     incDat <- allDat$incDat
-    xlim <- c(min(dat[,"startDay"]),max(dat[,"endDay"]))
+    if(is.null(xlim)) xlim <- c(min(dat[,"startDay"]),max(dat[,"endDay"]))
     
     quantiles <- unique(microBounds[,"quantile"])
     botM <- microBounds[microBounds[,"quantile"]==quantiles[1],c("time","micro")]

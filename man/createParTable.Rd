@@ -4,13 +4,9 @@
 \alias{createParTable}
 \title{MCMC parameter table creation}
 \usage{
-createParTable(version = 1, realDat = NULL, saveFile = NULL)
+createParTable(saveFile = NULL)
 }
 \arguments{
-\item{version}{the version of the model to use. See \code{\link{print_version_names}}}
-
-\item{realDat}{if real data is available, adds parameters for the states given}
-
 \item{saveFile}{if provided, writes the parameter table to the given filename}
 }
 \value{

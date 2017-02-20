@@ -47,7 +47,7 @@ posterior_complex_buckets <- function(ts, values, names, local, startDays, endDa
         tmpBuckets <- buckets[indices]
         tmpPars <- values[indices_pars]
         tmpValidDaysMicro <- NULL
-        if(!is.null(microceph_valid_days)) tmpValidDaysMicro <- microceph_valid_days[microceph_valid_local == local]
+        if(!is.null(microceph_valid_days)) tmpValidDaysMicro <- microceph_valid_days[microceph_valid_local == place]
         
         names(tmpPars) <- names[indices_pars]
 
@@ -87,7 +87,6 @@ posterior_complex_buckets <- function(ts, values, names, local, startDays, endDa
                          ts,tmpY0s,tmpPars,tmpStart,tmpEnd,tmpBuckets,tmpMicro,
                          tmpBirths,tmpInc_ZIKV,tmpInc_NH,tmpInc_buckets,tmpInc_start,
                          tmpInc_end,peak_start,peak_end, tmpValidDaysMicro,tmpValidDaysInc)
-     
         lik <- lik + tmpLik
     }
     if(!is.null(allPriors)){
@@ -150,34 +149,34 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
         
         perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
         if(is.na(pars["inc_sd"])){
-            lik <- lik + incidence_likelihood(perCapInc, zikv,nh)
+            lik <- lik + pars["inc_weight"]*incidence_likelihood(perCapInc, zikv,nh)
         } else {
-            lik <- lik + incidence_likelihood_norm(perCapInc, zikv,nh,pars["inc_sd"])
+            lik <- lik + pars["inc_weight"]*incidence_likelihood_norm(perCapInc, zikv,nh,pars["inc_sd"])
         }
         
     }
     probs <- generate_micro_curve(pars)
     probM <- generate_probM(y["I_M",], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)*pars["propn"]
-    
+   
+
     if(is.null(valid_days_micro)){
         probM <- probM[which(y["time",] >= min(startDays) & y["time",] <= max(endDays))]
     } else {
         probM <- probM[y["time",] %in% valid_days_micro]
     }
-    
     probM <- average_buckets(probM, buckets)
 
     if(is.na(pars["micro_sd"])) {
-        lik <- lik + likelihood_probM(microCeph, births, probM)
+        lik <- lik + (1-pars["inc_weight"])*likelihood_probM(microCeph, births, probM)
     } else {
-        lik <- lik + likelihood_probM_norm(microCeph, births, probM, unname(pars["micro_sd"]))
+        lik <- lik + (1-pars["inc_weight"])*likelihood_probM_norm(microCeph, births, probM, unname(pars["micro_sd"]))
     }
-    
+
     if(!is.null(peak_start)){
         lik <- lik + dunif(peakTime, peak_start,peak_end,1)
     }
 
-    return(lik)
+    return(unname(lik))
 }
 
 
@@ -309,12 +308,10 @@ incidence_likelihood_norm<- function(perCapInc, inc, N_H, lik_sd){
 #' @param peak_locals vector of corresponding state name
 #' @param unique_states vector of all unique state names
 #' @param allPriors defaults to NULL. Arguments for parameter priors, if desired.
-#' @param microDat the full data frame of microcephaly data
-#' @param incDat the full data frame of incidence data
 #' @return a single value for the posterior
 #' @export
 #' @useDynLib zikaProj
-create_posterior <- function(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays=NULL, inc_endDays=NULL,inc_locals=NULL,inc_buckets=NULL,inc_ZIKV=NULL,inc_NH=NULL, peak_startDays=NULL, peak_endDays=NULL,peak_locals=NULL,unique_states, allPriors=NULL, microDat=NULL,incDat=NULL){
+create_posterior <- function(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays=NULL, inc_endDays=NULL,inc_locals=NULL,inc_buckets=NULL,inc_ZIKV=NULL,inc_NH=NULL, peak_startDays=NULL, peak_endDays=NULL,peak_locals=NULL,unique_states, allPriors=NULL){
 
     ## I have included some code to explicitly extract all days included within the data sampling periods.
     ## this allows for non-contiguous data to be included, as we have to index the model predicted
@@ -323,35 +320,34 @@ create_posterior <- function(ts, values, names, local, startDays, endDays, bucke
     ## with the corresponding state that it refers to. This means that we can pass these as vectors
     ## to the likelihood function rather than data frames which will aid computational speed.
     ## Must be done for incidence and microcephaly data seperately.
-    microceph_valid_days <- NULL
-    microceph_valid_local <- NULL
+    times_microceph<- NULL
+    for(place in unique(data_locals)){
+        tmpStartDays <- startDays[which(data_locals == place)]
+        tmpEndDays <- endDays[which(data_locals == place)]
+        y <- unique(unname(unlist(apply(cbind(tmpStartDays,tmpEndDays), 1, function(x) x[1]:x[2]))))
+        times_microceph<- rbind(times_microceph, data.frame("local"=place,"valid_days"=y))
+    }
+    microceph_valid_days <- times_microceph$valid_days
+    microceph_valid_local <- times_microceph$local
+    
     inc_valid_days <- NULL
     inc_valid_local <- NULL
-    
-    if(!is.null(microDat)){
-        times_microceph<- NULL
-        for(local in unique(microDat$local)){
-            tmp <- microDat[microDat$local == local, c("startDay","endDay")]
-            y <- unname(unlist(apply(tmp, 1, function(x) x[1]:x[2])))
-            times_microceph<- rbind(times_microceph, data.frame("local"=local,"valid_days"=y))
-        }
-        microceph_valid_days <- times_microceph$valid_days
-        microceph_valid_local <- times_microceph$local_days
-    }
-    if(!is.null(incDat)){
+    if(!is.null(inc_startDays)){
         times_inc <- NULL
-        for(local in unique(incDat$local)){
-            tmp <- incDat[incDat$local == local, c("startDay","endDay")]
-            y <- unname(unlist(apply(tmp, 1, function(x) x[1]:x[2])))
-            times_inc<- rbind(times_inc, data.frame("local"=local,"valid_days"=y))
+        for(place in unique(inc_locals)){
+            tmpStartDays <- inc_startDays[which(inc_locals == place)]
+            tmpEndDays <- inc_endDays[which(inc_locals == place)]
+            y <- unique(unname(unlist(apply(cbind(tmpStartDays,tmpEndDays), 1, function(x) x[1]:x[2]))))
+            times_inc<- rbind(times_inc, data.frame("local"=place,"valid_days"=y))
         }
         inc_valid_days <- times_inc$valid_days
         inc_valid_local <- times_inc$local
     }
     
+
     if(!is.null(microCeph)){
         f <- function(values){
-            return(posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays,inc_endDays,inc_locals,inc_buckets,inc_ZIKV,inc_NH, peak_startDays, peak_endDays,peak_locals, unique_states,allPriors, microecph_valid_days, microceph_valid_local, inc_valid_days, inc_valid_local))
+            return(posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays,inc_endDays,inc_locals,inc_buckets,inc_ZIKV,inc_NH, peak_startDays, peak_endDays,peak_locals, unique_states,allPriors, microceph_valid_days, microceph_valid_local, inc_valid_days, inc_valid_local))
         }
     } else {
         f <- function(values){

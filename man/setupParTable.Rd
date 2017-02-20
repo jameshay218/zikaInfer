@@ -5,7 +5,7 @@
 \title{MCMC parameter setup}
 \usage{
 setupParTable(version = 1, realDat = NULL, sharedProb = FALSE,
-  parFile = "", stateParFile = "")
+  parFile = "", stateParFile = "", stateNormLik = NULL)
 }
 \arguments{
 \item{version}{which model version is being run (see \code{\link{print_version_names}})}
@@ -17,6 +17,8 @@ setupParTable(version = 1, realDat = NULL, sharedProb = FALSE,
 \item{parFile}{if already specified, where to find the parameter table file without state parameters}
 
 \item{stateParFile}{as parFile, but with state specific parameters added}
+
+\item{stateNormLik}{boolean deciding whether or not a normal likelihood function is used (otherwise binomial). If NULL, uses the binomial. If not NULL, true or false indicates whether the likelihood standard deviations are state specific or not.}
 }
 \value{
 a matrix of needed settings for the MCMC algorithm. For each parameter, gives a name, lower and upper bounds, boolean for log scale, initial step sizes, log proposal and whether or not the parameter should be fixed.
