@@ -5,7 +5,7 @@
 \title{Parameter setup}
 \usage{
 partab_setup(stateNames, version, realDat, useInc, allowablePars = NULL,
-  sharedProb = TRUE, normLik = NULL)
+  sharedProb = TRUE, normLik = NULL, stateWeights = FALSE)
 }
 \arguments{
 \item{stateNames}{the vector of states to include}
@@ -21,6 +21,8 @@ partab_setup(stateNames, version, realDat, useInc, allowablePars = NULL,
 \item{sharedProb}{bool if the version with shared microcephaly parameters should be used}
 
 \item{normLik}{Using normal likelihood function for data? If false, uses binomial likelihood. If true, uses normal likelihood which incorporates two standard deviation parameters for ZIKV and microcephaly incidence data}
+
+\item{stateWeights}{bool deciding if data from different states should be weighted}
 }
 \value{
 the modified parameter table

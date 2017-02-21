@@ -73,7 +73,7 @@ posterior_complex_buckets <- function(ts, values, names, local, startDays, endDa
                 tmpInc_buckets <- inc_buckets[indices_inc]
                 tmpInc_start <- inc_startDays[indices_inc]
                 tmpInc_end <- inc_endDays[indices_inc]
-                if(!is.null(inc_valid_days)) tmpValidDaysInc <- inc_valid_days[inc_valid_local == local]
+                if(!is.null(inc_valid_days)) tmpValidDaysInc <- inc_valid_days[inc_valid_local == place]
             }
         } 
         if(!is.null(peak_startDays)){
@@ -87,7 +87,7 @@ posterior_complex_buckets <- function(ts, values, names, local, startDays, endDa
                          ts,tmpY0s,tmpPars,tmpStart,tmpEnd,tmpBuckets,tmpMicro,
                          tmpBirths,tmpInc_ZIKV,tmpInc_NH,tmpInc_buckets,tmpInc_start,
                          tmpInc_end,peak_start,peak_end, tmpValidDaysMicro,tmpValidDaysInc)
-        lik <- lik + tmpLik
+        lik <- lik + tmpLik*tmpPars["state_weight"]
     }
     if(!is.null(allPriors)){
         lik <- lik + allPriors(values, names, local)
@@ -281,7 +281,7 @@ incidence_likelihood <- function(perCapInc, inc, N_H){
 #' @export
 #' @useDynLib zikaProj
 incidence_likelihood_norm<- function(perCapInc, inc, N_H, lik_sd){
-    return(sum(dnorm(inc/N_H, perCapInc, lik_sd, 1)))
+    return(sum(dnorm(inc, perCapInc*N_H, lik_sd, 1)))
 }
 
 #' Simplify posterior
@@ -324,11 +324,14 @@ create_posterior <- function(ts, values, names, local, startDays, endDays, bucke
     for(place in unique(data_locals)){
         tmpStartDays <- startDays[which(data_locals == place)]
         tmpEndDays <- endDays[which(data_locals == place)]
-        y <- unique(unname(unlist(apply(cbind(tmpStartDays,tmpEndDays), 1, function(x) x[1]:x[2]))))
-        times_microceph<- rbind(times_microceph, data.frame("local"=place,"valid_days"=y))
+        days <- NULL
+        for(i in 1:length(tmpStartDays)) days <- c(days, tmpStartDays[i]:tmpEndDays[i])
+        days <- unique(days)
+        times_microceph<- rbind(times_microceph, data.frame("local"=place,"valid_days"=days))
     }
     microceph_valid_days <- times_microceph$valid_days
-    microceph_valid_local <- times_microceph$local
+    microceph_valid_local <- as.character(times_microceph$local)
+
     
     inc_valid_days <- NULL
     inc_valid_local <- NULL
@@ -337,11 +340,14 @@ create_posterior <- function(ts, values, names, local, startDays, endDays, bucke
         for(place in unique(inc_locals)){
             tmpStartDays <- inc_startDays[which(inc_locals == place)]
             tmpEndDays <- inc_endDays[which(inc_locals == place)]
-            y <- unique(unname(unlist(apply(cbind(tmpStartDays,tmpEndDays), 1, function(x) x[1]:x[2]))))
-            times_inc<- rbind(times_inc, data.frame("local"=place,"valid_days"=y))
+            days <- NULL
+            for(i in 1:length(tmpStartDays)) days <- c(days, tmpStartDays[i]:tmpEndDays[i])
+            days <- unique(days)
+            times_inc<- rbind(times_inc, data.frame("local"=place,"valid_days"=days))
+
         }
         inc_valid_days <- times_inc$valid_days
-        inc_valid_local <- times_inc$local
+        inc_valid_local <- as.character(times_inc$local)
     }
     
 

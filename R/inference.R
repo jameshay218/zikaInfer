@@ -132,7 +132,6 @@ run_metropolis_MCMC <- function(data=NULL,
         inc_ZIKV <- incDat[,"inc"]
         inc_NH <- incDat[,"N_H"]
     }
-    
                                         # Posterior setup ---------------------------------------------------------
     ## Create posterior function with closures for neatness
     posterior_new <- create_posterior(ts, current_params, par_names, par_labels, 
@@ -140,8 +139,9 @@ run_metropolis_MCMC <- function(data=NULL,
                                        data_locals, inc_startDays,inc_endDays,inc_locals,
                                        inc_buckets,inc_ZIKV,inc_NH, peak_startDays, 
                                        peak_endDays,peak_locals, unique_states, allPriors)
+
     posterior_simp <- protect(posterior_new)
-  
+    
                                         # Chain setups ------------------------------------------------------------
     ## Setup MCMC chain file with correct column names
     mcmc_chain_file <- paste(filename,"_chain.csv",sep="")
@@ -406,9 +406,10 @@ proposalfunction <- function(values, lower_bounds, upper_bounds,steps, index){
 #' @param microDatFile the location of the microcephaly data file which is needed to obtain N_H and L_H for each state. Note that this is only needed if no parTab is provided
 #' @param parTab the parameter table as returned by \code{\link{setupParTable}}
 #' @param allowableParsFile file location for the allowable parameters table, if it exists.
+#' @param peakTimings Optional data frame providing a specific upper and lower peak time bound for each state
 #' @return a table of allowable parameters with columns for t0, mosquito density (R0), corresponding state (as this will vary by N_H and life expectancy), and corresponding peak time
 #' @export
-generate_allowable_params <- function(peakTimings=927, peakTimeRange=60, stateNames,parTab=NULL,allowableParsFile="allowablePars.csv", R0max=6.5){
+generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames,parTab=NULL,allowableParsFile="allowablePars.csv", R0max=6.5,peakTimings=NULL){
     if(!is.null(allowableParsFile) & file.exists(allowableParsFile)) allowablePars <- read.table(allowableParsFile)
     else {
         allowablePars <- NULL
@@ -417,23 +418,37 @@ generate_allowable_params <- function(peakTimings=927, peakTimeRange=60, stateNa
             tmpTab <- parTab[parTab$local %in% c(local, "all"),]
             for(i in 1:nrow(peakTimes)){
                 for(j in 1:ncol(peakTimes)){
+                    if(!is.null(peakTimings)){
+                        tmpPeakLower <- peakTimings[peakTimings$local==local,"start"]
+                        tmpPeakUpper <- peakTimings[peakTimings$local==local,"end"]
+                    } else {
+                        tmpPeakLower <- peakTime - peakTimeRange/2
+                        tmpPeakUpper <- peakTime + peakTimeRange/2
+                    }
+                    
                     pars <- tmpTab$values
                     names(pars) <- tmpTab$names
-#                    print(pars)
+
                     pars["density"] <- j/10
                     pars["constSeed"] <- i*10
+                    
                     y0s <- generate_y0s(as.numeric(pars["N_H"]),as.numeric(pars["density"]))
+                    
                     t_pars <- seq(0,3003,by=1)
+                    
                     y <- solveModelSimple_rlsoda(t_pars, y0s,pars,TRUE)
+                    
                     peakTimes[i,j] <- y[which.max(diff(y[,"incidence"])),"time"]
+                    
                     R0 <- r0.calc(pars)
-                    if(R0 > 1 & R0 < R0max & peakTimes[i,j] > (peakTimings[local] - peakTimeRange/2) & peakTimes[i,j] < (peakTimings[local] + peakTimeRange/2)){
+                    
+                    if(R0 > 1 & R0 < R0max & peakTimes[i,j] > tmpPeakLower & peakTimes[i,j] < tmpPeakUpper){
                         allowablePars <- rbind(allowablePars,data.frame(i*10,j/10,local,peakTimes[i,j],R0))
                     }
                 }
             }
         }
-        allowabledPars <- allowablePars[complete.cases(allowablePars),]
+        allowablePars <- allowablePars[complete.cases(allowablePars),]
         colnames(allowablePars) <- c("constSeed","density","local","peak","r0")
     }
     return(allowablePars)

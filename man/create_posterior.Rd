@@ -8,7 +8,7 @@ create_posterior(ts, values, names, local, startDays, endDays, buckets,
   microCeph, births, data_locals, inc_startDays = NULL, inc_endDays = NULL,
   inc_locals = NULL, inc_buckets = NULL, inc_ZIKV = NULL, inc_NH = NULL,
   peak_startDays = NULL, peak_endDays = NULL, peak_locals = NULL,
-  unique_states, allPriors = NULL, microDat = NULL, incDat = NULL)
+  unique_states, allPriors = NULL)
 }
 \arguments{
 \item{ts}{time vector over which to solve the ODE model}
@@ -52,10 +52,6 @@ create_posterior(ts, values, names, local, startDays, endDays, buckets,
 \item{unique_states}{vector of all unique state names}
 
 \item{allPriors}{defaults to NULL. Arguments for parameter priors, if desired.}
-
-\item{microDat}{the full data frame of microcephaly data}
-
-\item{incDat}{the full data frame of incidence data}
 }
 \value{
 a single value for the posterior

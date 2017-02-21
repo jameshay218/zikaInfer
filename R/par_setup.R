@@ -8,9 +8,10 @@
 #' @param allowablePars data frame of allowable parameters for density and constSeed
 #' @param sharedProb bool if the version with shared microcephaly parameters should be used
 #' @param normLik Using normal likelihood function for data? If false, uses binomial likelihood. If true, uses normal likelihood which incorporates two standard deviation parameters for ZIKV and microcephaly incidence data
+#' @param stateWeights bool deciding if data from different states should be weighted
 #' @return the modified parameter table
 #' @export
-partab_setup <- function(stateNames, version, realDat, useInc,allowablePars=NULL,sharedProb=TRUE, normLik=NULL){
+partab_setup <- function(stateNames, version, realDat, useInc,allowablePars=NULL,sharedProb=TRUE, normLik=NULL,stateWeights=FALSE){
     correct_order <- c("pernambuco", "sergipe", "paraiba", "bahia", "riograndedonorte", 
                        "acre", "piaui", "alagoas", "matogrosso", "maranhao", "rondonia", 
                        "ceara", "tocantins", "espiritosanto", "roraima", "riodejaneiro", 
@@ -22,8 +23,8 @@ partab_setup <- function(stateNames, version, realDat, useInc,allowablePars=NULL
     norm_state <- correct_order[correct_order %in% stateNames][1]
     message(cat("Reference state: ",norm_state,"\n",sep=""))
     
-    parTab <- setupParTable(version,realDat,sharedProb=sharedProb,stateNormLik=normLik)
-
+    parTab <- setupParTable(version,realDat,sharedProb=sharedProb,stateNormLik=normLik,stateWeights=stateWeights)
+    if(stateWeights) parTab[parTab$names=="state_weight","values"] <- 1/length(stateNames)
     ## If not using incidence data, need to fix incidence proportion and baseline inc parameters
     if(!useInc){
         incDat <- NULL
@@ -131,15 +132,15 @@ setupParsLong <- function(version = 1){
     inc_weight <- 0
     
     if(version ==1){
-        pars <- c("inc_weight"=inc_weight,"burnin"=burnin,"baselineProb"=baseline,pars,"mean"=mean,"var"=var,"c"=c, "tstep"=tstep)
+        pars <- c("state_weight"=1,"inc_weight"=inc_weight,"burnin"=burnin,"baselineProb"=baseline,pars,"mean"=mean,"var"=var,"c"=c, "tstep"=tstep)
     } else if(version ==2){
-        pars <- c("inc_weight"=inc_weight,"burnin"=burnin,"baselineProb"=baseline,pars,"tstep"=tstep, "p1"=p1, "p2"=p2, "p3"=p3)
+        pars <- c("state_weight"=1,"inc_weight"=inc_weight,"burnin"=burnin,"baselineProb"=baseline,pars,"tstep"=tstep, "p1"=p1, "p2"=p2, "p3"=p3)
     } else if(version==3){
-        pars <- c("inc_weight"=inc_weight,"burnin"=burnin,"baselineProb"=baseline,pars,"tstep"=tstep, "p1"=p1, "p2"=p2, "p3"=p3, "p4"=p4, "p5"=p5, "p6"=p6)
+        pars <- c("state_weight"=1,"inc_weight"=inc_weight,"burnin"=burnin,"baselineProb"=baseline,pars,"tstep"=tstep, "p1"=p1, "p2"=p2, "p3"=p3, "p4"=p4, "p5"=p5, "p6"=p6)
     } else if(version==4){
-        pars <- c("inc_weight"=inc_weight,"burnin"=burnin,"baselineProb"=baseline,pars,"tstep"=tstep, "p1"=p1, "p2"=p2, "p3"=p3, "p4"=p4, "p5"=p5, "p6"=p6, "p7"=p7, "p8"=p8)  
+        pars <- c("state_weight"=1,"inc_weight"=inc_weight,"burnin"=burnin,"baselineProb"=baseline,pars,"tstep"=tstep, "p1"=p1, "p2"=p2, "p3"=p3, "p4"=p4, "p5"=p5, "p6"=p6, "p7"=p7, "p8"=p8)  
     } else {
-        pars <- c("inc_weight"=inc_weight,"sampFreq"=sampFreq,"sampPropn"=sampPropn,"mu_I"=mu_I,"sd_I"=sd_I,"mu_N"=mu_N,"sd_N"=sd_N,"probMicro"=probMicro,"baselineProb"=baseline,"burnin"=burnin,"epiStart"=epiStart,pars,"mean"=mean,"var"=var,"c"=c,"tstep"=tstep)
+        pars <- c("state_weight"=1,"inc_weight"=inc_weight,"sampFreq"=sampFreq,"sampPropn"=sampPropn,"mu_I"=mu_I,"sd_I"=sd_I,"mu_N"=mu_N,"sd_N"=sd_N,"probMicro"=probMicro,"baselineProb"=baseline,"burnin"=burnin,"epiStart"=epiStart,pars,"mean"=mean,"var"=var,"c"=c,"tstep"=tstep)
     }
     return(pars)   
 }
@@ -169,18 +170,20 @@ setupListPars <- function(duration=2*365, version=1){
 #' @param sharedProb boolean indicating if all states share the same risk curve
 #' @param parFile if already specified, where to find the parameter table file without state parameters
 #' @param stateParFile as parFile, but with state specific parameters added
-#' @param stateNormLik boolean deciding whether or not a normal likelihood function is used (otherwise binomial). If NULL, uses the binomial. If not NULL, true or false indicates whether the likelihood standard deviations are state specific or not. 
+#' @param stateNormLik boolean deciding whether or not a normal likelihood function is used (otherwise binomial). If NULL, uses the binomial. If not NULL, true or false indicates whether the likelihood standard deviations are state specific or not.
+#' @param stateWeights bool deciding if state weightings should be used (otherwise all states have equal weighting)
 #' @return a matrix of needed settings for the MCMC algorithm. For each parameter, gives a name, lower and upper bounds, boolean for log scale, initial step sizes, log proposal and whether or not the parameter should be fixed.
 #' @export
-setupParTable <- function(version=1, realDat=NULL, sharedProb=FALSE, parFile = "", stateParFile = "",stateNormLik=NULL){
+setupParTable <- function(version=1, realDat=NULL, sharedProb=FALSE, parFile = "", stateParFile = "",stateNormLik=NULL,stateWeights=FALSE){
     ## Checks if given filename exists. If not, creates a fresh parameter table
     if(file.exists(parFile)){
         print(paste("Reading in: ",parFile,sep=""))
         paramTable <- read.table(parFile, header=TRUE,sep=",",stringsAsFactors=FALSE)
     }
     else paramTable <- createParTable(NULL)
+  
     useNames <- names(setupParsLong(version))
-       
+    if(stateWeights) useNames <- useNames[useNames != "state_weight"]
     ## Gets the parameter names used for each version of the model
     allMicroPars <- c("mean","var","c","p1","p2","p3","p4","p5","p6","p7","p8")
     if(version==2){
@@ -228,7 +231,7 @@ setupParTable <- function(version=1, realDat=NULL, sharedProb=FALSE, parFile = "
 #' @export
 #' @useDynLib zikaProj
 createParTable <- function(saveFile=NULL){
-    names <- c("sampFreq","sampPropn","mu_I","sd_I","mu_N","sd_N","probMicro","inc_weight","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","p_HM","p_MH","constSeed","mean","var","c","tstep","p1","p2","p3","p4","p5","p6","p7","p8","inc_sd","micro_sd")    
+    names <- c("sampFreq","sampPropn","mu_I","sd_I","mu_N","sd_N","probMicro","inc_weight","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","p_HM","p_MH","constSeed","mean","var","c","tstep","p1","p2","p3","p4","p5","p6","p7","p8","inc_sd","micro_sd","state_weight")    
     paramTable <- matrix(0, ncol=9, nrow=length(names))
     paramTable <- as.data.frame(paramTable)
     colnames(paramTable) <- c("names", "values","local","lower_bounds","upper_bounds","steps","fixed","start_lower","start_upper")
@@ -272,6 +275,7 @@ createParTable <- function(saveFile=NULL){
     paramTable[paramTable[,"names"]=="p8",2:ncol(paramTable)] <- c(0.1,"all",0,1,0.1,0,0.01,0.1)
     paramTable[paramTable[,"names"]=="inc_sd",2:ncol(paramTable)] <- c(1,"all",0,100,0.1,1,0.5,10)
     paramTable[paramTable[,"names"]=="micro_sd",2:ncol(paramTable)] <- c(1,"all",0,100,0.1,1,0.5,10)
+    paramTable[paramTable[,"names"]=="state_weight",2:ncol(paramTable)] <- c(1,"all",0,1,0.1,1,0.1,1)
     if(!is.null(saveFile)) write.table(paramTable,saveFile,row.names=FALSE,sep=",")
     
     return(paramTable)
@@ -287,7 +291,7 @@ createParTable <- function(saveFile=NULL){
 #' @useDynLib zikaProj
 createStateParTable <- function(stateDat, saveFile = NULL){
     places <- as.character(unique(stateDat$local))
-    numberPars <- 20
+    numberPars <- 21
     paramTable <- matrix(0, ncol=9, nrow=numberPars*length(places))
     paramTable <- as.data.frame(paramTable)
     colnames(paramTable) <- c("names", "values","local", "lower_bounds","upper_bounds","steps","fixed","start_lower","start_upper")
@@ -335,6 +339,9 @@ createStateParTable <- function(stateDat, saveFile = NULL){
         index <- index + 1
         paramTable[index,] <- c("micro_sd",1,place,0,100,0.1,1,0.5,10)
         index <- index + 1
+        paramTable[index,] <- c("state_weight",1,place,0,1,0.1,1,0.1,1)
+        index <- index + 1
+        
     }
     if(!is.null(saveFile)) write.table(paramTable,saveFile,row.names=FALSE,sep=",")
     return(paramTable)

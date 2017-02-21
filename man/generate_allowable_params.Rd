@@ -4,10 +4,13 @@
 \alias{generate_allowable_params}
 \title{Generate allowable starting parameters}
 \usage{
-generate_allowable_params(peakTimings = 927, peakTimeRange = 60, stateNames,
-  parTab = NULL, allowableParsFile = "allowablePars.csv", R0max = 6.5)
+generate_allowable_params(peakTime = 927, peakTimeRange = 60, stateNames,
+  parTab = NULL, allowableParsFile = "allowablePars.csv", R0max = 6.5,
+  peakTimings = NULL)
 }
 \arguments{
+\item{peakTime}{the desired central peak time. Defaults to 927}
+
 \item{peakTimeRange}{the desired allowable peak time range (ie. square prior)}
 
 \item{stateNames}{the set of Brazilian states for which allowable parameters should be generated. Must match those in the microDatFile}
@@ -16,7 +19,7 @@ generate_allowable_params(peakTimings = 927, peakTimeRange = 60, stateNames,
 
 \item{allowableParsFile}{file location for the allowable parameters table, if it exists.}
 
-\item{peakTime}{the desired central peak time. Defaults to 927}
+\item{peakTimings}{Optional data frame providing a specific upper and lower peak time bound for each state}
 
 \item{microDatFile}{the location of the microcephaly data file which is needed to obtain N_H and L_H for each state. Note that this is only needed if no parTab is provided}
 }
