@@ -12,15 +12,17 @@
 #' @return the modified parameter table
 #' @export
 partab_setup <- function(stateNames, version, realDat, useInc,allowablePars=NULL,sharedProb=TRUE, normLik=NULL,stateWeights=FALSE){
-    correct_order <- c("pernambuco", "sergipe", "paraiba", "bahia", "riograndedonorte", 
+    correct_order <- c("pernambuco", "sergipe", "paraiba", "bahia","riograndedonorte", 
                        "acre", "piaui", "alagoas", "matogrosso", "maranhao", "rondonia", 
                        "ceara", "tocantins", "espiritosanto", "roraima", "riodejaneiro", 
                        "saopaulo", "para", "minasgerais", "matogrossdosul", "distritofederal", 
                        "goias", "riograndedosul", "amazonas", "parana", "santacatarina", 
                        "amapa")
+    norm_state_test <- plyr::ddply(realDat, ~local, function(x) sum(x$microCeph))
+    norm_state <- norm_state_test[which.max(norm_state_test$V1),"local"]
     
     ## Get first state from the correct order found in passed states
-    norm_state <- correct_order[correct_order %in% stateNames][1]
+    ##norm_state <- correct_order[correct_order %in% stateNames][1]
     message(cat("Reference state: ",norm_state,"\n",sep=""))
     
     parTab <- setupParTable(version,realDat,sharedProb=sharedProb,stateNormLik=normLik,stateWeights=stateWeights)
@@ -250,13 +252,13 @@ createParTable <- function(saveFile=NULL){
     paramTable[paramTable[,"names"]=="baselineProb",2:ncol(paramTable)] <- c(0.0002,"all",0,1,0.1,0,0,0.001)
     paramTable[paramTable[,"names"]=="burnin",2:ncol(paramTable)] <- c(0,"all",0,1000,0.1,1,0,1000)
     paramTable[paramTable[,"names"]=="epiStart",2:ncol(paramTable)] <- c(0,"all",0,700,0.1,1,0,700)
-    paramTable[paramTable[,"names"]=="L_M",2:ncol(paramTable)] <- c(5,"all",2,20,0.1,1,2,14)
-    paramTable[paramTable[,"names"]=="D_EM",2:ncol(paramTable)] <- c(8.4,"all",7.3,9.3,0.1,1,7.3,9.3)
+    paramTable[paramTable[,"names"]=="L_M",2:ncol(paramTable)] <- c(5,"all",0,100,0.1,1,2,14)
+    paramTable[paramTable[,"names"]=="D_EM",2:ncol(paramTable)] <- c(8.4,"all",0,100,0.1,1,7.3,9.3)
     paramTable[paramTable[,"names"]=="L_H",2:ncol(paramTable)] <- c(365*70,"all",0,200*365,0.1,1,0,200*365)
     paramTable[paramTable[,"names"]=="D_C",2:ncol(paramTable)] <- c(365*18,"all",0,25*365,0.1,1,0,25*365)
     paramTable[paramTable[,"names"]=="D_F",2:ncol(paramTable)] <- c(0.75*365,"all",0,365,0.1,1,0,365)
-    paramTable[paramTable[,"names"]=="D_EH",2:ncol(paramTable)] <- c(4,"all",2.3,6,0.1,1,2.3,6)
-    paramTable[paramTable[,"names"]=="D_IH",2:ncol(paramTable)] <- c(6,"all",4,8,0.1,1,4,8)
+    paramTable[paramTable[,"names"]=="D_EH",2:ncol(paramTable)] <- c(4,"all",0,100,0.1,1,2.3,6)
+    paramTable[paramTable[,"names"]=="D_IH",2:ncol(paramTable)] <- c(6,"all",0,100,0.1,1,4,8)
     paramTable[paramTable[,"names"]=="b",2:ncol(paramTable)] <- c(0.5,"all",0,100,0.1,1,0,100)
     paramTable[paramTable[,"names"]=="p_HM",2:ncol(paramTable)] <- c(0.5,"all",0,1,0.1,1,0,1)
     paramTable[paramTable[,"names"]=="p_MH",2:ncol(paramTable)] <- c(0.5,"all",0,1,0.1,1,0,1)
