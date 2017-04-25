@@ -26,6 +26,7 @@ protect <- function(f){
 #' @param incDat optional data frame of incidence data if including incidence data in the likelihood function
 #' @param peakTimes optional parameter - data frame of peak times for Zika incidence for each state
 #' @param allPriors user function of prior for model parameters. Should take values, names and local from param_table
+#' @param version usually just leave this as "normal". I've added a "forecast" version which expects parameters to do with the lack of second wave.
 #' @return a list with: 1) full file path at which the MCMC chain is saved as a .csv file; 2) the last used covarianec matrix; 3) the last used scale size
 #' @export
 #' @seealso \code{\link{posterior_complex_buckets}}, \code{\link{proposalfunction}}
@@ -39,7 +40,8 @@ run_metropolis_MCMC <- function(data=NULL,
                                 incDat=NULL,
                                 peakTimes=NULL,
                                 allPriors=NULL,
-                                truePars=NULL
+                                truePars=NULL,
+                                version="normal"
                                 ){
                                         # MCMC par setup ---------------------------------------------------------- 
     ## Allowable error in scale tuning
@@ -135,10 +137,12 @@ run_metropolis_MCMC <- function(data=NULL,
                                         # Posterior setup ---------------------------------------------------------
     ## Create posterior function with closures for neatness
     posterior_new <- create_posterior(ts, current_params, par_names, par_labels, 
-                                       startDays, endDays, buckets, microCeph, births, 
-                                       data_locals, inc_startDays,inc_endDays,inc_locals,
-                                       inc_buckets,inc_ZIKV,inc_NH, peak_startDays, 
-                                       peak_endDays,peak_locals, unique_states, allPriors)
+                                      startDays, endDays, buckets, microCeph, births, 
+                                      data_locals, inc_startDays,inc_endDays,inc_locals,
+                                      inc_buckets,inc_ZIKV,inc_NH, peak_startDays, 
+                                      peak_endDays,peak_locals, unique_states, allPriors,
+                                      version
+                                      )
 
     posterior_simp <- protect(posterior_new)
     
@@ -191,7 +195,7 @@ run_metropolis_MCMC <- function(data=NULL,
             tempiter[j] <- tempiter[j] + 1
             ## If using multivariate proposals
         } else {
-            proposal <- mvr_proposal(current_params, non_fixed_params, covMat)
+            proposal <- mvr_proposal(current_params, non_fixed_params, scale*covMat)
             tempiter <- tempiter + 1
         }
         names(proposal) <- names(current_params)
@@ -253,7 +257,8 @@ run_metropolis_MCMC <- function(data=NULL,
                     tempaccepted <- tempiter <- reset
                 } else {       ## If using multivariate proposals
                     if(chain_index > OPT_TUNING*adaptive_period & chain_index < (0.9*adaptive_period)){
-                        covMat <- scale*cov(opt_chain[1:chain_index,])
+                        #covMat <- scale*cov(opt_chain[1:chain_index,])
+                        covMat <- cov(opt_chain[1:chain_index,])
                         tempiter <- tempaccepted <- 0
                         message(cat("Optimisation iteration: ", i,sep="\t"))
                         ## Print acceptance rate

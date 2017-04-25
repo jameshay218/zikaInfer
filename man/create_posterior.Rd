@@ -8,7 +8,7 @@ create_posterior(ts, values, names, local, startDays, endDays, buckets,
   microCeph, births, data_locals, inc_startDays = NULL, inc_endDays = NULL,
   inc_locals = NULL, inc_buckets = NULL, inc_ZIKV = NULL, inc_NH = NULL,
   peak_startDays = NULL, peak_endDays = NULL, peak_locals = NULL,
-  unique_states, allPriors = NULL)
+  unique_states, allPriors = NULL, version = "normal")
 }
 \arguments{
 \item{ts}{time vector over which to solve the ODE model}
@@ -52,6 +52,8 @@ create_posterior(ts, values, names, local, startDays, endDays, buckets,
 \item{unique_states}{vector of all unique state names}
 
 \item{allPriors}{defaults to NULL. Arguments for parameter priors, if desired.}
+
+\item{version}{usually just leave this as "normal". I've added a "forecast" version which expects parameters to do with the lack of second wave.}
 }
 \value{
 a single value for the posterior

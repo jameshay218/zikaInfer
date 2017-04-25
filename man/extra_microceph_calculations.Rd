@@ -4,7 +4,8 @@
 \alias{extra_microceph_calculations}
 \title{Post calculations}
 \usage{
-extra_microceph_calculations(chain, version = 1, microceph_limit = 0.001)
+extra_microceph_calculations(chain, version = 1, microceph_limit = 0.001,
+  scale = 1)
 }
 \arguments{
 \item{chain}{the full MCMC chain to do post analysis on}
@@ -12,6 +13,8 @@ extra_microceph_calculations(chain, version = 1, microceph_limit = 0.001)
 \item{version}{the version of the model run here}
 
 \item{microceph_limit}{the probability of microcephaly given infection to use as the cut off}
+
+\item{scale}{if a non 100% reporting proportion, need to divide by assumed proportion}
 }
 \value{
 an MCMC chain of the added analyses

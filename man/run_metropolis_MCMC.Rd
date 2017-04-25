@@ -6,7 +6,7 @@
 \usage{
 run_metropolis_MCMC(data = NULL, ts, param_table, mcmcPars, filename,
   mvrPars = NULL, incDat = NULL, peakTimes = NULL, allPriors = NULL,
-  truePars = NULL)
+  truePars = NULL, version = "normal")
 }
 \arguments{
 \item{data}{the microcephaly data against which the likelihood is calculated}
@@ -26,6 +26,8 @@ run_metropolis_MCMC(data = NULL, ts, param_table, mcmcPars, filename,
 \item{peakTimes}{optional parameter - data frame of peak times for Zika incidence for each state}
 
 \item{allPriors}{user function of prior for model parameters. Should take values, names and local from param_table}
+
+\item{version}{usually just leave this as "normal". I've added a "forecast" version which expects parameters to do with the lack of second wave.}
 }
 \value{
 a list with: 1) full file path at which the MCMC chain is saved as a .csv file; 2) the last used covarianec matrix; 3) the last used scale size

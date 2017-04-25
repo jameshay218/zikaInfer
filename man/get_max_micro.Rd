@@ -4,10 +4,12 @@
 \alias{get_max_micro}
 \title{Max micro risk}
 \usage{
-get_max_micro(chain)
+get_max_micro(chain, scale)
 }
 \arguments{
 \item{chain}{the MCMC chain to run over}
+
+\item{scale}{scales microcephaly risk curve by assumed reporting proportion}
 }
 \value{
 a vector of estimated maximum risk from the MCMC chain

@@ -95,6 +95,111 @@ posterior_complex_buckets <- function(ts, values, names, local, startDays, endDa
     return(lik)
 }
 
+#' Posterior function for forecast
+#'
+#' Using the microcephaly risk model, produces a forecast of microcephaly affected births for all time periods and calculates a likelihood of observing given microcephaly cases
+#' @export
+posterior_known_inc <- function(pars, startDays, endDays,
+                                buckets, microCeph, births,
+                                zikv, nh, inc_buckets,
+                                inc_start, inc_end,
+                                valid_days_micro, valid_days_inc){
+    switch_time_i <- pars["switch_time_i"]
+    switch_time_m <- pars["switch_time_m"]
+    ## Generate microcephaly curve for these parameters
+    probs <- generate_micro_curve(pars)
+
+    ## Use incidence data to get daily incidence
+    ## Get incidence before and after the switch time - different reporting rates
+    inc_1 <- zikv[which(inc_start < switch_time_i)]/pars["incPropn"]
+    inc_2 <- zikv[inc_start >= switch_time]/pars["incPropn2"]
+    inc <- c(inc_1,inc_2)
+
+    inc <- rep(inc/nh/inc_buckets, inc_buckets)
+
+    ## Generate probability of observing a microcephaly caes on a given day
+    probM <- generate_probM_aux(inc, probs, pars["baselineProb"])
+    probM[startDays < switch_time_m] <- probM[startDays < switch_time_m]*pars["propn"]
+    probM[startDays >= switch_time_m] <- probM[startDays >= switch_time_m]*pars["propn2"]
+    
+    births[startDays >= switch_time_m] <- as.integer(births[startDays >= switch_time_m]*(1-pars["birth_reduction"]))
+
+    probM <- average_buckets(probM,buckets)
+    lik <- likelihood_probM(microCeph,births,probM)
+
+    return(lik)
+}
+
+#' Posterior function for forecast
+#'
+#' Using the microcephaly risk model, produces a forecast of microcephaly affected births for all time periods and calculates a likelihood of observing given microcephaly cases
+#' @export
+posterior_known_inc_seir <- function(pars, startDays, endDays,
+                                     buckets, microCeph, births,
+                                     zikv, nh, inc_buckets,
+                                     inc_start, inc_end,
+                                     valid_days_micro, valid_days_inc){
+    lik <- 0
+
+    ## Times after which reporting/birth behaviour changes
+    switch_time_i <- pars["switch_time_i"]
+    switch_time_m <- pars["switch_time_m"]
+    
+    ## Generate microcephaly curve for these parameters
+    probs <- generate_micro_curve(pars)
+
+    ## Solve SEIR model
+    y0s <- generate_y0s(as.numeric(pars["N_H"]),as.numeric(pars["density"]))
+    y <- solveModelSimple_rlsoda(seq(0,3003,by=1), y0s, pars,FALSE)
+
+    ## Calculate SEIR generated incidence for before switch time
+    calc_inc <- diff(y["incidence",])
+    calc_inc[calc_inc < 0] <- 0
+    N_H <- colSums(y[5:8,])
+
+    calc_inc <- calc_inc[which(y["time",] >= min(inc_start) & y["time",] < switch_time_i)]
+    ## Population size before switch time
+    N_H <- N_H[which(y["time",] >= min(inc_start) & y["time",] < switch_time_i)]
+
+    ## Get average buckets for this
+    calc_inc <- sum_buckets(calc_inc,inc_buckets[which(inc_start < switch_time_i)])
+    N_H <- average_buckets(N_H,inc_buckets[which(inc_start < switch_time_i)])
+
+    ## Calculate per capita incidence from SEIR model
+    perCapInc <- (1-(1-(calc_inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
+    
+    ## Get subset of incidence for these times
+    inc_1 <- zikv[which(inc_start < switch_time_i)]
+
+    ## Calculate likelihood of SEIR model parameters given incidence up to this time
+    lik <- lik + pars["inc_weight"]*sum(dbinom(x=inc_1,size=N_H,prob=perCapInc,log=TRUE))
+
+    ## Convert to true underlying incidence
+    inc_1 <- inc_1/pars["incPropn"]
+    #inc_1 <- perCapInc*N_H/pars["incPropn"]
+
+    ## Get incidence after switch time with new reporting rate
+    inc_2 <- zikv[which(inc_start >= switch_time_i)]/pars["incPropn2"]
+    inc <- c(inc_1,inc_2)
+    
+    ## Convert to daily incidence
+    inc <- rep(inc/nh/inc_buckets, inc_buckets)
+
+    ## Generate probability of observing a microcephaly caes on a given day
+    probM <- generate_probM_aux(inc, probs, pars["baselineProb"])
+    ts <- seq(min(inc_start), max(inc_start),by=1)
+    
+    probM[which(ts < switch_time_m)] <- probM[which(ts < switch_time_m)]*pars["propn"]
+    probM[which(ts >= switch_time_m)] <- probM[which(ts >= switch_time_m)]*pars["propn2"]
+    ## Births after switch time have reduction
+    births[which(startDays >= switch_time_m)] <- as.integer(births[which(startDays >= switch_time_m)]*(1-pars["birth_reduction"]))
+
+    probM <- average_buckets(probM,buckets)
+    lik <- lik + (1-pars["inc_weight"])*likelihood_probM(microCeph,births,probM)
+    return(lik)
+}
+
+
 #' Posterior function for the simple SEIR model with bucketed data for a single state
 #'
 #' Given the time vector, initial conditions ODE parameters and a matrix of microcephaly data, calculates the posterior value for a given data set. Note that no priors are used here.
@@ -156,6 +261,12 @@ posterior_simple_buckets <- function(ts, y0s, pars, startDays, endDays, buckets,
         
     }
     probs <- generate_micro_curve(pars)
+
+    ## Alternative
+    ## inc <- diff(y["incidence",])
+    ##inc[inc < 0] <- 0
+    ## probM <- generate_probM_aux(inc, probs,pars["baselineProb"])
+    
     probM <- generate_probM(y["I_M",], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)*pars["propn"]
    
 
@@ -267,7 +378,7 @@ posterior_inc <- function(ts, values, names, local,inc_startDays,inc_endDays,inc
 #' @export
 #' @useDynLib zikaProj
 incidence_likelihood <- function(perCapInc, inc, N_H){
-    return(sum(dbinom(inc,N_H,perCapInc,log=1)))
+    return(sum(dbinom(x=inc,size=N_H,prob=perCapInc,log=1)))
 }
 
 #' Incidence likelihood normal
@@ -308,10 +419,11 @@ incidence_likelihood_norm<- function(perCapInc, inc, N_H, lik_sd){
 #' @param peak_locals vector of corresponding state name
 #' @param unique_states vector of all unique state names
 #' @param allPriors defaults to NULL. Arguments for parameter priors, if desired.
+#' @param version usually just leave this as "normal". I've added a "forecast" version which expects parameters to do with the lack of second wave.
 #' @return a single value for the posterior
 #' @export
 #' @useDynLib zikaProj
-create_posterior <- function(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays=NULL, inc_endDays=NULL,inc_locals=NULL,inc_buckets=NULL,inc_ZIKV=NULL,inc_NH=NULL, peak_startDays=NULL, peak_endDays=NULL,peak_locals=NULL,unique_states, allPriors=NULL){
+create_posterior <- function(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays=NULL, inc_endDays=NULL,inc_locals=NULL,inc_buckets=NULL,inc_ZIKV=NULL,inc_NH=NULL, peak_startDays=NULL, peak_endDays=NULL,peak_locals=NULL,unique_states, allPriors=NULL, version="normal"){
 
     ## I have included some code to explicitly extract all days included within the data sampling periods.
     ## this allows for non-contiguous data to be included, as we have to index the model predicted
@@ -349,16 +461,24 @@ create_posterior <- function(ts, values, names, local, startDays, endDays, bucke
         inc_valid_days <- times_inc$valid_days
         inc_valid_local <- as.character(times_inc$local)
     }
-    
 
-    if(!is.null(microCeph)){
-        f <- function(values){
-            return(posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays,inc_endDays,inc_locals,inc_buckets,inc_ZIKV,inc_NH, peak_startDays, peak_endDays,peak_locals, unique_states,allPriors, microceph_valid_days, microceph_valid_local, inc_valid_days, inc_valid_local))
+    if(version == "normal"){
+        if(!is.null(microCeph)){
+            f <- function(values){
+                return(posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays,inc_endDays,inc_locals,inc_buckets,inc_ZIKV,inc_NH, peak_startDays, peak_endDays,peak_locals, unique_states,allPriors, microceph_valid_days, microceph_valid_local, inc_valid_days, inc_valid_local))
+        }
+        } else {
+            f <- function(values){
+                return(posterior_inc(ts, values, names, local, inc_startDays,inc_endDays,inc_locals,inc_buckets,inc_ZIKV,inc_NH, unique_states,allPriors,inc_valid_days, inc_valid_local))
+                
+            }
         }
     } else {
         f <- function(values){
-            return(posterior_inc(ts, values, names, local, inc_startDays,inc_endDays,inc_locals,inc_buckets,inc_ZIKV,inc_NH, unique_states,allPriors,inc_valid_days, inc_valid_local))
-            
+            return(posterior_known_inc(pars, startDays, endDays,
+                                       buckets, microCeph, births,
+                                       zikv, nh, inc_buckets,
+                                       inc_start, inc_end))
         }
     }
     return(f)

@@ -78,8 +78,9 @@ calculate_DIC <- function(chain,state=NULL){
 #' @param state the given state to subset by, if present.
 #' @param runs number of samples to take
 #' @param limit the risk limit to consider as being at risk
+#' @param scale scales microcephaly risk curve by assumed reporting proportion
 #' @return a list with three vectors. 1: first day of significant risk, 2: last day of significant risk; 3: the number of days spent at risk
-get_microceph_range <- function(chain,state=NULL,runs, limit=0.001){
+get_microceph_range <- function(chain,state=NULL,runs, limit=0.001,scale=1){
     ## If there is a state column and a state is specified, subset chain by this
     if(!is.null(chain$state) & !is.null(state)){
         chain <- chain[chain$state==state,]
@@ -99,7 +100,7 @@ get_microceph_range <- function(chain,state=NULL,runs, limit=0.001){
         tmpPars["tstep"] <- 1
 
         ## Generate microcephaly curve from this
-        probs <- generate_micro_curve(tmpPars)
+        probs <- generate_micro_curve(tmpPars)/scale
 
         ## Get those days above the limit
         tmp <- which(probs > limit)
@@ -119,16 +120,17 @@ get_microceph_range <- function(chain,state=NULL,runs, limit=0.001){
 #' For a given MCMC chain, calculates the first day at risk
 #' @param chain the MCMC chain to run over
 #' @param limit the probability of microcephaly considered at risk
+#' @param scale scales microcephaly risk curve by assumed reporting proportion
 #' @return a vector of first risk days
 #' @export
 #' @seealso \code{\link{get_microceph_range}}
-get_lower_micro_bound <- function(chain,limit=0.001){
+get_lower_micro_bound <- function(chain,limit=0.001,scale=1){
   lower <- numeric(nrow(chain))
   for(i in 1:nrow(chain)){
     tmpPars <- as.numeric(chain[i,])
     names(tmpPars) <- colnames(chain)
     tmpPars["tstep"] <- 1
-    probs <- generate_micro_curve(tmpPars)
+    probs <- generate_micro_curve(tmpPars)/scale
     tmp <- which(probs > limit)
     if(length(tmp) > 0){
       lower[i] <- tmp[1] -1
@@ -143,16 +145,17 @@ get_lower_micro_bound <- function(chain,limit=0.001){
 #' For a given MCMC chain, calculates the last day at risk
 #' @param chain the MCMC chain to run over
 #' @param limit the probability of microcephaly considered at risk
+#' @param scale scales microcephaly risk curve by assumed reporting proportion
 #' @return a vector of last risk days
 #' @export
 #' @seealso \code{\link{get_microceph_range}}
-get_upper_micro_bound <- function(chain,state,limit=0.001){
+get_upper_micro_bound <- function(chain,limit=0.001,scale=1){
   lower <- numeric(nrow(chain))
   for(i in 1:nrow(chain)){
     tmpPars <- as.numeric(chain[i,])
     names(tmpPars) <- colnames(chain)
     tmpPars["tstep"] <- 1
-    probs <- generate_micro_curve(tmpPars)
+    probs <- generate_micro_curve(tmpPars)/scale
     tmp <- which(probs > limit)
     if(length(tmp) > 0){
       lower[i] <- tmp[length(tmp)] -1
@@ -166,9 +169,10 @@ get_upper_micro_bound <- function(chain,state,limit=0.001){
 #'
 #' For a given MCMC chain, calculates the maximum risk of microcephaly given infection
 #' @param chain the MCMC chain to run over
+#' @param scale scales microcephaly risk curve by assumed reporting proportion
 #' @return a vector of estimated maximum risk from the MCMC chain
 #' @export
-get_max_micro <- function(chain){
+get_max_micro <- function(chain,scale){
   maxPs <- numeric(nrow(chain))
   for(i in 1:nrow(chain)){
       tmpPars <- get_index_pars(chain,i)
@@ -183,14 +187,15 @@ get_max_micro <- function(chain){
 #'
 #' For a given MCMC chain, calculates the day of maximum risk of microcephaly given infection
 #' @param chain the MCMC chain to run over
+#' @param scale scales microcephaly risk curve by assumed reporting proportion
 #' @return a vector of estimated maximum risk days from the MCMC chain
 #' @export
-get_max_micro_day <- function(chain){
+get_max_micro_day <- function(chain,scale=1){
     maxWs <- numeric(nrow(chain))
     for(i in 1:nrow(chain)){
         tmpPars <- get_index_pars(chain,i)
         tmpPars["tstep"] <- 1
-        probs <- generate_micro_curve(tmpPars)
+        probs <- generate_micro_curve(tmpPars)/scale
         maxWs[i] <- which.max(probs) - 1
     }
     return(maxWs)
@@ -255,8 +260,8 @@ load_mcmc_chains <- function(location="",asList=FALSE, convertMCMC=FALSE,unfixed
 #' @return the full parameter table
 #' @export
 read_inipars <- function(location=""){
-    pars <- Sys.glob(file.path(location,"*inipars.csv"))
-    read_pars <- data.table::fread(pars[1],data.table=FALSE)       
+    pars <- Sys.glob("*inipars.csv")
+  read_pars <- fread(pars[1],data.table=FALSE)       
 }
 
 #' Attack rate simeq
@@ -309,7 +314,7 @@ convert_name_to_state <- function(name){
                      "minasgerais"="Minas Gerais", "matogrosso"="Mato Grosso","alagoas"="Alagoas","para"="Pará","acre"="Acre",
                      "espiritosanto"="Espírito Santo","goias"="Goiás","tocantins"="Tocantins","matogrossodosul"="Mato Grosso do Sul",
                      "matogrossdosul"="Mato Grosso do Sul","parana"="Paraná","riograndedosul"="Rio Grande do Sul","rondonia"="Rondônia",
-                     "roraima"="Roraima","santacatarina"="Santa Catarina")
+                     "roraima"="Roraima","santacatarina"="Santa Catarina", "colombia"="Colombia","northeast"="Northeast Brazil")
   return(country_names[name])
 }
 
@@ -319,9 +324,10 @@ convert_name_to_state <- function(name){
 #' @param chain the full MCMC chain to do post analysis on
 #' @param version the version of the model run here
 #' @param microceph_limit the probability of microcephaly given infection to use as the cut off
+#' @param scale if a non 100% reporting proportion, need to divide by assumed proportion
 #' @return an MCMC chain of the added analyses
 #' @export
-extra_microceph_calculations <- function(chain,version=1,microceph_limit=0.001){
+extra_microceph_calculations <- function(chain,version=1,microceph_limit=0.001,scale=1){
     if(version == 1) {
         ## Get break days as trimesters
         break1 <- 14*7
@@ -334,17 +340,18 @@ extra_microceph_calculations <- function(chain,version=1,microceph_limit=0.001){
         
         for(i in 1:nrow(chain)){
             pars <- get_index_pars(chain,i)
-            probs <- allProbs[i,] <- generate_micro_curve(pars)
+            probs <- allProbs[i,] <- generate_micro_curve(pars)/scale
         }      
         tr1 <- rowMeans(allProbs[,1:break1])
         tr2 <- rowMeans(allProbs[,break1:break2])
         tr3 <- rowMeans(allProbs[,break2:break3])
         
         mode <- calculate_gamma_mode(chain$mean,chain$var)
-        maxWeek <- get_max_micro_day(chain)
-        maxP <- get_max_micro(chain)
-        lower <- get_lower_micro_bound(chain,microceph_limit)
-        upper <- get_upper_micro_bound(chain,microceph_limit)
+        maxWeek <- get_max_micro_day(chain,scale)
+        maxP <- get_max_micro(chain,scale)
+        lower <- get_lower_micro_bound(chain,microceph_limit,scale)
+        upper <- get_upper_micro_bound(chain,microceph_limit,scale)
+        
         range <- upper - lower
         
     } else {
@@ -404,7 +411,9 @@ get_states <- function(){
     "São Paulo"="saopaulo",
     "Santa Catarina"="santacatarina",
     "Sergipe"="sergipe",
-    "Tocantins"="tocantins"  
+    "Tocantins"="tocantins",
+    "Colombia"="colombia",
+    "Northeast Brazil"="northeast"
   )
   return(states)
 }
@@ -443,7 +452,9 @@ states_to_title <- function(){
       "saopaulo"="São Paulo",
       "santacatarina"="Santa Catarina",
       "sergipe"="Sergipe",
-      "tocantins"="Tocantins" 
+      "tocantins"="Tocantins",
+      "colombia"="Colombia",
+      "northeast"="Northeast Brazil"
   )
   return(states)
 }
@@ -638,7 +649,7 @@ get_correct_order <- function(named=TRUE,normalised=FALSE){
 
 ## Converts the simplified state to its full name as a character
 convert_name_to_state <- function(name){
-  country_names <- c("pernambuco"="Pernambuco","amapa"="Amapá","amazonas" ="Amazonas",
+  country_names <- c("colombia"="Colombia","pernambuco"="Pernambuco","amapa"="Amapá","amazonas" ="Amazonas",
                      "distritofederal" = "Distrito Federal","bahia"="Bahia","saopaulo"="São Paulo",
                      "paraiba"="Paraíba","maranhao"="Maranhão","ceara"="Ceará","sergipe"="Sergipe",
                      "riodejaneiro"="Rio de Janeiro","piaui"="Piauí","riograndedonorte"="Rio Grande Norte",

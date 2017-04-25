@@ -152,6 +152,9 @@ plot_best_trajectory_multi <- function(chain, realDat, parTab, ts, runs=100, inc
     for(i in 1:length(states)){
         ps[[i]] <- plot_best_trajectory_single(states[i], chain, realDat, parTab, ts, runs, incDat=incDat, ylabel=FALSE, xlabel=FALSE, mcmcPars,ylimM,ylimI,startDay,months,weeks,xlim)
     }
+
+    if(length(states) <= 1) return(ps[[1]])
+
     ncols <- ceiling(length(states)/ncol)
     order <- get_correct_order(FALSE,TRUE)
     order1 <- as.numeric(sapply(order, function(x) which(x == states)))
@@ -379,7 +382,7 @@ overlapPlots <- function(p1,p2, centre_plot=TRUE){
 #' @param noMonths if realDat not provided, need to provide the number of months of forecasted data that we wish to see
 #' @param noWeeks if no incidence data provided, number of weeks over which we should plot the data
 #' @export
-plot_setup_data <- function(chain, dat=NULL, incDat=NULL, parTab, ts, local, runs=NULL,startDay=NULL, noMonths=12,noWeeks=52){
+plot_setup_data <- function(chain, dat=NULL, incDat=NULL, parTab, ts, local, runs=NULL,startDay=NULL, noMonths=12,noWeeks=52,perCap=FALSE){
     ## Get the subset of data for this particular state and find the middle day for each month
     ## If not provided, generate artificial sampling times
     tmpDat <- NULL
@@ -395,11 +398,21 @@ plot_setup_data <- function(chain, dat=NULL, incDat=NULL, parTab, ts, local, run
         tmpDat$meanDay <- rowMeans(tmpDat[,c("startDay","endDay")])
     }
 
-    # Get subset of incidence data for this state.
+                                        # Get subset of incidence data for this state.
     tmpInc <- NULL
-    if(!is.null(incDat)){
-        tmpInc <- incDat[incDat$local == local,]
-        tmpInc$meanDay <- rowMeans(tmpInc[,c("startDay","endDay")])
+    if(!is.null(incDat[incDat$local == local,])){
+        if(!(nrow(incDat[incDat$local == local,]) == 0)){
+            tmpInc <- incDat[incDat$local == local,]
+            tmpInc$meanDay <- rowMeans(tmpInc[,c("startDay","endDay")])
+        } else {
+            inc_weeks <- rep(7,noWeeks)
+
+            startDays <- startDay + cumsum(inc_weeks) - inc_weeks[1]
+            endDays <- startDay + cumsum(inc_weeks)
+            tmpInc <- data.frame(startDay=startDays,endDay=endDays)
+            tmpInc$buckets <- inc_weeks
+            tmpInc$meanDay <- rowMeans(tmpInc[,c("startDay","endDay")])
+        }
     } else {
         inc_weeks <- rep(7,noWeeks)
 
@@ -408,12 +421,13 @@ plot_setup_data <- function(chain, dat=NULL, incDat=NULL, parTab, ts, local, run
         tmpInc <- data.frame(startDay=startDays,endDay=endDays)
         tmpInc$buckets <- inc_weeks
         tmpInc$meanDay <- rowMeans(tmpInc[,c("startDay","endDay")])
-    }        
+    }
+    
 
     ## Get the set of best fitting parameters. These will be used to generate the best fit incidence and
     ## microcephaly line
     bestPars <- get_best_pars(chain)
-    tmp <- plot_setup_data_auxiliary(bestPars,tmpDat,tmpInc,parTab,ts,local)
+    tmp <- plot_setup_data_auxiliary(bestPars,tmpDat,tmpInc,parTab,ts,local,perCap)
     bestInc <- tmp$inc
     bestMicro <- tmp$micro
     
@@ -425,25 +439,36 @@ plot_setup_data <- function(chain, dat=NULL, incDat=NULL, parTab, ts, local, run
     ## For each sample, get the sample parameters from the chain and calculate the trajectory
     for(i in samples){
         pars <- get_index_pars(chain,i)
-        tmp <- plot_setup_data_auxiliary(pars,tmpDat,tmpInc,parTab,ts,local)
+        tmp <- plot_setup_data_auxiliary(pars,tmpDat,tmpInc,parTab,ts,local, perCap)
         inc <- tmp$inc
         micro <- tmp$micro
         allInc <- rbind(allInc, inc)
         allMicro <- rbind(allMicro, micro)
     }
-
-    incBounds <- as.data.frame(reshape2::melt(sapply(unique(allInc$time),function(x) quantile(allInc[allInc$time==x,"inc"],c(0.025,0.5,0.975)))[c(1,3),]))
-    microBounds <- as.data.frame(reshape2::melt(sapply(unique(allMicro$day),function(x) quantile(allMicro[allMicro$day==x,"number"],c(0.025,0.5,0.975)))[c(1,3),]))
-    colnames(microBounds) <- c("quantile","time","micro")
-    colnames(incBounds) <- c("quantile","time","inc")
     
-    microBounds[,"time"] <- tmpDat[,"meanDay"][microBounds[,"time"]]
-    incBounds[,"time"] <- tmpInc[,"meanDay"][incBounds[,"time"]]
+    #incBounds <- as.data.frame(reshape2::melt(sapply(unique(allInc$time),function(x) quantile(allInc[allInc$time==x,"inc"],c(0.025,0.5,0.975)))[c(1,3),]))
+    #microBounds <- as.data.frame(reshape2::melt(sapply(unique(allMicro$day),function(x) quantile(allMicro[allMicro$day==x,"number"],c(0.025,0.5,0.975)))[c(1,3),]))
+    incBounds <- as.data.frame(t(sapply(unique(allInc$time),function(x) quantile(allInc[allInc$time==x,"inc"],c(0.025,0.5,0.975)))[c(1,3),]))
+    microBounds <- as.data.frame(t(sapply(unique(allMicro$day),function(x) quantile(allMicro[allMicro$day==x,"number"],c(0.025,0.5,0.975)))[c(1,3),]))
+    incBounds <- cbind(incBounds, bestInc$inc)
+    microBounds <- cbind(microBounds, bestMicro$number)
+    colnames(microBounds) <- c("lower","upper","best")
+    colnames(incBounds) <- c("lower","upper","best")
     
-    return(list("bestInc"=bestInc,"incBounds"=incBounds,"bestMicro"=bestMicro,"microBounds"=microBounds, "data"=tmpDat,"incDat"=tmpInc))
+    incBounds$time <- bestInc$time
+    microBounds$time <- bestMicro$day
+    incBounds$local <- local
+    microBounds$local <- local
+    #colnames(microBounds) <- c("quantile","time","micro")
+    #colnames(incBounds) <- c("quantile","time","inc")
+    
+                                        # microBounds[,"time"] <- tmpDat[,"meanDay"][microBounds[,"time"]]
+                                        # incBounds[,"time"] <- tmpInc[,"meanDay"][incBounds[,"time"]]
+    
+    return(list("incBounds"=incBounds,"microBounds"=microBounds, "data"=tmpDat,"incDat"=tmpInc))
 }
 
-plot_setup_data_auxiliary <- function(pars, dat,incDat, parTab, ts, local){
+plot_setup_data_auxiliary <- function(pars, dat,incDat, parTab, ts, local, perCap=FALSE){
     ## As the model has many parameters with the same name, need to find the index in the MCMC colnames
     ## that corresponds to this state
     number <- which(unique(parTab$local)==local) - 2
@@ -468,10 +493,10 @@ plot_setup_data_auxiliary <- function(pars, dat,incDat, parTab, ts, local){
     probM <- average_buckets(probM, dat[,"buckets"])
 
     ## Generate predicted microcephaly cases or per birth incidence depending on what was provided
-    if(!is.null(dat$births)){
-        predicted <- probM*dat[,"births"]*pars["propn"]
-    } else {
+    if(perCap){
         predicted <- probM*pars["propn"]
+    } else {
+        predicted <- probM*dat[,"births"]*pars["propn"]
     }
     predicted <- data.frame(day=dat[,"meanDay"],number=predicted)
     
@@ -625,3 +650,140 @@ generate_centroids <- function(country="Brazil",map_df,plotLabels){
   return(centers)
 }
 
+
+
+
+
+
+
+#' Plot microcephaly curves with bounds
+#'
+#' Given an MCMC chain, plots microcephaly risk curves with 95% prediction intervals
+#' @param chain the MCMC chain
+#' @return the ggplot object
+#' @export
+plot_micro_bounds <- function(chain, samp_no=10000,ylim=0.3,chain2=NULL, colombia_chain=NULL){
+    samples <- sample(nrow(chain), samp_no)
+    microCurves <- matrix(nrow=samp_no,ncol=40*7)
+    trimesterCurves <- matrix(nrow=samp_no,ncol=40*7)
+    tm1 <- tm2 <- tm3 <- numeric(samp_no)
+    i <- 1
+    for(samp in samples){
+        pars <- chain[samp,]
+         pars <- as.numeric(chain[samp,])
+        names(pars) <- colnames(chain)
+        probs <- generate_micro_curve(pars)/0.8
+        tm1[i] <- mean(probs[1:14*7])
+        tm2[i] <- mean(probs[(14*7 + 1):(28*7)])
+        tm3[i] <- mean(probs[(28*7 + 1):length(probs)])
+        #tmp <- average_buckets(probs, rep(7,40))
+        microCurves[i,] <- probs
+        i <- i + 1
+    }
+
+    if(!is.null(colombia_chain)){
+        samples <- sample(nrow(colombia_chain),samp_no)
+        microCurves1 <- matrix(nrow=samp_no,ncol=40*7)
+        i <- 1
+        for(samp in samples){
+            pars <- as.numeric(colombia_chain[samp,])
+            names(pars) <- colnames(colombia_chain)
+            probs <- generate_micro_curve(pars)
+            microCurves1[i,] <- probs
+            i <- i + 1
+        }
+        colMeans <- colMeans(microCurves1)
+        colLower <- apply(microCurves1,2,function(x) quantile(x, 0.025))
+        colUpper <- apply(microCurves1,2,function(x) quantile(x,0.975))
+        colDat <- data.frame(weeks=1:(40*7),colMeans,colUpper,colLower)
+        colDat[,c("colMeans","colUpper","colLower")] <- colDat[,c("colMeans","colUpper","colLower")]/max(colUpper)
+    }
+
+    
+    mean_tm1 <- mean(tm1)
+    upper_tm1 <- quantile(tm1, 0.025)
+    lower_tm1 <- quantile(tm1,0.975)
+
+    mean_tm2 <- mean(tm2)
+    upper_tm2 <- quantile(tm2, 0.025)
+    lower_tm2 <- quantile(tm2,0.975)
+
+    mean_tm3 <- mean(tm3)
+    upper_tm3 <- quantile(tm3, 0.025)
+    lower_tm3 <- quantile(tm3,0.975)
+    
+    tm_dat <- data.frame(x=c(0,14*7, 14*7, 28*7, 28*7, 40*7),
+                         zero=rep(0,6),
+                         means=c(mean_tm1, mean_tm1, mean_tm2, mean_tm2,  mean_tm3, mean_tm3),
+                         lower=c(lower_tm1, lower_tm1, lower_tm2, lower_tm2, lower_tm3, lower_tm3),
+                         upper=c(upper_tm1, upper_tm1, upper_tm2, upper_tm2, upper_tm3, upper_tm3))
+    
+    
+    if(!is.null(chain2)){
+        samples <- sample(nrow(chain2),samp_no)
+        i <- 1
+        for(samp in samples){
+            pars <- as.numeric(chain2[samp,])
+            names(pars) <- colnames(chain2)
+            probs <- generate_micro_curve(pars)/0.8
+            trimesterCurves[i,] <- probs
+            i <- i + 1
+        }
+        trimMeans <- colMeans(trimesterCurves)
+        trimUpper <- apply(trimesterCurves,2,function(x) quantile(x, 0.025))
+        trimLower <- apply(trimesterCurves,2,function(x) quantile(x,0.975))
+        trimDat <- data.frame(weeks=1:(40*7),trimMeans,trimUpper,trimLower)
+        trimDat[,2:4] <- trimDat[,2:4]/max(trimUpper)
+    }
+        
+    
+    means <- colMeans(microCurves)
+    lower <- apply(microCurves,2,function(x) quantile(x, 0.025))
+    upper <- apply(microCurves,2,function(x) quantile(x,0.975))
+    dat <- data.frame(weeks=1:(40*7),means,lower,upper)
+    dat[,2:4] <- dat[,2:4]/max(upper)
+
+    p1 <- ggplot(dat)
+    
+    if(!is.null(chain2)){
+        barDat <- data.frame(x=c(7,21,35),ymax=c(upper_tm1,upper_tm2,upper_tm3),ymin=c(lower_tm1,lower_tm2,lower_tm3))
+ #       print(barDat)
+#        barDat <- data.frame(x=c(7,21,35),ymax=unique(trimUpper),ymin=unique(trimLower))
+  #      print(barDat)
+        p1 <- p1 +
+            geom_errorbar(data=barDat,aes(x=c(7*7,21*7,35*7),ymax=ymax,ymin=ymin),width=40) +
+                                        #geom_ribbon(data=trimDat,aes(x=weeks,ymax=trimMeans,ymin=rep(0,nrow(trimDat))),fill="blue",alpha=0.1,col="black")
+            geom_ribbon(data=tm_dat,aes(x=x,ymax=means,ymin=zero),fill="blue",alpha=0.5,col="black")
+            
+        
+  }
+    if(!is.null(colombia_chain)){
+        p1 <- p1 +
+            geom_ribbon(data=colDat,aes(x=weeks,ymax=colUpper,ymin=colLower),fill="green",alpha=0.3) +
+            geom_line(data=colDat,aes(x=weeks,y=colMeans),col="black",lty="dashed")
+        
+    }
+    p1 <- p1 + 
+        geom_ribbon(data=dat,aes(x=weeks,ymax=upper,ymin=lower),fill="firebrick2",alpha=0.8) +
+        geom_line(aes(x=weeks,y=means),col="black",lty="dashed") +
+        ylab("Probability of microcephaly given ZIKV infection")+
+        xlab("Week of gestation at time of infection") +
+                                        #ggtitle("Microcephaly Risk Curve") +
+        theme_bw() +
+        theme(axis.text.x=element_text(size=10),
+              panel.grid.minor=element_blank(),
+              plot.title=element_text(size=10),
+              axis.text.y=element_text(size=10),
+              axis.title.x=element_text(size=10),
+              axis.title.y=element_text(size=10)) +
+        scale_y_continuous(expand=c(0,0),limits=c(0,ylim)) +
+        scale_x_continuous(expand=c(0,0),limits=c(0,40*7),breaks=seq(0,280,by=7*4), labels=seq(0,40,by=4))+
+        geom_vline(xintercept=c(14*7, 28*7),col="grey",lty="dashed")
+    
+
+  
+    return(p1)
+
+}
+
+    

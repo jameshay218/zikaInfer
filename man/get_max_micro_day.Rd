@@ -4,10 +4,12 @@
 \alias{get_max_micro_day}
 \title{Max micro risk day}
 \usage{
-get_max_micro_day(chain)
+get_max_micro_day(chain, scale = 1)
 }
 \arguments{
 \item{chain}{the MCMC chain to run over}
+
+\item{scale}{scales microcephaly risk curve by assumed reporting proportion}
 }
 \value{
 a vector of estimated maximum risk days from the MCMC chain

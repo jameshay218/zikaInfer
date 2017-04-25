@@ -4,12 +4,14 @@
 \alias{get_upper_micro_bound}
 \title{Upper microbound}
 \usage{
-get_upper_micro_bound(chain, state, limit = 0.001)
+get_upper_micro_bound(chain, limit = 0.001, scale = 1)
 }
 \arguments{
 \item{chain}{the MCMC chain to run over}
 
 \item{limit}{the probability of microcephaly considered at risk}
+
+\item{scale}{scales microcephaly risk curve by assumed reporting proportion}
 }
 \value{
 a vector of last risk days
