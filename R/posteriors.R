@@ -109,6 +109,8 @@ posterior_known_inc <- function(pars, startDays, endDays,
     ## Generate microcephaly curve for these parameters
     probs <- generate_micro_curve(pars)
 
+   
+    
     ## Use incidence data to get daily incidence
     ## Get incidence before and after the switch time - different reporting rates
     inc_1 <- zikv[which(inc_start < switch_time_i)]/pars["incPropn"]
@@ -140,11 +142,13 @@ posterior_known_inc_seir <- function(pars, startDays, endDays,
                                      inc_start, inc_end,
                                      valid_days_micro, valid_days_inc){
     lik <- 0
-
+    ts <- seq(min(inc_start), max(inc_end)-1,by=1)
     ## Times after which reporting/birth behaviour changes
     switch_time_i <- pars["switch_time_i"]
     switch_time_m <- pars["switch_time_m"]
-    
+    switch_time_behaviour <- pars["switch_time_behaviour"]
+    ## If this is one, then we're assuming that ZIKV reporting did not change
+    check_par <- pars["zikv_reporting_change"]
     ## Generate microcephaly curve for these parameters
     probs <- generate_micro_curve(pars)
 
@@ -155,7 +159,7 @@ posterior_known_inc_seir <- function(pars, startDays, endDays,
     ## Calculate SEIR generated incidence for before switch time
     calc_inc <- diff(y["incidence",])
     calc_inc[calc_inc < 0] <- 0
-    N_H <- colSums(y[5:8,])
+    N_H <- floor(colSums(y[5:8,]))
 
     calc_inc <- calc_inc[which(y["time",] >= min(inc_start) & y["time",] < switch_time_i)]
     ## Population size before switch time
@@ -164,38 +168,88 @@ posterior_known_inc_seir <- function(pars, startDays, endDays,
     ## Get average buckets for this
     calc_inc <- sum_buckets(calc_inc,inc_buckets[which(inc_start < switch_time_i)])
     N_H <- average_buckets(N_H,inc_buckets[which(inc_start < switch_time_i)])
-
     ## Calculate per capita incidence from SEIR model
     perCapInc <- (1-(1-(calc_inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
-    
+
     ## Get subset of incidence for these times
     inc_1 <- zikv[which(inc_start < switch_time_i)]
 
+    #print(inc_1)
     ## Calculate likelihood of SEIR model parameters given incidence up to this time
     lik <- lik + pars["inc_weight"]*sum(dbinom(x=inc_1,size=N_H,prob=perCapInc,log=TRUE))
+    #lik <- lik + sum(dbinom(x=inc_1,size=N_H,prob=perCapInc,log=TRUE))
 
     ## Convert to true underlying incidence
     inc_1 <- inc_1/pars["incPropn"]
     #inc_1 <- perCapInc*N_H/pars["incPropn"]
 
     ## Get incidence after switch time with new reporting rate
-    inc_2 <- zikv[which(inc_start >= switch_time_i)]/pars["incPropn2"]
+    if(check_par == 1){
+        inc_2 <- zikv[which(inc_start >= switch_time_i)]/pars["incPropn2"]
+    } else {
+        inc_2 <- zikv[which(inc_start >= switch_time_i)]/pars["incPropn"]
+    }
     inc <- c(inc_1,inc_2)
     
     ## Convert to daily incidence
     inc <- rep(inc/nh/inc_buckets, inc_buckets)
 
     ## Generate probability of observing a microcephaly caes on a given day
-    probM <- generate_probM_aux(inc, probs, pars["baselineProb"])
-    ts <- seq(min(inc_start), max(inc_start),by=1)
-    
+    ##probM <- generate_probM_aux(inc, probs, pars["baselineProb"])
+    bp <- exp(pars["baselineProb"])
+    ## Getting non-aborted births, (1-a)p_m(t)
+    probM_a <- generate_probM_forecast_NEW(inc, probs, bp,
+                                     pars["abortion_rate"], pars["birth_reduction"],
+                                     which(ts == pars["switch_time_behaviour"]), pars["abortion_cutoff"], FALSE)
+    ## Getting aborted births, ap_m(t)
+    probM_b <- generate_probM_forecast_NEW(inc, probs, bp,
+                                     pars["abortion_rate"], pars["birth_reduction"],
+                                     which(ts == pars["switch_time_behaviour"]), pars["abortion_cutoff"], TRUE)
+
+    #return(probM_b/probM_a))
+    ## So probability of becoming a microcephaly case and being observed is
+    ## the proportion of births that become microcephaly cases of those that
+    ## were not aborted microcephaly cases
+    probM <- probM_a/(1-probM_b)
     probM[which(ts < switch_time_m)] <- probM[which(ts < switch_time_m)]*pars["propn"]
     probM[which(ts >= switch_time_m)] <- probM[which(ts >= switch_time_m)]*pars["propn2"]
-    ## Births after switch time have reduction
-    births[which(startDays >= switch_time_m)] <- as.integer(births[which(startDays >= switch_time_m)]*(1-pars["birth_reduction"]))
-
     probM <- average_buckets(probM,buckets)
-    lik <- lik + (1-pars["inc_weight"])*likelihood_probM(microCeph,births,probM)
+    
+    ## Births after prediction time are not realised births - it may be that some of these
+    ## were avoided at time t-40 from switch_time_behaviour
+    ## Comment this out if we don't want to ues avoided births parameter
+    prediction_time <- pars["predicted_births"]
+    ## Births after a certain time are predicted and not actual births
+    predicted_births <- births[which(startDays >= prediction_time)]
+    
+    ## Can calculate the number of aborted births from microcephaly measurements
+    ## and estimated microcephaly risk
+    probM_b[which(ts < switch_time_behaviour)] <- 0
+
+    probM_abortions <- probM_b/probM_a
+    #return(list(probM_b, probM_a))
+    probM_abortions <- average_buckets(probM_abortions,buckets)
+    aborted_births <- microCeph*probM_abortions
+    #return(aborted_births)
+    
+    ## Aborted births for the predicted birth time  
+    aborted_births <- aborted_births[which(startDays >= prediction_time)]
+    ## From this, we can infer the true number of births that happened assuming that some births
+    ## were aborted and a proportion of the forecasted births did no occur
+    inferred_births <- (1-pars["avoided_births"])*predicted_births - aborted_births
+    ## The actual number of births after the prediction time are inferred
+    births2 <- births
+    births2[which(startDays >= prediction_time)] <- as.integer(inferred_births)
+    #return(aborted_births)
+    ##
+    #print(inferred_births)
+    #return(probM*births2)
+    #print(births2)
+    #print(probM)
+    #print(microCeph)
+    #lik <- lik + likelihood_probM(microCeph,births,probM)
+    lik <- lik + (1-pars["inc_weight"])*likelihood_probM(microCeph,births2,probM)
+    return(probM)
     return(lik)
 }
 

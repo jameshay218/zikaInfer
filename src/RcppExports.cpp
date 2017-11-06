@@ -152,3 +152,38 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// generate_probM_forecast_NEW
+NumericVector generate_probM_forecast_NEW(NumericVector riskI, NumericVector probM, double bp, double abortion_rate, double birth_reduction, int switch_t, int abortion_time, bool ABORTED);
+RcppExport SEXP zikaProj_generate_probM_forecast_NEW(SEXP riskISEXP, SEXP probMSEXP, SEXP bpSEXP, SEXP abortion_rateSEXP, SEXP birth_reductionSEXP, SEXP switch_tSEXP, SEXP abortion_timeSEXP, SEXP ABORTEDSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type riskI(riskISEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type probM(probMSEXP);
+    Rcpp::traits::input_parameter< double >::type bp(bpSEXP);
+    Rcpp::traits::input_parameter< double >::type abortion_rate(abortion_rateSEXP);
+    Rcpp::traits::input_parameter< double >::type birth_reduction(birth_reductionSEXP);
+    Rcpp::traits::input_parameter< int >::type switch_t(switch_tSEXP);
+    Rcpp::traits::input_parameter< int >::type abortion_time(abortion_timeSEXP);
+    Rcpp::traits::input_parameter< bool >::type ABORTED(ABORTEDSEXP);
+    rcpp_result_gen = Rcpp::wrap(generate_probM_forecast_NEW(riskI, probM, bp, abortion_rate, birth_reduction, switch_t, abortion_time, ABORTED));
+    return rcpp_result_gen;
+END_RCPP
+}
+// generate_probM_forecast_OLD
+NumericVector generate_probM_forecast_OLD(NumericVector riskI, NumericVector probM, double bp, double abortion_rate, double birth_reduction, int switch_t, int abortion_time);
+RcppExport SEXP zikaProj_generate_probM_forecast_OLD(SEXP riskISEXP, SEXP probMSEXP, SEXP bpSEXP, SEXP abortion_rateSEXP, SEXP birth_reductionSEXP, SEXP switch_tSEXP, SEXP abortion_timeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type riskI(riskISEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type probM(probMSEXP);
+    Rcpp::traits::input_parameter< double >::type bp(bpSEXP);
+    Rcpp::traits::input_parameter< double >::type abortion_rate(abortion_rateSEXP);
+    Rcpp::traits::input_parameter< double >::type birth_reduction(birth_reductionSEXP);
+    Rcpp::traits::input_parameter< int >::type switch_t(switch_tSEXP);
+    Rcpp::traits::input_parameter< int >::type abortion_time(abortion_timeSEXP);
+    rcpp_result_gen = Rcpp::wrap(generate_probM_forecast_OLD(riskI, probM, bp, abortion_rate, birth_reduction, switch_t, abortion_time));
+    return rcpp_result_gen;
+END_RCPP
+}

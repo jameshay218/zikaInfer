@@ -21,3 +21,6 @@ vignettes/*.pdf
 binaries
 
 *~
+
+*.o
+*.so

@@ -20,7 +20,7 @@ create_f <- function(parTab,data,PRIOR_FUNC,incDat,perCap,...){
       y <- model_forecast(values, startDays, endDays,
                           buckets, microCeph, births,
                           zikv, nh, inc_buckets,
-                          inc_start, inc_end,perCap,...)
+inc_start, inc_end,perCap,...)
       return(y)
   }
 }
@@ -61,6 +61,68 @@ model_forecast <- function(pars, startDays, endDays,
     meanDays <- (tmpStart + tmpEnd)/2
     return(data.frame("x"=meanDays,"y"=probM))
 }
+
+model_forecast_2 <- function(pars, startDays, endDays,
+                           buckets, microCeph, births,
+                           zikv, nh, inc_buckets,
+                           inc_start, inc_end,
+                           valid_days_micro, valid_days_inc,
+                           perCap=FALSE){
+    ## Generate microcephaly curve for these parameters
+    probs <- generate_micro_curve(pars)
+    ts <- seq(min(inc_start), max(inc_end)-1,by=1)
+    switch_time_i <- pars["switch_time_i"]
+    switch_time_m <- pars["switch_time_m"]
+    switch_time_behaviour <- pars["switch_time_behaviour"]
+    ## If this is one, then we're assuming that ZIKV reporting did not change
+    check_par <- pars["zikv_reporting_change"]
+    
+    ## Get daily actual incidence based on data
+    inc_1 <- zikv[which(inc_start < switch_time_i)]
+    inc_1 <- inc_1/pars["incPropn"]
+    if(check_par == 1){
+        inc_2 <- zikv[which(inc_start >= switch_time_i)]/pars["incPropn2"]
+    } else {
+        inc_2 <- zikv[which(inc_start >= switch_time_i)]/pars["incPropn"]
+    }
+    inc <- c(inc_1,inc_2)
+    
+    inc <- rep(inc/nh/inc_buckets, inc_buckets)
+    ## Generate probability of observing a microcephaly case on a given day
+    probM_a <- generate_probM_forecast_NEW(inc, probs, pars["baselineProb"],
+                                     pars["abortion_rate"], pars["birth_reduction"],
+                                     which(ts == pars["switch_time_behaviour"]), pars["abortion_cutoff"], FALSE)
+
+    ## Getting aborted births, ap_m(t)
+    probM_b <- generate_probM_forecast_NEW(inc, probs, pars["baselineProb"],
+                                     pars["abortion_rate"], pars["birth_reduction"],
+                                     which(ts == pars["switch_time_behaviour"]), pars["abortion_cutoff"], TRUE)
+    ## Get subset of times for the data we have incidence data
+    probM <- probM_a/(1-probM_b)
+    
+    probM[which(ts < switch_time_m)] <- probM[which(ts < switch_time_m)]*pars["propn"]
+    probM[which(ts >= switch_time_m)] <- probM[which(ts >= switch_time_m)]*pars["propn2"]
+    probM <- average_buckets(probM,buckets)
+    return(probM)
+    probM <- probM*births
+    #tmp_buckets <- buckets[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
+    #tmp_births <- births[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
+
+    ## Get daily observed microcephaly cases
+                                        # if(perCap) {
+    #probM <- probM*tmp_births
+                                        # } else {
+                                        #    probM <- probM*pars["propn"]
+                                        #}
+    
+    tmpStart <- startDays[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
+    tmpEnd <- endDays[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
+    ## Reported on mean of start and end report day
+    meanDays <- (tmpStart + tmpEnd)/2
+    return(data.frame("x"=meanDays,"y"=probM))
+}
+
+
 
 generate_peak_time_table <- function(dat, incDat){
     all_states <- get_epidemic_states(dat)$include
@@ -206,17 +268,22 @@ indiv_model_fit <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/northe
                            incScale=50,
                            runs=1000,
                            ylim=0.1,
-                           bot=FALSE){
+                           xlim=NULL,
+                           bot=FALSE,
+                           standalone=FALSE,
+                           parTab=NULL,
+                           chain=NULL){
     ts <- seq(0,3003,by=1)
     setwd(chainWD)
-    parTab <- read_inipars()
-    chain <- zikaProj::load_mcmc_chains(location = chainWD,
+    if(is.null(parTab)) parTab <- read_inipars()
+    if(is.null(chain)){
+        chain <- zikaProj::load_mcmc_chains(location = chainWD,
                                         asList = FALSE,
                                         convertMCMC = FALSE,
                                         unfixed = FALSE,
                                         thin = 10,
                                         burnin = 750000)
-  
+    }
     dat <- read.csv(datFile,stringsAsFactors = FALSE)
     dat <- dat[dat$local == local,]
     incDat <- NULL
@@ -247,7 +314,6 @@ indiv_model_fit <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/northe
         colnames(predict_bounds) <- c("lower","upper","best")
         predict_bounds$time <- best_predict[,1]
     }
- 
     if(!(local %in% parTab$local)){
         dat$local <- "bahia"
         if(!is.null(incDat)) incDat$local <- "bahia"
@@ -259,14 +325,14 @@ indiv_model_fit <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/northe
     labels <- rep(getDaysPerMonth(3),4)
     labels <- c(0,cumsum(labels))
     labels_names <- as.yearmon(as.Date(labels,origin="2013-01-01"))
-
+    print("wow")
     tmp <- plot_setup_data(chain, dat, incDat,parTab, ts, local,200,365, noMonths=36,noWeeks=150,perCap=TRUE)
+    print("wow2")
     microBounds <- tmp[["microBounds"]]
     incBounds <- tmp[["incBounds"]]
     dat$meanDay <- rowMeans(dat[,c("startDay","endDay")])
     if(!is.null(incDat)){
         incDat$meanDay <- rowMeans(incDat[,c("startDay","endDay")])
-      
         incDat$local <- localName
     }
     
@@ -295,32 +361,50 @@ indiv_model_fit <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/northe
     }
     p <- p + geom_point(data=dat, aes(x=meanDay, y = microCeph/births), size=0.6) +
         facet_wrap(~local,scales="free_y",ncol=1) +
-        scale_y_continuous(limits=c(0,ylim),breaks=seq(0,ylim,by=ylim/5),expand=c(0,0),sec.axis=sec_axis(~.*(incScale),name="Reported ZIKV incidence (red)"))+
-        theme_bw()
-    if(bot){
-        p <- p +
-            theme(axis.text.y=element_text(size=8,family="Arial"),
-                  axis.title.x=element_blank(),
-                  axis.title=element_text(size=10,family="Arial"),
-                  strip.text=element_text(size=8,family="Arial"),
-                  axis.title.y=element_blank(),
-                  axis.text.x=element_text(angle=90,hjust=0.5,size=8,family="Arial"), 
-                  axis.ticks.x = element_blank(),
-                  panel.grid.minor = element_blank())
+        scale_y_continuous(limits=c(0,ylim),breaks=seq(0,ylim,by=ylim/5),expand=c(0,0),sec.axis=sec_axis(~.*(incScale),name="Reported per capita\nZIKV infection incidence (red)"))+
+        theme_classic()
+    if(standalone){
+        
+        p <- p + theme(axis.text.y=element_text(size=8,family="Arial"),
+                      axis.title=element_text(size=8,family="Arial"),
+                      strip.text=element_blank(),
+                      panel.grid.minor = element_blank())
+        if(bot){
+            p <- p + theme(
+                      axis.text.x=element_blank(),
+                      axis.title.x=element_blank(),
+                      axis.ticks.x = element_blank())
+            }
+
+
     } else {
-        p <- p +        
-            theme(axis.text.y=element_text(size=8,family="Arial"),
-                  axis.title.x=element_blank(),
-                  axis.title=element_text(size=10,family="Arial"),
-                  strip.text=element_text(size=8,family="Arial"),
-                  axis.title.y=element_blank(),
-                  axis.text.x=element_blank(), 
-                  axis.ticks.x = element_blank(),
-                  panel.grid.minor = element_blank())
+        if(bot){
+            p <- p +
+                theme(axis.text.y=element_text(size=8,family="Arial"),
+                      axis.title.x=element_blank(),
+                      axis.title=element_text(size=10,family="Arial"),
+                      strip.text=element_text(size=8,family="Arial"),
+                      axis.title.y=element_blank(),
+                      axis.text.x=element_text(angle=90,hjust=0.5,size=8,family="Arial"), 
+                      axis.ticks.x = element_blank(),
+                      panel.grid.minor = element_blank())
+        } else {
+            p <- p +        
+                theme(axis.text.y=element_text(size=8,family="Arial"),
+                      axis.title.x=element_blank(),
+                      axis.title=element_text(size=10,family="Arial"),
+                      strip.text=element_text(size=8,family="Arial"),
+                      axis.title.y=element_blank(),
+                      axis.text.x=element_blank(), 
+                      axis.ticks.x = element_blank(),
+                      panel.grid.minor = element_blank())
+        }
     }
+    x_lower <- 365
+    if(!is.null(xlim)) x_lower <- xlim
     p <- p +
-        scale_x_continuous(limits=c(365,max(labels)),breaks=labels,labels=labels_names)+
-        ylab("Reported microcephaly incidence (black)") +
+        scale_x_continuous(limits=c(x_lower,max(labels)),breaks=labels,labels=labels_names)+
+        ylab("Reported per birth\nmicrocephaly incidence (black)") +
         xlab("")
     return(p)
 }

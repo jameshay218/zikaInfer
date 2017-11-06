@@ -396,7 +396,7 @@ forecast_microceph <- function(chain,microParChain=NULL,parTab, ts,runs,origin="
 #' @param ts the vector of times to solve the model over. Should be in days, but will be converted to months.
 #' @param weeks if preferred, will return weekly proportions rather than months
 #' @return a data frame of months and proportion microcephaly affected births
-forecast_microceph_indiv<- function(pars,local, parTab, ts, weeks=FALSE){
+forecast_microceph_indiv <- function(pars,local, parTab, ts, weeks=FALSE){
     noYears <- floor(max(ts)/365)
 
     if(weeks){
@@ -437,3 +437,96 @@ forecast_microceph_indiv<- function(pars,local, parTab, ts, weeks=FALSE){
     return(data.frame("time"=meanDay,"microceph"=predicted))
 }
 
+
+
+#' @export
+forecast_known_inc_seir <- function(pars, startDays, endDays,
+                                    buckets, microCeph, births,
+                                    zikv, nh, inc_buckets,
+                                    inc_start, inc_end,
+                                    valid_days_micro, valid_days_inc){
+    ## Times after which reporting/birth behaviour changes
+    switch_time_i <- pars["switch_time_i"]
+    switch_time_m <- pars["switch_time_m"]
+    switch_time_behaviour <- pars["switch_time_behaviour"]
+    
+    ## Generate microcephaly curve for these parameters
+    probs <- generate_micro_curve(pars)
+
+    ## Solve SEIR model
+    y0s <- generate_y0s(as.numeric(pars["N_H"]),as.numeric(pars["density"]))
+    y <- solveModelSimple_rlsoda(seq(0,3003,by=1), y0s, pars,FALSE)
+
+    ## Calculate SEIR generated incidence for before switch time
+    calc_inc <- diff(y["incidence",])
+    calc_inc[calc_inc < 0] <- 0
+    N_H <- colSums(y[5:8,])
+
+    calc_inc <- calc_inc[which(y["time",] >= min(inc_start) & y["time",] < switch_time_i)]
+    ## Population size before switch time
+    N_H <- N_H[which(y["time",] >= min(inc_start) & y["time",] < switch_time_i)]
+
+    ## Get average buckets for this
+    calc_inc <- sum_buckets(calc_inc,inc_buckets[which(inc_start < switch_time_i)])
+    N_H <- average_buckets(N_H,inc_buckets[which(inc_start < switch_time_i)])
+
+    ## Calculate per capita incidence from SEIR model
+    perCapInc <- (1-(1-(calc_inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
+    
+    ## Get subset of incidence for these times
+    inc_1 <- zikv[which(inc_start < switch_time_i)]
+
+    ## Convert to true underlying incidence
+    inc_1 <- inc_1/pars["incPropn"]
+    #inc_1 <- perCapInc*N_H/pars["incPropn"]
+
+    ## Get incidence after switch time with new reporting rate
+    inc_2 <- zikv[which(inc_start >= switch_time_i)]/pars["incPropn2"]
+    inc <- c(inc_1,inc_2)
+    
+    ## Convert to daily incidence
+    inc <- rep(inc/nh/inc_buckets, inc_buckets)
+
+    ## Generate probability of observing a microcephaly caes on a given day
+    #probM <- generate_probM_aux(inc, probs, pars["baselineProb"])
+    ts <- seq(min(inc_start), max(inc_start),by=1)
+    probM <- generate_probM_forecast(inc, probs, pars["baselineProb"],
+                                     pars["abortion_rate"], pars["birth_reduction"],
+                                     which(ts == pars["switch_time_behaviour"]), 12*7)
+    
+    
+    probM[which(ts < switch_time_m)] <- probM[which(ts < switch_time_m)]*pars["propn"]
+    probM[which(ts >= switch_time_m)] <- probM[which(ts >= switch_time_m)]*pars["propn2"]
+    ## Births after switch time have reduction
+                                        #births[which(startDays >= switch_time_m)] <- as.integer(births[which(startDays >= switch_time_m)]*(1-pars["birth_reduction"]))
+
+    probM <- average_buckets(probM,buckets)
+    
+    return(probM*births)
+}
+
+#' @export
+create_f_wow <- function(parTab,microDat,incDat){
+
+    startDays <- microDat$startDay
+    endDays <- microDat$endDays
+    buckets <- microDat$buckets
+    births <- microDat$births
+    microCeph <- microDat$microCeph
+    
+    zikv <- incDat$inc
+    nh <- incDat$N_H
+    inc_buckets <- incDat$buckets
+    inc_start <- incDat$startDay
+    inc_end <- incDat$endDay
+    
+    names_pars <- parTab$names
+    f <- function(values){
+        names(values) <- names_pars
+        lik <- forecast_known_inc_seir(values, startDays, endDays,
+                                        buckets, microCeph, births,
+                                        zikv, nh, inc_buckets,
+                                        inc_start, inc_end)
+        return(lik)
+    }
+}

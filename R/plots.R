@@ -406,7 +406,6 @@ plot_setup_data <- function(chain, dat=NULL, incDat=NULL, parTab, ts, local, run
             tmpInc$meanDay <- rowMeans(tmpInc[,c("startDay","endDay")])
         } else {
             inc_weeks <- rep(7,noWeeks)
-
             startDays <- startDay + cumsum(inc_weeks) - inc_weeks[1]
             endDays <- startDay + cumsum(inc_weeks)
             tmpInc <- data.frame(startDay=startDays,endDay=endDays)
@@ -415,7 +414,6 @@ plot_setup_data <- function(chain, dat=NULL, incDat=NULL, parTab, ts, local, run
         }
     } else {
         inc_weeks <- rep(7,noWeeks)
-
         startDays <- startDay + cumsum(inc_weeks) - inc_weeks[1]
         endDays <- startDay + cumsum(inc_weeks)
         tmpInc <- data.frame(startDay=startDays,endDay=endDays)
@@ -489,9 +487,9 @@ plot_setup_data_auxiliary <- function(pars, dat,incDat, parTab, ts, local, perCa
     probs <- generate_micro_curve(pars)
     probM <- generate_probM(y[,"I_M"], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)
     probM <- probM[which(y[,"time"] >= min(dat[,"startDay"]) & y[,"time"] <= max(dat[,"endDay"]))]
-
     probM <- average_buckets(probM, dat[,"buckets"])
 
+    
     ## Generate predicted microcephaly cases or per birth incidence depending on what was provided
     if(perCap){
         predicted <- probM*pars["propn"]
