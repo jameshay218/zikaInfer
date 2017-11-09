@@ -7,7 +7,7 @@ using namespace Rcpp;
 
 // toUnitScale
 double toUnitScale(double x, double min, double max);
-RcppExport SEXP zikaProj_toUnitScale(SEXP xSEXP, SEXP minSEXP, SEXP maxSEXP) {
+RcppExport SEXP _zikaProj_toUnitScale(SEXP xSEXP, SEXP minSEXP, SEXP maxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -20,7 +20,7 @@ END_RCPP
 }
 // fromUnitScale
 double fromUnitScale(double x, double min, double max);
-RcppExport SEXP zikaProj_fromUnitScale(SEXP xSEXP, SEXP minSEXP, SEXP maxSEXP) {
+RcppExport SEXP _zikaProj_fromUnitScale(SEXP xSEXP, SEXP minSEXP, SEXP maxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -33,7 +33,7 @@ END_RCPP
 }
 // generate_foi
 NumericVector generate_foi(NumericVector IM, double NH, double b, double pMH, double tstep);
-RcppExport SEXP zikaProj_generate_foi(SEXP IMSEXP, SEXP NHSEXP, SEXP bSEXP, SEXP pMHSEXP, SEXP tstepSEXP) {
+RcppExport SEXP _zikaProj_generate_foi(SEXP IMSEXP, SEXP NHSEXP, SEXP bSEXP, SEXP pMHSEXP, SEXP tstepSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -48,7 +48,7 @@ END_RCPP
 }
 // generate_riskS
 NumericVector generate_riskS(NumericVector foi, double tstep);
-RcppExport SEXP zikaProj_generate_riskS(SEXP foiSEXP, SEXP tstepSEXP) {
+RcppExport SEXP _zikaProj_generate_riskS(SEXP foiSEXP, SEXP tstepSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -60,7 +60,7 @@ END_RCPP
 }
 // generate_riskI
 NumericVector generate_riskI(NumericVector foi, NumericVector riskS, double tstep);
-RcppExport SEXP zikaProj_generate_riskI(SEXP foiSEXP, SEXP riskSSEXP, SEXP tstepSEXP) {
+RcppExport SEXP _zikaProj_generate_riskI(SEXP foiSEXP, SEXP riskSSEXP, SEXP tstepSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -73,7 +73,7 @@ END_RCPP
 }
 // generate_probM_aux
 NumericVector generate_probM_aux(NumericVector riskI, NumericVector probM, double bp);
-RcppExport SEXP zikaProj_generate_probM_aux(SEXP riskISEXP, SEXP probMSEXP, SEXP bpSEXP) {
+RcppExport SEXP _zikaProj_generate_probM_aux(SEXP riskISEXP, SEXP probMSEXP, SEXP bpSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -86,7 +86,7 @@ END_RCPP
 }
 // generate_probM
 NumericVector generate_probM(NumericVector IM, double NH, NumericVector probM, double b, double pMH, double bp, double tstep);
-RcppExport SEXP zikaProj_generate_probM(SEXP IMSEXP, SEXP NHSEXP, SEXP probMSEXP, SEXP bSEXP, SEXP pMHSEXP, SEXP bpSEXP, SEXP tstepSEXP) {
+RcppExport SEXP _zikaProj_generate_probM(SEXP IMSEXP, SEXP NHSEXP, SEXP probMSEXP, SEXP bSEXP, SEXP pMHSEXP, SEXP bpSEXP, SEXP tstepSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -103,7 +103,7 @@ END_RCPP
 }
 // likelihood_probM
 double likelihood_probM(NumericVector microBirths, NumericVector allBirths, NumericVector probM);
-RcppExport SEXP zikaProj_likelihood_probM(SEXP microBirthsSEXP, SEXP allBirthsSEXP, SEXP probMSEXP) {
+RcppExport SEXP _zikaProj_likelihood_probM(SEXP microBirthsSEXP, SEXP allBirthsSEXP, SEXP probMSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -116,7 +116,7 @@ END_RCPP
 }
 // likelihood_probM_norm
 double likelihood_probM_norm(NumericVector microBirths, NumericVector allBirths, NumericVector probM, double lik_sd);
-RcppExport SEXP zikaProj_likelihood_probM_norm(SEXP microBirthsSEXP, SEXP allBirthsSEXP, SEXP probMSEXP, SEXP lik_sdSEXP) {
+RcppExport SEXP _zikaProj_likelihood_probM_norm(SEXP microBirthsSEXP, SEXP allBirthsSEXP, SEXP probMSEXP, SEXP lik_sdSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -130,7 +130,7 @@ END_RCPP
 }
 // average_buckets
 NumericVector average_buckets(NumericVector a, NumericVector buckets);
-RcppExport SEXP zikaProj_average_buckets(SEXP aSEXP, SEXP bucketsSEXP) {
+RcppExport SEXP _zikaProj_average_buckets(SEXP aSEXP, SEXP bucketsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -142,7 +142,7 @@ END_RCPP
 }
 // sum_buckets
 NumericVector sum_buckets(NumericVector a, NumericVector buckets);
-RcppExport SEXP zikaProj_sum_buckets(SEXP aSEXP, SEXP bucketsSEXP) {
+RcppExport SEXP _zikaProj_sum_buckets(SEXP aSEXP, SEXP bucketsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -154,7 +154,7 @@ END_RCPP
 }
 // generate_probM_forecast_NEW
 NumericVector generate_probM_forecast_NEW(NumericVector riskI, NumericVector probM, double bp, double abortion_rate, double birth_reduction, int switch_t, int abortion_time, bool ABORTED);
-RcppExport SEXP zikaProj_generate_probM_forecast_NEW(SEXP riskISEXP, SEXP probMSEXP, SEXP bpSEXP, SEXP abortion_rateSEXP, SEXP birth_reductionSEXP, SEXP switch_tSEXP, SEXP abortion_timeSEXP, SEXP ABORTEDSEXP) {
+RcppExport SEXP _zikaProj_generate_probM_forecast_NEW(SEXP riskISEXP, SEXP probMSEXP, SEXP bpSEXP, SEXP abortion_rateSEXP, SEXP birth_reductionSEXP, SEXP switch_tSEXP, SEXP abortion_timeSEXP, SEXP ABORTEDSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -172,7 +172,7 @@ END_RCPP
 }
 // generate_probM_forecast_OLD
 NumericVector generate_probM_forecast_OLD(NumericVector riskI, NumericVector probM, double bp, double abortion_rate, double birth_reduction, int switch_t, int abortion_time);
-RcppExport SEXP zikaProj_generate_probM_forecast_OLD(SEXP riskISEXP, SEXP probMSEXP, SEXP bpSEXP, SEXP abortion_rateSEXP, SEXP birth_reductionSEXP, SEXP switch_tSEXP, SEXP abortion_timeSEXP) {
+RcppExport SEXP _zikaProj_generate_probM_forecast_OLD(SEXP riskISEXP, SEXP probMSEXP, SEXP bpSEXP, SEXP abortion_rateSEXP, SEXP birth_reductionSEXP, SEXP switch_tSEXP, SEXP abortion_timeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -186,4 +186,26 @@ BEGIN_RCPP
     rcpp_result_gen = Rcpp::wrap(generate_probM_forecast_OLD(riskI, probM, bp, abortion_rate, birth_reduction, switch_t, abortion_time));
     return rcpp_result_gen;
 END_RCPP
+}
+
+static const R_CallMethodDef CallEntries[] = {
+    {"_zikaProj_toUnitScale", (DL_FUNC) &_zikaProj_toUnitScale, 3},
+    {"_zikaProj_fromUnitScale", (DL_FUNC) &_zikaProj_fromUnitScale, 3},
+    {"_zikaProj_generate_foi", (DL_FUNC) &_zikaProj_generate_foi, 5},
+    {"_zikaProj_generate_riskS", (DL_FUNC) &_zikaProj_generate_riskS, 2},
+    {"_zikaProj_generate_riskI", (DL_FUNC) &_zikaProj_generate_riskI, 3},
+    {"_zikaProj_generate_probM_aux", (DL_FUNC) &_zikaProj_generate_probM_aux, 3},
+    {"_zikaProj_generate_probM", (DL_FUNC) &_zikaProj_generate_probM, 7},
+    {"_zikaProj_likelihood_probM", (DL_FUNC) &_zikaProj_likelihood_probM, 3},
+    {"_zikaProj_likelihood_probM_norm", (DL_FUNC) &_zikaProj_likelihood_probM_norm, 4},
+    {"_zikaProj_average_buckets", (DL_FUNC) &_zikaProj_average_buckets, 2},
+    {"_zikaProj_sum_buckets", (DL_FUNC) &_zikaProj_sum_buckets, 2},
+    {"_zikaProj_generate_probM_forecast_NEW", (DL_FUNC) &_zikaProj_generate_probM_forecast_NEW, 8},
+    {"_zikaProj_generate_probM_forecast_OLD", (DL_FUNC) &_zikaProj_generate_probM_forecast_OLD, 7},
+    {NULL, NULL, 0}
+};
+
+RcppExport void R_init_zikaProj(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
 }

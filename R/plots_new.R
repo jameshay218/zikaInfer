@@ -20,7 +20,7 @@ create_f <- function(parTab,data,PRIOR_FUNC,incDat,perCap,...){
       y <- model_forecast(values, startDays, endDays,
                           buckets, microCeph, births,
                           zikv, nh, inc_buckets,
-inc_start, inc_end,perCap,...)
+                          inc_start, inc_end,perCap,...)
       return(y)
   }
 }

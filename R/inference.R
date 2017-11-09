@@ -30,7 +30,6 @@ protect <- function(f){
 #' @return a list with: 1) full file path at which the MCMC chain is saved as a .csv file; 2) the last used covarianec matrix; 3) the last used scale size
 #' @export
 #' @seealso \code{\link{posterior_complex_buckets}}, \code{\link{proposalfunction}}
-#' @useDynLib zikaProj
 run_metropolis_MCMC <- function(data=NULL,
                                 ts,
                                 param_table,
@@ -310,7 +309,6 @@ run_metropolis_MCMC <- function(data=NULL,
 #' @param popt the desired acceptance rate
 #' @param pcur the current acceptance rate
 #' @return the scaled step size
-#' @useDynLib zikaProj
 scaletuning <- function(step, popt,pcur){
     if(pcur ==1) pcur <- 0.99
     if(pcur == 0) pcur <- 0.01
@@ -354,7 +352,6 @@ rm_scale <- function(step_scale, mc, popt,log_prob, N_adapt)
 #' @param covMat the 2D covariance matrix for all of the parameters
 #' @return a parameter vector of a proposed move. Note that these may fall outside the allowable ranges.
 #' @export
-#' @useDynLib zikaProj
 mvr_proposal <- function(values, fixed, covMat){
     proposed <- values
     proposed[fixed] <- MASS::mvrnorm(n=1,mu=proposed[fixed],Sigma=(5.6644/length(fixed))*covMat)
@@ -371,7 +368,6 @@ mvr_proposal <- function(values, fixed, covMat){
 #' @param index numeric value for the index of the parameter to be moved from the param table and vector
 #' @return the parameter vector after step
 #' @export
-#' @useDynLib zikaProj
 proposalfunction <- function(values, lower_bounds, upper_bounds,steps, index){
     mn <- lower_bounds[index]
     mx <- upper_bounds[index]

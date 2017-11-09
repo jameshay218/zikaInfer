@@ -320,11 +320,11 @@ convert_name_to_state <- function(name){
 
 #' Post calculations
 #'
-#' Adds some parameter estimates for peripheral microcephaly risk parameters eg. mode. Note that this only applies to version 1 of the model; if not version 1, will return lots of zeros
+#' Adds some parameter estimates for peripheral microcephaly risk parameters eg. mode. Note that this only applies to version 1 of the model. If not version 1, will return lots of zeros
 #' @param chain the full MCMC chain to do post analysis on
 #' @param version the version of the model run here
 #' @param microceph_limit the probability of microcephaly given infection to use as the cut off
-#' @param scale if a non 100% reporting proportion, need to divide by assumed proportion
+#' @param scale if a non 100 percent reporting proportion, need to divide by assumed proportion
 #' @return an MCMC chain of the added analyses
 #' @export
 extra_microceph_calculations <- function(chain,version=1,microceph_limit=0.001,scale=1){

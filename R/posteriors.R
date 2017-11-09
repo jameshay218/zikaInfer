@@ -95,6 +95,32 @@ posterior_complex_buckets <- function(ts, values, names, local, startDays, endDa
     return(lik)
 }
 
+#' Posterior function for CRS prediction
+#'
+#' Using the microcephaly risk model, produces a forecast of CRS affected births for all time periods and calculates a likelihood of observing given CRS cases
+#' @export
+posterior_CRS <- function(pars, startDays, endDays,
+                                buckets, microCeph, births,
+                                inc, nh, inc_buckets,
+                                inc_start, inc_end){
+    switch_time <- pars["switch_time"]
+     ## Generate microcephaly curve for these parameters
+    probs <- generate_micro_curve(pars)
+    ## Use incidence data to get daily incidence
+    ## Get incidence before and after the switch time - different reporting rates
+    inc <- inc/pars["incPropn"]
+    inc <- rep(inc/nh/inc_buckets, inc_buckets)
+    ## Generate probability of observing a microcephaly caes on a given day
+    probM <- generate_probM_aux(inc, probs, pars["baselineProb"])
+    probM[startDays < switch_time] <- probM[startDays < switch_time]*pars["propn"]
+    probM[startDays >= switch_time] <- probM[startDays >= switch_time]*pars["propn2"]
+   
+    probM <- average_buckets(probM,buckets)
+    lik <- likelihood_probM(microCeph,births,probM)
+
+    return(lik)
+}
+
 #' Posterior function for forecast
 #'
 #' Using the microcephaly risk model, produces a forecast of microcephaly affected births for all time periods and calculates a likelihood of observing given microcephaly cases

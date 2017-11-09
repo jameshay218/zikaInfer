@@ -9,7 +9,9 @@ LazyData: true
 URL: https://github.com/jameshay218/zikaProj
 BugReports: https://github.com/jameshay218/zikaProj/issues
 Suggests:
-    testthat
+    testthat,
+    knitr,
+    rmarkdown
 LinkingTo: Rcpp
 Imports:
     coda,
@@ -24,3 +26,4 @@ Imports:
     reshape2,
     rlsoda
 RoxygenNote: 5.0.1
+VignetteBuilder: knitr
