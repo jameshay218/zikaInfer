@@ -14,12 +14,12 @@ extra_microceph_calculations(chain, version = 1, microceph_limit = 0.001,
 
 \item{microceph_limit}{the probability of microcephaly given infection to use as the cut off}
 
-\item{scale}{if a non 100% reporting proportion, need to divide by assumed proportion}
+\item{scale}{if a non 100 percent reporting proportion, need to divide by assumed proportion}
 }
 \value{
 an MCMC chain of the added analyses
 }
 \description{
-Adds some parameter estimates for peripheral microcephaly risk parameters eg. mode. Note that this only applies to version 1 of the model; if not version 1, will return lots of zeros
+Adds some parameter estimates for peripheral microcephaly risk parameters eg. mode. Note that this only applies to version 1 of the model. If not version 1, will return lots of zeros
 }
 

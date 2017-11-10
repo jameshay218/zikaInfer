@@ -111,7 +111,6 @@ density.calc <- function(params,R0){
 #' @param density number of mosquitoes per person
 #' @return a vector of initial population sizes
 #' @export
-#' @useDynLib
 generate_y0s <- function(N_H, density, iniI=10){
     N_M <- unname(N_H)*unname(density)
     S_M = 1*(N_M)
@@ -205,7 +204,7 @@ microceph_v4 <- function(pars){
 solveModelSimple_lsoda<- function(ts, y0s, pars,makenames=FALSE){
     ## Package ODE pars
     pars <- pars[c("L_M","L_H","D_EM","D_EH","D_IH","b","p_HM","p_MH","constSeed")]
-    y <- deSolve::ode(y0s, ts, func="simpleSEIR",parms=pars,dllname="zikaProj",initfunc="initmodSEIR",nout=0, rtol=1e-5,atol=1e-5)
+    y <- deSolve::ode(y0s, ts, func="CsimpleSEIR",parms=pars,dllname="zikaProj",initfunc="CinitmodSEIR",nout=0, rtol=1e-5,atol=1e-5)
     if(makenames) colnames(y) <- c("time","S_M","E_M","I_M","S_H","E_H","I_H","R_H","incidence")
     return(y)
 }
@@ -221,7 +220,7 @@ solveModelSimple_lsoda<- function(ts, y0s, pars,makenames=FALSE){
 #' @export
 solveModelSimple_rlsoda<- function(ts, y0s, pars,compatible=FALSE){
     pars <- pars[c("L_M","L_H","D_EM","D_EH","D_IH","b","p_HM","p_MH","constSeed")]
-    rlsoda::rlsoda(y0s, ts, CsimpleSEIR_rich, pars, dllname="zikaProj", deSolve_compatible = compatible,return_time=TRUE,return_initial=TRUE,atol=1e-6,rtol=1e-6)
+    rlsoda::rlsoda(y0s, ts, CsimpleSEIR_rich, parms=pars, dllname="zikaProj", deSolve_compatible = compatible,return_time=TRUE,return_initial=TRUE,atol=1e-6,rtol=1e-6)
 }
 
 
@@ -231,7 +230,6 @@ solveModelSimple_rlsoda<- function(ts, y0s, pars,compatible=FALSE){
 #' @param breaks total number of months to consider (defaults to 12 to give raw days per each month)
 #' @return vector of days
 #' @export
-#' @useDynLib zikaProj
 getDaysPerMonth <- function(breaks=12){
     days <- c(31,28,31,30,31,30,31,31,30,31,30,31)
     days <- colSums(matrix(days,ncol=breaks))
@@ -245,7 +243,6 @@ getDaysPerMonth <- function(breaks=12){
 #' @param chain the MCMC chain
 #' @return a name vector of the best parameters
 #' @export
-#' @useDynLib zikaProj
 get_best_pars <- function(chain){
     tmpNames <- colnames(chain)[2:(ncol(chain)-1)]
     bestPars <- as.numeric(chain[which.max(chain[,"lnlike"]),2:(ncol(chain)-1)])
@@ -260,7 +257,6 @@ get_best_pars <- function(chain){
 #' @param index the index
 #' @return a named vector of the best parameters
 #' @export
-#' @useDynLib zikaProj
 get_index_pars <- function(chain, index){
     tmpNames <- colnames(chain)[2:(ncol(chain)-1)]
     pars <- as.numeric(chain[index,2:(ncol(chain)-1)])
@@ -272,7 +268,6 @@ get_index_pars <- function(chain, index){
 #'
 #' In case you forget which version corresponds to which parameters!
 #' @export
-#' @useDynLib zikaProj
 print_version_names <- function(){
     print("Version 1 = Gamma curve")
     print("Version 2 = 3 pregnancy risk windows")

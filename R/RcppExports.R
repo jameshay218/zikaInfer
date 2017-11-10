@@ -9,7 +9,7 @@
 #' @return the value converted to a unit scale
 #' @export
 toUnitScale <- function(x, min, max) {
-    .Call('_zikaProj_toUnitScale', PACKAGE = 'zikaProj', x, min, max)
+    .Call(`_zikaProj_toUnitScale`, x, min, max)
 }
 
 #' Converts to linear scale
@@ -20,7 +20,7 @@ toUnitScale <- function(x, min, max) {
 #' @return the value converted to a linear scale
 #' @export
 fromUnitScale <- function(x, min, max) {
-    .Call('_zikaProj_fromUnitScale', PACKAGE = 'zikaProj', x, min, max)
+    .Call(`_zikaProj_fromUnitScale`, x, min, max)
 }
 
 #' FOI calculation
@@ -34,7 +34,7 @@ fromUnitScale <- function(x, min, max) {
 #' @return the vector of FOI
 #' @export
 generate_foi <- function(IM, NH, b, pMH, tstep) {
-    .Call('_zikaProj_generate_foi', PACKAGE = 'zikaProj', IM, NH, b, pMH, tstep)
+    .Call(`_zikaProj_generate_foi`, IM, NH, b, pMH, tstep)
 }
 
 #' Cumulative susceptible probability
@@ -45,7 +45,7 @@ generate_foi <- function(IM, NH, b, pMH, tstep) {
 #' @return the vector of cumulative escape probabilities
 #' @export
 generate_riskS <- function(foi, tstep) {
-    .Call('_zikaProj_generate_riskS', PACKAGE = 'zikaProj', foi, tstep)
+    .Call(`_zikaProj_generate_riskS`, foi, tstep)
 }
 
 #' Risk of infection
@@ -57,7 +57,7 @@ generate_riskS <- function(foi, tstep) {
 #' @return the vector of relative infection risks
 #' @export
 generate_riskI <- function(foi, riskS, tstep) {
-    .Call('_zikaProj_generate_riskI', PACKAGE = 'zikaProj', foi, riskS, tstep)
+    .Call(`_zikaProj_generate_riskI`, foi, riskS, tstep)
 }
 
 #' Time varying microcephaly risk AUX
@@ -69,7 +69,7 @@ generate_riskI <- function(foi, riskS, tstep) {
 #' @return the vector of microcephaly probabilities
 #' @export
 generate_probM_aux <- function(riskI, probM, bp) {
-    .Call('_zikaProj_generate_probM_aux', PACKAGE = 'zikaProj', riskI, probM, bp)
+    .Call(`_zikaProj_generate_probM_aux`, riskI, probM, bp)
 }
 
 #' Time varying microcephaly risk
@@ -85,7 +85,7 @@ generate_probM_aux <- function(riskI, probM, bp) {
 #' @return the vector of microcephaly probabilities
 #' @export
 generate_probM <- function(IM, NH, probM, b, pMH, bp, tstep) {
-    .Call('_zikaProj_generate_probM', PACKAGE = 'zikaProj', IM, NH, probM, b, pMH, bp, tstep)
+    .Call(`_zikaProj_generate_probM`, IM, NH, probM, b, pMH, bp, tstep)
 }
 
 #' Likelihood function for time-varying microcephaly
@@ -97,7 +97,7 @@ generate_probM <- function(IM, NH, probM, b, pMH, bp, tstep) {
 #' @return a single likelihood value
 #' @export
 likelihood_probM <- function(microBirths, allBirths, probM) {
-    .Call('_zikaProj_likelihood_probM', PACKAGE = 'zikaProj', microBirths, allBirths, probM)
+    .Call(`_zikaProj_likelihood_probM`, microBirths, allBirths, probM)
 }
 
 #' Likelihood function for time-varying microcephaly
@@ -110,7 +110,7 @@ likelihood_probM <- function(microBirths, allBirths, probM) {
 #' @return a single likelihood value
 #' @export
 likelihood_probM_norm <- function(microBirths, allBirths, probM, lik_sd) {
-    .Call('_zikaProj_likelihood_probM_norm', PACKAGE = 'zikaProj', microBirths, allBirths, probM, lik_sd)
+    .Call(`_zikaProj_likelihood_probM_norm`, microBirths, allBirths, probM, lik_sd)
 }
 
 #' Averages a vector based on bucket sizes
@@ -121,7 +121,7 @@ likelihood_probM_norm <- function(microBirths, allBirths, probM, lik_sd) {
 #' @return the vector of averaged a
 #' @export
 average_buckets <- function(a, buckets) {
-    .Call('_zikaProj_average_buckets', PACKAGE = 'zikaProj', a, buckets)
+    .Call(`_zikaProj_average_buckets`, a, buckets)
 }
 
 #' Sums a vector based on bucket sizes
@@ -132,7 +132,7 @@ average_buckets <- function(a, buckets) {
 #' @return the vector of summed a
 #' @export
 sum_buckets <- function(a, buckets) {
-    .Call('_zikaProj_sum_buckets', PACKAGE = 'zikaProj', a, buckets)
+    .Call(`_zikaProj_sum_buckets`, a, buckets)
 }
 
 #' Time varying microcephaly risk not aborted
@@ -149,7 +149,7 @@ sum_buckets <- function(a, buckets) {
 #' @return the vector of microcephaly probabilities
 #' @export
 generate_probM_forecast_NEW <- function(riskI, probM, bp, abortion_rate, birth_reduction, switch_t, abortion_time, ABORTED) {
-    .Call('_zikaProj_generate_probM_forecast_NEW', PACKAGE = 'zikaProj', riskI, probM, bp, abortion_rate, birth_reduction, switch_t, abortion_time, ABORTED)
+    .Call(`_zikaProj_generate_probM_forecast_NEW`, riskI, probM, bp, abortion_rate, birth_reduction, switch_t, abortion_time, ABORTED)
 }
 
 #' Time varying microcephaly risk AUX
@@ -165,6 +165,6 @@ generate_probM_forecast_NEW <- function(riskI, probM, bp, abortion_rate, birth_r
 #' @return the vector of microcephaly probabilities
 #' @export
 generate_probM_forecast_OLD <- function(riskI, probM, bp, abortion_rate, birth_reduction, switch_t, abortion_time) {
-    .Call('_zikaProj_generate_probM_forecast_OLD', PACKAGE = 'zikaProj', riskI, probM, bp, abortion_rate, birth_reduction, switch_t, abortion_time)
+    .Call(`_zikaProj_generate_probM_forecast_OLD`, riskI, probM, bp, abortion_rate, birth_reduction, switch_t, abortion_time)
 }
 

@@ -1,4 +1,4 @@
-int simpleSEIR_rich(double t, double *y, double *ydot, void *data)
+void simpleSEIR_rich(double t, double *y, double *ydot, void *data)
 {
   double *parms = (double*)data;
   double L_M = parms[0], L_H = parms[1], D_EM = parms[2], D_EH =  parms[3], D_IH = parms[4], 
@@ -47,5 +47,4 @@ int simpleSEIR_rich(double t, double *y, double *ydot, void *data)
 
     ydot[7] = E_H/D_EH - E_H/L_H;
   }
-  return 0;
 }

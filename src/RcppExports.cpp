@@ -187,25 +187,3 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-
-static const R_CallMethodDef CallEntries[] = {
-    {"_zikaProj_toUnitScale", (DL_FUNC) &_zikaProj_toUnitScale, 3},
-    {"_zikaProj_fromUnitScale", (DL_FUNC) &_zikaProj_fromUnitScale, 3},
-    {"_zikaProj_generate_foi", (DL_FUNC) &_zikaProj_generate_foi, 5},
-    {"_zikaProj_generate_riskS", (DL_FUNC) &_zikaProj_generate_riskS, 2},
-    {"_zikaProj_generate_riskI", (DL_FUNC) &_zikaProj_generate_riskI, 3},
-    {"_zikaProj_generate_probM_aux", (DL_FUNC) &_zikaProj_generate_probM_aux, 3},
-    {"_zikaProj_generate_probM", (DL_FUNC) &_zikaProj_generate_probM, 7},
-    {"_zikaProj_likelihood_probM", (DL_FUNC) &_zikaProj_likelihood_probM, 3},
-    {"_zikaProj_likelihood_probM_norm", (DL_FUNC) &_zikaProj_likelihood_probM_norm, 4},
-    {"_zikaProj_average_buckets", (DL_FUNC) &_zikaProj_average_buckets, 2},
-    {"_zikaProj_sum_buckets", (DL_FUNC) &_zikaProj_sum_buckets, 2},
-    {"_zikaProj_generate_probM_forecast_NEW", (DL_FUNC) &_zikaProj_generate_probM_forecast_NEW, 8},
-    {"_zikaProj_generate_probM_forecast_OLD", (DL_FUNC) &_zikaProj_generate_probM_forecast_OLD, 7},
-    {NULL, NULL, 0}
-};
-
-RcppExport void R_init_zikaProj(DllInfo *dll) {
-    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
-    R_useDynamicSymbols(dll, FALSE);
-}

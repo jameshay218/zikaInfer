@@ -155,7 +155,6 @@ setupParsLong <- function(version = 1){
 #' @return list of times, initial conditions, and ODE parameters
 #' @export
 #' @seealso \code{\link{setupParsLong}}
-#' @useDynLib zikaProj
 setupListPars <- function(duration=2*365, version=1){
     pars <- setupParsLong(version)
     y0 <- generate_y0s(pars["N_H"], pars["density"])
@@ -231,7 +230,6 @@ setupParTable <- function(version=1, realDat=NULL, sharedProb=FALSE, parFile = "
 #' @param saveFile if provided, writes the parameter table to the given filename
 #' @return a matrix of needed settings for the MCMC algorithm. For each parameter, gives a name, lower and upper bounds, initial step sizes and whether or not the parameter should be fixed.
 #' @export
-#' @useDynLib zikaProj
 createParTable <- function(saveFile=NULL){
     names <- c("sampFreq","sampPropn","mu_I","sd_I","mu_N","sd_N","probMicro","inc_weight","baselineProb","burnin","epiStart","L_M","D_EM","L_H","D_C","D_F","D_EH","D_IH","b","p_HM","p_MH","constSeed","mean","var","c","tstep","p1","p2","p3","p4","p5","p6","p7","p8","inc_sd","micro_sd","state_weight")    
     paramTable <- matrix(0, ncol=9, nrow=length(names))
@@ -290,7 +288,6 @@ createParTable <- function(saveFile=NULL){
 #' @param saveFile if provided, writes the parameter table to the given filename
 #' @return a matrix of needed settings for the MCMC algorithm. For each parameter, gives a name, lower and upper bounds, initial step sizes and whether or not the parameter should be fixed.
 #' @export
-#' @useDynLib zikaProj
 createStateParTable <- function(stateDat, saveFile = NULL){
     places <- as.character(unique(stateDat$local))
     numberPars <- 21

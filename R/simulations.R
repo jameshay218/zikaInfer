@@ -11,7 +11,6 @@
 #' @param peakTimeRange the allowable prior range for ZIKV incidence peak time
 #' @return a data frame of microcephaly births, total births and corresponding times.
 #' @export
-#' @useDynLib zikaProj
 generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, dataRangeMicro, dataRangeInc,noise=NULL, peakTimeRange=NULL){
     if(is.null(dataRangeMicro)) dataRangeMicro <- c(0,max(ts))
     if(is.null(dataRangeInc)) dataRangeInc <- c(0,max(ts))

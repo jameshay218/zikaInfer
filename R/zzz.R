@@ -1,5 +1,4 @@
-CsimpleSEIR_rich <- NULL
-#' @useDynLib zikaProj
+#' @useDynLib zikaProj, .registration = TRUE
 #' @importFrom Rcpp evalCpp
 #' @import stats
 #' @import utils
@@ -8,6 +7,4 @@ CsimpleSEIR_rich <- NULL
 #' @import ggplot2
 #' @import gridExtra
 #' @import gtable
-.onLoad <- function(...) {
-    CsimpleSEIR_rich <<- getNativeSymbolInfo("simpleSEIR_rich", "zikaProj")
-}
+NULL

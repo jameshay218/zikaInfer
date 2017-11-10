@@ -29,7 +29,6 @@
 #' @param inc_valid_local vector of locals corresponding to the days in inc_valid_days
 #' @return a single value for the posterior
 #' @export
-#' @useDynLib zikaProj 
 posterior_complex_buckets <- function(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals,inc_startDays=NULL,inc_endDays=NULL,inc_locals=NULL,inc_buckets=NULL,inc_ZIKV=NULL,inc_NH=NULL, peak_startDays=NULL, peak_endDays=NULL,peak_locals=NULL, unique_states, allPriors=NULL, microceph_valid_days=NULL, microceph_valid_local=NULL, inc_valid_days=NULL, inc_valid_local=NULL){
     lik <- 0
    
@@ -456,7 +455,6 @@ posterior_inc <- function(ts, values, names, local,inc_startDays,inc_endDays,inc
 #' @param N_H vector of population sizes (ie. per capita inc)
 #' @return a single log likelihood
 #' @export
-#' @useDynLib zikaProj
 incidence_likelihood <- function(perCapInc, inc, N_H){
     return(sum(dbinom(x=inc,size=N_H,prob=perCapInc,log=1)))
 }
@@ -470,7 +468,6 @@ incidence_likelihood <- function(perCapInc, inc, N_H){
 #' @param lik_sd standard deviation of the observation distribution
 #' @return a single log likelihood
 #' @export
-#' @useDynLib zikaProj
 incidence_likelihood_norm<- function(perCapInc, inc, N_H, lik_sd){
     return(sum(dnorm(inc, perCapInc*N_H, lik_sd, 1)))
 }
@@ -502,7 +499,6 @@ incidence_likelihood_norm<- function(perCapInc, inc, N_H, lik_sd){
 #' @param version usually just leave this as "normal". I've added a "forecast" version which expects parameters to do with the lack of second wave.
 #' @return a single value for the posterior
 #' @export
-#' @useDynLib zikaProj
 create_posterior <- function(ts, values, names, local, startDays, endDays, buckets, microCeph, births, data_locals, inc_startDays=NULL, inc_endDays=NULL,inc_locals=NULL,inc_buckets=NULL,inc_ZIKV=NULL,inc_NH=NULL, peak_startDays=NULL, peak_endDays=NULL,peak_locals=NULL,unique_states, allPriors=NULL, version="normal"){
 
     ## I have included some code to explicitly extract all days included within the data sampling periods.
