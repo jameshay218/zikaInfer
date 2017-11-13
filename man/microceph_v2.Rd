@@ -7,7 +7,7 @@
 microceph_v2(pars)
 }
 \arguments{
-\item{pars}{the model parameters}
+\item{pars}{the model parameters, "p1","p2",and "p3"}
 }
 \value{
 the vector of risks

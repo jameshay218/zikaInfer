@@ -2,7 +2,7 @@
 % Please edit documentation in R/posteriors.R
 \name{incidence_likelihood_norm}
 \alias{incidence_likelihood_norm}
-\title{Incidence likelihood normal}
+\title{Incidence likelihood (normal)}
 \usage{
 incidence_likelihood_norm(perCapInc, inc, N_H, lik_sd)
 }

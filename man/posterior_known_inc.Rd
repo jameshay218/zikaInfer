@@ -5,7 +5,33 @@
 \title{Posterior function for forecast}
 \usage{
 posterior_known_inc(pars, startDays, endDays, buckets, microCeph, births, zikv,
-  nh, inc_buckets, inc_start, inc_end, valid_days_micro, valid_days_inc)
+  nh, inc_buckets, inc_start, inc_end)
+}
+\arguments{
+\item{pars}{model parameters}
+
+\item{startDays}{vector of all starting days for reporting buckets}
+
+\item{endDays}{vector of all end days for reporting buckets}
+
+\item{buckets}{vector of all reporting bucket sizes}
+
+\item{microCeph}{vector of reported microcephaly cases}
+
+\item{births}{vector of birth numbers}
+
+\item{zikv}{vector of ZIKV incidence}
+
+\item{nh}{vector of population sizes over time}
+
+\item{inc_buckets}{vector of reporting windows for ZIKV incidence}
+
+\item{inc_start}{vector of all start days for ZIKV reporting buckets}
+
+\item{inc_end}{vector of all end days for reporting ZIKV buckets}
+}
+\value{
+a single value for the posterior
 }
 \description{
 Using the microcephaly risk model, produces a forecast of microcephaly affected births for all time periods and calculates a likelihood of observing given microcephaly cases

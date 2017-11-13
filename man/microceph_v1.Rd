@@ -7,7 +7,7 @@
 microceph_v1(pars)
 }
 \arguments{
-\item{pars}{the model parameters}
+\item{pars}{the model parameters, specifying "mean" (gamma mean),"var" (gamma variance), and "c" (additional scaling constant)}
 }
 \value{
 the vector of risks

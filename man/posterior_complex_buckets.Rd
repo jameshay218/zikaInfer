@@ -2,13 +2,13 @@
 % Please edit documentation in R/posteriors.R
 \name{posterior_complex_buckets}
 \alias{posterior_complex_buckets}
-\title{Posterior function for the simple SEIR model with bucketed data for multiple states}
+\title{Posterior function for the simple SEIR model with bucketed data for multiple locations}
 \usage{
 posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets,
   microCeph, births, data_locals, inc_startDays = NULL, inc_endDays = NULL,
   inc_locals = NULL, inc_buckets = NULL, inc_ZIKV = NULL, inc_NH = NULL,
   peak_startDays = NULL, peak_endDays = NULL, peak_locals = NULL,
-  unique_states, allPriors = NULL, microceph_valid_days = NULL,
+  unique_locations, allPriors = NULL, microceph_valid_days = NULL,
   microceph_valid_local = NULL, inc_valid_days = NULL,
   inc_valid_local = NULL)
 }
@@ -19,25 +19,25 @@ posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets,
 
 \item{names}{names for the ODE parameters}
 
-\item{local}{names of all the states that are being considered}
+\item{local}{names of all the locations that are being considered in microcephaly data corresponding to parTab (ie. gets indices for each location from the parameter table)}
 
-\item{startDays}{vector of the start day for each bucket of data}
+\item{startDays}{vector of the start day for each bucket of microcephaly data}
 
-\item{endDays}{vector of the end day for each bucket of data}
+\item{endDays}{vector of the end day for each bucket of microcephaly data}
 
-\item{buckets}{bucket sizes}
+\item{buckets}{bucket sizes for microcephaly sampling periods}
 
 \item{microCeph}{vector of microcephaly incidence for each bucket}
 
 \item{births}{vector of total briths for each bucket}
 
-\item{data_locals}{corresponding vector of state names for the microcephaly data}
+\item{data_locals}{corresponding vector of location names for the microcephaly data}
 
 \item{inc_startDays}{start day vector for incidence data}
 
 \item{inc_endDays}{end day vector for incidence data}
 
-\item{inc_locals}{vector of state names for incidence data}
+\item{inc_locals}{vector of location names for incidence data}
 
 \item{inc_buckets}{sampling window vector for incidence data}
 
@@ -49,19 +49,19 @@ posterior_complex_buckets(ts, values, names, local, startDays, endDays, buckets,
 
 \item{peak_endDays}{vector of end allowable day of incidence peak time}
 
-\item{peak_locals}{vector of corresponding state name}
+\item{peak_locals}{vector of corresponding location names}
 
-\item{unique_states}{vector of all unique states}
+\item{unique_locations}{vector of all unique locations}
 
 \item{allPriors}{defaults to NULL. Arguments for parameter priors, if desired.}
 
 \item{microceph_valid_days}{vector of all days included in the microcephaly data}
 
-\item{microceph_valid_local}{vector of locals corresponding to the days in microceph_valid_days}
+\item{microceph_valid_local}{vector of locations corresponding to the days in microceph_valid_days}
 
 \item{inc_valid_days}{vector of all days included in the incidence data}
 
-\item{inc_valid_local}{vector of locals corresponding to the days in inc_valid_days}
+\item{inc_valid_local}{vector of locations corresponding to the days in inc_valid_days}
 }
 \value{
 a single value for the posterior

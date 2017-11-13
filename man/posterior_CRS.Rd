@@ -8,6 +8,6 @@ posterior_CRS(pars, startDays, endDays, buckets, microCeph, births, inc, nh,
   inc_buckets, inc_start, inc_end)
 }
 \description{
-Using the microcephaly risk model, produces a forecast of CRS affected births for all time periods and calculates a likelihood of observing given CRS cases
+Using the microcephaly risk model, produces a forecast of CRS affected births for all time periods and calculates a likelihood of observing given CRS cases. Uses reported incidence as per capita risk (after dividing my reporting rate).
 }
 

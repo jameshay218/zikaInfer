@@ -15,4 +15,7 @@ a vector of risks
 \description{
 Generates the microcephaly risk curve from model parameters
 }
+\seealso{
+\code{\link{microceph_v1}}, \code{\link{microceph_v2}}, \code{\link{microceph_v3}}, \code{\link{microceph_v4}}
+}
 

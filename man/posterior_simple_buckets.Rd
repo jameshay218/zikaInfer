@@ -2,7 +2,7 @@
 % Please edit documentation in R/posteriors.R
 \name{posterior_simple_buckets}
 \alias{posterior_simple_buckets}
-\title{Posterior function for the simple SEIR model with bucketed data for a single state}
+\title{Posterior function for the simple SEIR model with bucketed data for a single location}
 \usage{
 posterior_simple_buckets(ts, y0s, pars, startDays, endDays, buckets, microCeph,
   births, zikv = NULL, nh = NULL, inc_buckets = NULL, inc_start = NULL,

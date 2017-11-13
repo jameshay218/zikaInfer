@@ -5,7 +5,7 @@
 \title{Posterior function for the simple SEIR model with incidence only}
 \usage{
 posterior_inc(ts, values, names, local, inc_startDays, inc_endDays, inc_locals,
-  inc_buckets, inc_ZIKV, inc_NH, unique_states, allPriors = NULL,
+  inc_buckets, inc_ZIKV, inc_NH, unique_locations, allPriors = NULL,
   inc_valid_days = NULL, inc_valid_local = NULL)
 }
 \arguments{
@@ -15,7 +15,7 @@ posterior_inc(ts, values, names, local, inc_startDays, inc_endDays, inc_locals,
 
 \item{names}{names of the model parameters}
 
-\item{local}{the vector of state names corresponding to the parameter table}
+\item{local}{the vector of location names corresponding to the parameter table}
 
 \item{inc_startDays}{vector of all starting days for reporting buckets}
 
@@ -23,11 +23,11 @@ posterior_inc(ts, values, names, local, inc_startDays, inc_endDays, inc_locals,
 
 \item{inc_buckets}{vector of all reporting bucket sizes}
 
-\item{inc_ZIKV}{vector of reported ZIKV caes}
+\item{inc_ZIKV}{vector of reported ZIKV case}
 
 \item{inc_NH}{vector of all population sizes}
 
-\item{unique_states}{vector of all unique states to be tested}
+\item{unique_locations}{vector of all unique locations to be tested}
 
 \item{allPriors}{defaults to FALSE. Arguments for parameter priors, if desired.}
 
@@ -35,12 +35,12 @@ posterior_inc(ts, values, names, local, inc_startDays, inc_endDays, inc_locals,
 
 \item{inc_valid_local}{vector of locals corresponding to the days in inc_valid_days}
 
-\item{inc_local}{vector of all state names corresponding to the incidence table}
+\item{inc_local}{vector of all location names corresponding to the incidence table}
 }
 \value{
 a single value for the posterior
 }
 \description{
-Given the time vector, initial conditions ODE parameters and deconstructed matrix of incidence data, calculates the posterior value for a given data set.
+Given the time vector, ODE parameters and deconstructed matrix of incidence data, calculates the posterior probability for a given data set.
 }
 

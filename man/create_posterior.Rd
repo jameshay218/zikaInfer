@@ -2,13 +2,13 @@
 % Please edit documentation in R/posteriors.R
 \name{create_posterior}
 \alias{create_posterior}
-\title{Simplify posterior}
+\title{Simplify posterior call}
 \usage{
 create_posterior(ts, values, names, local, startDays, endDays, buckets,
   microCeph, births, data_locals, inc_startDays = NULL, inc_endDays = NULL,
   inc_locals = NULL, inc_buckets = NULL, inc_ZIKV = NULL, inc_NH = NULL,
   peak_startDays = NULL, peak_endDays = NULL, peak_locals = NULL,
-  unique_states, allPriors = NULL, version = "normal")
+  unique_locations, allPriors = NULL, version = "normal")
 }
 \arguments{
 \item{ts}{time vector over which to solve the ODE model}
@@ -17,7 +17,7 @@ create_posterior(ts, values, names, local, startDays, endDays, buckets,
 
 \item{names}{names for the ODE parameters}
 
-\item{local}{names of all the states that are being considered}
+\item{local}{names of all the locations that are being considered}
 
 \item{startDays}{vector of the start day for each bucket of data}
 
@@ -29,13 +29,13 @@ create_posterior(ts, values, names, local, startDays, endDays, buckets,
 
 \item{births}{vector of total briths for each bucket}
 
-\item{data_locals}{corresponding vector of state names for the microcephaly data}
+\item{data_locals}{corresponding vector of location names for the microcephaly data}
 
 \item{inc_startDays}{start day vector for incidence data}
 
 \item{inc_endDays}{end day vector for incidence data}
 
-\item{inc_locals}{vector of state names for incidence data}
+\item{inc_locals}{vector of location names for incidence data}
 
 \item{inc_buckets}{sampling window vector for incidence data}
 
@@ -47,9 +47,9 @@ create_posterior(ts, values, names, local, startDays, endDays, buckets,
 
 \item{peak_endDays}{vector of end allowable day of incidence peak time}
 
-\item{peak_locals}{vector of corresponding state name}
+\item{peak_locals}{vector of corresponding location name}
 
-\item{unique_states}{vector of all unique state names}
+\item{unique_locations}{vector of all unique location names}
 
 \item{allPriors}{defaults to NULL. Arguments for parameter priors, if desired.}
 

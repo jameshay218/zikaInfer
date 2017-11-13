@@ -1,0 +1,87 @@
+---
+title: "How to use the package"
+author: "James Hay"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r setup, echo=FALSE}
+library(kableExtra)
+library(knitr)
+options(knitr.table.format = "html")
+knitr::opts_chunk$set(fig.width=6, fig.height=4) 
+```
+
+### Input parameters
+The first step in using this package is to define the set of model parameters. An example table of parameters is provided in the package and can be viewed using the following:
+```{r}
+data(exampleParTab)
+
+## Extract parameter values to solve model. Note that 
+## these parameters MUST be named
+pars <- exampleParTab$values
+names(pars) <- exampleParTab$names
+```
+Refer to the documentation of `?exampleParTab` for a description of the parameter table columns and their uses.
+
+### Transmission model
+The transmission component of the model is an SEIR model with mosquito vectors, described [here](ADD LINK TO VIGNETTE SECTION). The model can be solved as follows:
+```{r}
+## Generate starting population sizes based on human population size
+## and mosquito density
+y0s <- generate_y0s(pars["N_H"], pars["density"],iniI=10)
+## Times to solve model over. Note that the unit of time is in days
+ts <- seq(0,3003,by=1)
+y <- solveSEIRModel_rlsoda(ts, y0s, pars, TRUE)
+plot(y[,"I_H"],type='l',col="red",
+     xlab="Time (days)", ylab="ZIKV incidence in humans")
+```
+
+This SEIR model is then used to generate a per-capita risk of infection at any given time. Note that there is a suite of accompanying functions:
+```{r}
+## Calculate R0
+r0.calc(pars)
+
+## Find the mosquito density required for a desired R0
+density.calc(pars, R0=3)
+```
+
+### The gestational risk model
+There are four implemented risk models that describe the risk of developing a congenital abnormality given infection in a particular gestational week. These are numbered 1-4 (`print_version_names()`). The `generate_micro_curve` function will automatically detect which version of the risk curve the user requires based on the parameter names:
+```{r}
+risk <- generate_micro_curve(pars)
+plot(risk,type='l',col="blue",
+     xlab="Gestational time at infection (days)",ylab="Prob of congenital abnormality")
+```
+
+### Combined model
+Taken together, the per capita incidence model and gestational risk model are combined to give the expected proportion of microcephaly affected births observed in a given day.
+```{r}
+probM <- generate_probM(y[,"I_M"],pars["N_H"],risk,pars["b"],pars["p_MH"],pars["baselineProb"],1)
+plot(probM,type='l',col="green",
+     xlab="Time (days)",ylab="Proportion of microcephaly affected births")
+```
+
+## Simulate data
+```{r}
+library(ggplot2)
+
+## Generate simulated data with known parameters
+simDat <- generate_multiple_data(ts=seq(0,3003,by=1), parTab=exampleParTab, weeks=FALSE, 
+          dataRangeMicro=c(500,1065),dataRangeInc=c(365,1000), noise=TRUE,peakTimeRange=60)
+microDat <- simDat[[1]]
+incDat <- simDat[[2]]
+
+## Check the generated data
+ggplot(incDat) + 
+  geom_line(aes(x=startDay,y=inc/N_H), col="red") +
+  geom_line(data=microDat,aes(x=startDay,y=microCeph/births),col="blue") + 
+  facet_wrap(~local) +
+  ylab("Per capita ZIKV incidence") +
+  xlab("Time (days)") +
+  scale_y_continuous(sec.axis=sec_axis(~.*1,name="Per birth microcephaly\n incidence (blue)")) +
+  theme_bw()
+```

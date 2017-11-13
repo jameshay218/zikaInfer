@@ -437,7 +437,7 @@ generate_allowable_params <- function(peakTime=927, peakTimeRange=60, stateNames
                     
                     t_pars <- seq(0,3003,by=1)
                     
-                    y <- solveModelSimple_rlsoda(t_pars, y0s,pars,TRUE)
+                    y <- solveSEIRModel_rlsoda(t_pars, y0s,pars,TRUE)
                     
                     peakTimes[i,j] <- y[which.max(diff(y[,"incidence"])),"time"]
                     

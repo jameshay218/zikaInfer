@@ -1,17 +1,16 @@
-
-#' Simulation multi-state microcephaly data
+#' Simulation multi-state microcephaly and incidence data
 #'
-#' Given all of the parameters needed to solve the SEIR model, produces a data frame of simulated microcephaly affected births for multiple states. Produces data for each unique state in the paramTable argument.
+#' Given all of the parameters needed to solve the SEIR model, produces a data frame of simulated microcephaly affected births for multiple states. Produces data for each unique state in the parTab argument.
 #' @param t_pars vector of two components - the total run time in days and the time step for the ODE solver
-#' @param paramTable Table of all parameters needed to solve the SEIR model and microcephaly simulation for each unique state. See \code{\link{setupParTable}}
+#' @param parTab Table of all parameters needed to solve the SEIR model and microcephaly simulation for each unique state. See \code{\link{setupParTable}}
 #' @param weeks Defaults to FALSE. If true. returns weekly microcephaly births rather than by month.
 #' @param dataRangeMicro a vector with lower and upper bounds on days for simulated microcephaly data
 #' @param dataRangeInc a vector with lower and upper bounds on days for simulated ZIKV incidence data
 #' @param noise bool indicating if noise should be added to the data
 #' @param peakTimeRange the allowable prior range for ZIKV incidence peak time
-#' @return a data frame of microcephaly births, total births and corresponding times.
+#' @return a data frame of microcephaly births, total births and corresponding times; a data frame of ZIKV incidence data; a data frame describing the ZIKV epidemic peak times for each location included in the simulation
 #' @export
-generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, dataRangeMicro, dataRangeInc,noise=NULL, peakTimeRange=NULL){
+generate_multiple_data <- function(ts=seq(0,3003,by=1), parTab,weeks=FALSE, dataRangeMicro, dataRangeInc,noise=FALSE, peakTimeRange=NULL){
     if(is.null(dataRangeMicro)) dataRangeMicro <- c(0,max(ts))
     if(is.null(dataRangeInc)) dataRangeInc <- c(0,max(ts))
 
@@ -22,7 +21,7 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, 
     inc_buckets <- rep(7, max(ts)/7)
     
     ## Get all unique places that data should be created for
-    places <- unique(paramTable$local)
+    places <- unique(parTab$local)
     places <- places[places!="all"]
    
     overallMicroDat <- NULL
@@ -33,8 +32,8 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, 
     ## For each place
     for(place in places){
         ## Get state specific and universal parameters out of param table
-        pars <- paramTable[paramTable$local %in% c("all",place),"values"]
-        names(pars) <- paramTable[paramTable$local %in% c("all",place),"names"]
+        pars <- parTab[parTab$local %in% c("all",place),"values"]
+        names(pars) <- parTab[parTab$local %in% c("all",place),"names"]
 
         ## Generate microcephaly curve
         probs <- generate_micro_curve(pars)
@@ -42,8 +41,8 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, 
         ## Generate starting population sizes
         y0s <- generate_y0s(pars["N_H"], pars["density"])
         ## Solve the ODE model
-        y <- solveModelSimple_rlsoda(ts, y0s, pars, TRUE)
-        #y <- solveModelSimple_lsoda(ts, y0s, pars, TRUE)
+        y <- solveSEIRModel_rlsoda(ts, y0s, pars, TRUE)
+        #y <- solveSEIRModel_lsoda(ts, y0s, pars, TRUE)
 
 
         ######################################
@@ -66,7 +65,7 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, 
         microDat <- probM*births
 
         if(noise){
-            if(!any(paramTable$names == "micro_sd")){
+            if(!any(parTab$names == "micro_sd")){
                 microDat <- rbinom(length(probM), births, probM)
             } else {
                 microDat <- rnorm(length(probM), births*probM, pars["micro_sd"])
@@ -90,7 +89,7 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, 
         perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
         
         if(noise){
-            if(!any(paramTable$names=="inc_sd")){
+            if(!any(parTab$names=="inc_sd")){
                 inc <- rbinom(length(perCapInc),pars["N_H"], perCapInc)
             } else {
                 tmp <- rnorm(length(perCapInc),perCapInc*pars["N_H"],pars["inc_sd"])
@@ -118,7 +117,6 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), paramTable,weeks=FALSE, 
         ## Add in times etc
         tmpMicroDat <- data.frame("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"microCeph"=microDat,"births"=rep(births,length(buckets)),"local"=place,stringsAsFactors=FALSE)
         tmpIncDat <- data.frame("startDay" = cumsum(inc_buckets)-inc_buckets,"endDay" =cumsum(inc_buckets),"buckets"=inc_buckets,"inc"=inc,"N_H"=N_H,"local"=place,stringsAsFactors=FALSE)
-
         
         ## Only return data in the desired range
         tmpMicroDat <- tmpMicroDat[tmpMicroDat[,"startDay"] >= dataRangeMicro[1] & tmpMicroDat[,"endDay"] <= dataRangeMicro[2],]

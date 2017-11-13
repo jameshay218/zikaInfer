@@ -2,7 +2,7 @@
 % Please edit documentation in R/posteriors.R
 \name{incidence_likelihood}
 \alias{incidence_likelihood}
-\title{Incidence likelihood}
+\title{Incidence likelihood (binomial)}
 \usage{
 incidence_likelihood(perCapInc, inc, N_H)
 }

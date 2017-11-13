@@ -9,4 +9,7 @@ print_version_names()
 \description{
 In case you forget which version corresponds to which parameters!
 }
+\seealso{
+\code{generate_micro_curve}, \code{\link{microceph_v1}}, \code{\link{microceph_v2}}, \code{\link{microceph_v3}}, \code{\link{microceph_v4}}
+}
 

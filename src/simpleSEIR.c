@@ -23,7 +23,7 @@ void initmodSEIR(void (* odeparms)(int *, double *))
 }
 
 /* Derivatives and 1 output variable */
-void simpleSEIR (int *neq, double *t, double *y, double *ydot, double *yout, int *ip)
+void SEIR_model_lsoda (int *neq, double *t, double *y, double *ydot, double *yout, int *ip)
 {
 
   double S_M = y[0]; // Susceptible mosquitoes
