@@ -39,7 +39,7 @@ model_forecast <- function(pars, startDays, endDays,
 
     ## Generate probability of observing a microcephaly case on a given day
     probM <- generate_probM_aux(inc, probs, pars["baselineProb"])
-
+    
     ## Get subset of times for the data we have incidence data
     tmp_buckets <- buckets[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
     tmp_births <- births[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
@@ -62,70 +62,10 @@ model_forecast <- function(pars, startDays, endDays,
     return(data.frame("x"=meanDays,"y"=probM))
 }
 
-model_forecast_2 <- function(pars, startDays, endDays,
-                           buckets, microCeph, births,
-                           zikv, nh, inc_buckets,
-                           inc_start, inc_end,
-                           valid_days_micro, valid_days_inc,
-                           perCap=FALSE){
-    ## Generate microcephaly curve for these parameters
-    probs <- generate_micro_curve(pars)
-    ts <- seq(min(inc_start), max(inc_end)-1,by=1)
-    switch_time_i <- pars["switch_time_i"]
-    switch_time_m <- pars["switch_time_m"]
-    switch_time_behaviour <- pars["switch_time_behaviour"]
-    ## If this is one, then we're assuming that ZIKV reporting did not change
-    check_par <- pars["zikv_reporting_change"]
-    
-    ## Get daily actual incidence based on data
-    inc_1 <- zikv[which(inc_start < switch_time_i)]
-    inc_1 <- inc_1/pars["incPropn"]
-    if(check_par == 1){
-        inc_2 <- zikv[which(inc_start >= switch_time_i)]/pars["incPropn2"]
-    } else {
-        inc_2 <- zikv[which(inc_start >= switch_time_i)]/pars["incPropn"]
-    }
-    inc <- c(inc_1,inc_2)
-    
-    inc <- rep(inc/nh/inc_buckets, inc_buckets)
-    ## Generate probability of observing a microcephaly case on a given day
-    probM_a <- generate_probM_forecast_NEW(inc, probs, pars["baselineProb"],
-                                     pars["abortion_rate"], pars["birth_reduction"],
-                                     which(ts == pars["switch_time_behaviour"]), pars["abortion_cutoff"], FALSE)
-
-    ## Getting aborted births, ap_m(t)
-    probM_b <- generate_probM_forecast_NEW(inc, probs, pars["baselineProb"],
-                                     pars["abortion_rate"], pars["birth_reduction"],
-                                     which(ts == pars["switch_time_behaviour"]), pars["abortion_cutoff"], TRUE)
-    ## Get subset of times for the data we have incidence data
-    probM <- probM_a/(1-probM_b)
-    
-    probM[which(ts < switch_time_m)] <- probM[which(ts < switch_time_m)]*pars["propn"]
-    probM[which(ts >= switch_time_m)] <- probM[which(ts >= switch_time_m)]*pars["propn2"]
-    probM <- average_buckets(probM,buckets)
-    return(probM)
-    probM <- probM*births
-    #tmp_buckets <- buckets[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
-    #tmp_births <- births[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
-
-    ## Get daily observed microcephaly cases
-                                        # if(perCap) {
-    #probM <- probM*tmp_births
-                                        # } else {
-                                        #    probM <- probM*pars["propn"]
-                                        #}
-    
-    tmpStart <- startDays[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
-    tmpEnd <- endDays[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
-    ## Reported on mean of start and end report day
-    meanDays <- (tmpStart + tmpEnd)/2
-    return(data.frame("x"=meanDays,"y"=probM))
-}
-
 
 
 generate_peak_time_table <- function(dat, incDat){
-    all_states <- get_epidemic_states(dat)$include
+    all_states <- get_epidemic_locations(dat)$include
     peakTimes <- rep(858,length(all_states))
     
     peakTimes[which(all_states == "pernambuco")] <- 804
@@ -138,15 +78,18 @@ generate_peak_time_table <- function(dat, incDat){
     peakWidths[which(all_states == "riograndedonorte")] <- 60
 
     ## Actual peak times
-    actualPeaks <- data.frame(local=convert_name_to_state_factor(
-                                  c("bahia","pernambuco","riograndedonorte")),
+    data(locationInfo)
+    actualPeaks <- data.frame(local=locationInfo[locationInfo$rawName %in%
+                                                 c("bahia","pernambuco","riograndedonorte"),"fullName"],
                               peakTime=c(855,804,862),
                               stringsAsFactors = FALSE)
     
-    peakTimes <- data.frame(local=convert_name_to_state_factor(all_states),
+    peakTimes <- data.frame(local=locationInfo[locationInfo$rawName %in%
+                                               c("bahia","pernambuco","riograndedonorte"),"fullName"],
                             start=peakTimes-peakWidths/2,
                             end=peakTimes+peakWidths/2,
                             stringsAsFactors = FALSE)
+    
     peakTimes <- merge(actualPeaks,peakTimes,by="local",all=TRUE)
     
     if(!is.null(incDat)){
@@ -260,60 +203,51 @@ main_model_fits <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/multi_
 }
 
 
-indiv_model_fit <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/northeast/model_1",
-                           datFile = "~/Documents/Zika/Data/northeast_microceph.csv",
-                           incFile = "~/Documents/Zika/Data/northeast_zikv.csv",
-                           local = "bahia",
-                           localName = "Northeast Brazil NEJM",
-                           incScale=50,
-                           runs=1000,
-                           ylim=0.1,
-                           xlim=NULL,
-                           bot=FALSE,
-                           standalone=FALSE,
-                           parTab=NULL,
-                           chain=NULL){
+indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph.csv",
+                            incFile = "~/Documents/Zika/Data/northeast_zikv.csv",
+                            local = "bahia",
+                            localName = "Northeast Brazil NEJM",
+                            incScale=50,
+                            runs=1000,
+                            ylim=0.1,
+                            xlim=NULL,
+                            bot=FALSE,
+                            standalone=FALSE,
+                            parTab=NULL,
+                            chain=NULL,
+                            forecast=FALSE,
+                            weeks=FALSE){
     ts <- seq(0,3003,by=1)
-    setwd(chainWD)
-    if(is.null(parTab)) parTab <- read_inipars()
-    if(is.null(chain)){
-        chain <- zikaProj::load_mcmc_chains(location = chainWD,
-                                        asList = FALSE,
-                                        convertMCMC = FALSE,
-                                        unfixed = FALSE,
-                                        thin = 10,
-                                        burnin = 750000)
-    }
+    if(is.null(parTab)) parTab <- read_inipars(chainWD)
+
     dat <- read.csv(datFile,stringsAsFactors = FALSE)
     dat <- dat[dat$local == local,]
-    incDat <- NULL
 
-    tmpDat <- read.csv("~/Documents/Zika/Data/allDat28.02.17.csv",stringsAsFactors=FALSE)
-    tmpInc <- read.csv("~/Documents/Zika/Data/inc_data_120317.csv",stringsAsFactors=FALSE)
-    tmpInc$meanDay <- rowMeans(tmpInc[,c("startDay","endDay")])
-    tmpInc$local <- convert_name_to_state_factor(tmpInc$local)
-    peakTimes <- generate_peak_time_table(tmpDat,tmpInc)
-    peakTimes <- peakTimes[peakTimes$local == convert_name_to_state_factor(local),]
+    incDat <- NULL
     if(!is.null(incFile)){
         incDat <- read.csv(incFile,stringsAsFactors=FALSE)    
         incDat <- incDat[incDat$local == local,]
-        
-        f <- create_f(parTab,dat,NULL,incDat=incDat, perCap=TRUE)
-        
-        samples <-  sample(nrow(chain), runs)
-        microCurves <- NULL
-        for(i in 1:length(samples)){
-            pars <- get_index_pars(chain,samples[i])
-            microCurves <- rbind(microCurves, f(pars))
-        }
-        
-        predict_bounds <- as.data.frame(t(sapply(unique(microCurves$x),function(x) quantile(microCurves[microCurves$x==x,"y"],c(0.025,0.5,0.975)))[c(1,3),]))
-        bestPars <- get_best_pars(chain)
-        best_predict <- f(bestPars)
-        predict_bounds <- cbind(predict_bounds, best_predict[,2])
-        colnames(predict_bounds) <- c("lower","upper","best")
-        predict_bounds$time <- best_predict[,1]
+        incDat$meanDay <- rowMeans(incDat[,c("startDay","endDay")])
+        peakTime <- incDat[which.max(incDat$inc),"meanDay"]
     }
+
+    if(forecast) f <- create_f(parTab,data,NULL,incDat=incDat, perCap=TRUE)
+    else f <- create_forecast_normal(local, parTab, ts, weeks)
+    
+    samples <-  sample(nrow(chain), runs)
+    microCurves <- NULL
+    for(i in 1:length(samples)){
+        pars <- get_index_pars(chain,samples[i])
+        microCurves <- rbind(microCurves, f(pars))
+    }
+    
+    predict_bounds <- as.data.frame(t(sapply(unique(microCurves$x),function(x) quantile(microCurves[microCurves$x==x,"y"],c(0.025,0.5,0.975)))[c(1,3),]))
+    bestPars <- get_best_pars(chain)
+    best_predict <- f(bestPars)
+    predict_bounds <- cbind(predict_bounds, best_predict[,2])
+    colnames(predict_bounds) <- c("lower","upper","best")
+    predict_bounds$time <- best_predict[,1]
+    
     if(!(local %in% parTab$local)){
         dat$local <- "bahia"
         if(!is.null(incDat)) incDat$local <- "bahia"
@@ -341,6 +275,7 @@ indiv_model_fit <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/northe
     incBounds[,c("lower","upper","best")] <- incBounds[,c("lower","upper","best")]
     incBounds$local <- localName
     peakTimes$local <- localName
+    
     p <- ggplot() +
         geom_ribbon(data=microBounds,aes(ymin=lower,ymax=upper,x=time),fill="blue",alpha=0.5) +
         geom_ribbon(data=incBounds,aes(ymin=lower/incScale,ymax=upper/incScale,x=time),fill="green",alpha=0.5) +
@@ -364,7 +299,6 @@ indiv_model_fit <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/northe
         scale_y_continuous(limits=c(0,ylim),breaks=seq(0,ylim,by=ylim/5),expand=c(0,0),sec.axis=sec_axis(~.*(incScale),name="Reported per capita\nZIKV infection incidence (red)"))+
         theme_classic()
     if(standalone){
-        
         p <- p + theme(axis.text.y=element_text(size=8,family="Arial"),
                       axis.title=element_text(size=8,family="Arial"),
                       strip.text=element_blank(),

@@ -213,7 +213,7 @@ get_max_micro_day <- function(chain,scale=1){
 #' @return the list or data frame of MCMC chains
 #' @export
 load_mcmc_chains <- function(location="",asList=FALSE, convertMCMC=FALSE,unfixed=TRUE, thin=1, burnin=100000,unique_names=TRUE){
-    chains <- Sys.glob(file.path(location,"*chain.csv"))
+    chains <- Sys.glob(file.path(location,"*_multivariate_chain.csv"))
     if(length(chains) < 1){
         message("Error - no chains found")
         return(NULL)
