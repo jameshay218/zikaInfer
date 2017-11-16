@@ -5,7 +5,7 @@
 \title{MCMC start parTab}
 \usage{
 generateStartingParTab(parTab, peakTimes = NULL, restrictedR0 = TRUE,
-  allowableParsFile = "")
+  allowableParsFile = "", allowableStarts = NULL)
 }
 \arguments{
 \item{parTab}{the parameter table to generate starting positions from}
@@ -15,6 +15,8 @@ generateStartingParTab(parTab, peakTimes = NULL, restrictedR0 = TRUE,
 \item{restrictedR0}{if TRUE, sets starting points for density and t0 based on generated allowable values}
 
 \item{allowableParsFile}{set to "" if not available. These allowable start points take a while to generate (\code{\link{generateAllowableParams}}), so it can sometimes be helpful to pre-compute these and then pass the file location}
+
+\item{allowableStarts}{the pre-computed matrix of allowable parameters}
 }
 \value{
 a parameter table in the same form as that which was passed in, but with randomised values

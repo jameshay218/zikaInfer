@@ -83,9 +83,10 @@ parTabSetup <- function(locationNames, version,locationInfo,
 #' @param peakTimes the ODE solver and likelihood function is a bit tempermental to the choice of starting parameters for R0 and the epidemic seed time, t0.
 #' @param restrictedR0 if TRUE, sets starting points for density and t0 based on generated allowable values
 #' @param allowableParsFile set to "" if not available. These allowable start points take a while to generate (\code{\link{generateAllowableParams}}), so it can sometimes be helpful to pre-compute these and then pass the file location
+#' @param allowableStarts the pre-computed matrix of allowable parameters
 #' @return a parameter table in the same form as that which was passed in, but with randomised values
 #' @export
-generateStartingParTab <- function(parTab, peakTimes=NULL,restrictedR0=TRUE,allowableParsFile=""){
+generateStartingParTab <- function(parTab, peakTimes=NULL,restrictedR0=TRUE,allowableParsFile="", allowableStarts=NULL){
     startTab <- parTab
     stateNames <- unique(startTab$local)
     stateNames <- stateNames[stateNames != "all"]
@@ -95,8 +96,10 @@ generateStartingParTab <- function(parTab, peakTimes=NULL,restrictedR0=TRUE,allo
 
     ## If restricting state points for R0, set these seperately
     if(restrictedR0){
-        allowableStarts <- generateAllowableParams(peakTime=NULL, peakTimeRange=120, stateNames=stateNames,
-                                                   parTab=parTab,allowableParsFile=allowableParsFile,R0max=7,peakTimings=peakTimes)
+        if(is.null(allowableStarts)){
+            allowableStarts <- generateAllowableParams(peakTime=NULL, peakTimeRange=120, stateNames=stateNames,
+                                                       parTab=parTab,allowableParsFile=allowableParsFile,R0max=7,peakTimings=peakTimes)
+        }
         for(local in stateNames){
             tmp_starts <- allowableStarts[allowableStarts$local == local,]
             startTab[startTab$local == local & startTab$names == "density","values"] <- as.numeric(tmp_starts[runif(1,1,nrow(tmp_starts)),"density"])
