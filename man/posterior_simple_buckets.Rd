@@ -7,7 +7,7 @@
 posterior_simple_buckets(ts, y0s, pars, startDays, endDays, buckets, microCeph,
   births, zikv = NULL, nh = NULL, inc_buckets = NULL, inc_start = NULL,
   inc_end = NULL, peak_start = NULL, peak_end = NULL,
-  valid_days_micro = NULL, valid_days_inc = NULL)
+  valid_days_micro = NULL, valid_days_inc = NULL, solver = "rlsoda")
 }
 \arguments{
 \item{ts}{time vector over which to solve the ODE model}
@@ -43,6 +43,8 @@ posterior_simple_buckets(ts, y0s, pars, startDays, endDays, buckets, microCeph,
 \item{valid_days_micro}{a vector of days for which data were collected, allowing non-contiguous comparisons. Microcephaly}
 
 \item{valid_days_inc}{a vector of days for which data were collected, allowing non-contiguous comparisons. Incidence}
+
+\item{solver}{which ODE solver to use, either "rlsoda" or "lsoda"}
 }
 \value{
 a single value for the posterior

@@ -24,7 +24,8 @@ Imports:
     nleqslv,		
     Rcpp,	
     reshape2,
-    rlsoda
+    rlsoda,
+    lazymcmc
 RoxygenNote: 5.0.1
 VignetteBuilder: knitr
 Encoding: UTF-8

@@ -4,12 +4,12 @@
 \name{exampleParTab}
 \alias{exampleParTab}
 \title{Example parameter table}
-\format{An object of class \code{data.frame} with 19 rows and 9 columns.}
+\format{A data frame}
 \usage{
 data(exampleParTab)
 }
 \description{
-Example parameter table
+An example of parameter table that would be used to generate simulated data and control parameter space exploration during the MCMC procedure.
 }
 \keyword{datasets}
 

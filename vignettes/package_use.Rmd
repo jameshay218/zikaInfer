@@ -66,14 +66,17 @@ plot(probM,type='l',col="green",
 ```
 
 ## Simulate data
+
 ```{r}
 library(ggplot2)
 
 ## Generate simulated data with known parameters
-simDat <- generate_multiple_data(ts=seq(0,3003,by=1), parTab=exampleParTab, weeks=FALSE, 
-          dataRangeMicro=c(500,1065),dataRangeInc=c(365,1000), noise=TRUE,peakTimeRange=60)
+simDat <- generate_multiple_data(ts, parTab=exampleParTab, weeks=FALSE, 
+                                  dataRangeMicro=c(600,2000),dataRangeInc=c(600,1500), 
+                                  noise=FALSE,peakTimeRange=60)
 microDat <- simDat[[1]]
 incDat <- simDat[[2]]
+peakTimes <- simDat[[3]]
 
 ## Check the generated data
 ggplot(incDat) + 
@@ -85,3 +88,13 @@ ggplot(incDat) +
   scale_y_continuous(sec.axis=sec_axis(~.*1,name="Per birth microcephaly\n incidence (blue)")) +
   theme_bw()
 ```
+
+## Re-estimate model parameters
+
+## Assess chain convergence
+
+## Plot model fits
+
+## Plot microcephaly risk curve
+
+## Check parameter posterior densities

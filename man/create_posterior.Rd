@@ -4,61 +4,27 @@
 \alias{create_posterior}
 \title{Simplify posterior call}
 \usage{
-create_posterior(ts, values, names, local, startDays, endDays, buckets,
-  microCeph, births, data_locals, inc_startDays = NULL, inc_endDays = NULL,
-  inc_locals = NULL, inc_buckets = NULL, inc_ZIKV = NULL, inc_NH = NULL,
-  peak_startDays = NULL, peak_endDays = NULL, peak_locals = NULL,
-  unique_locations, allPriors = NULL, version = "normal")
+create_posterior(parTab, data, PRIOR_FUNC, ...)
 }
 \arguments{
+\item{parTab}{the parameter table. See \code{\link{exampleParTab}}}
+
+\item{data}{the microcephaly data. See \code{\link{exampleMicroDat}}}
+
+\item{PRIOR_FUNC}{pointer to a function to calculate prior values. Can take "pars" and "..." as arguments, where "pars" is the model parameters.}
+
+\item{incDat}{should also include incidence data, though this can be left as NULL. See \code{\link{exampleIncDat}}.}
+
+\item{peakTimes}{include data on epidemic peak time ranges. Can be left as NULL. See \code{\link{examplePeakTimes}}}
+
 \item{ts}{time vector over which to solve the ODE model}
 
-\item{values}{ODE parameters}
-
-\item{names}{names for the ODE parameters}
-
-\item{local}{names of all the locations that are being considered}
-
-\item{startDays}{vector of the start day for each bucket of data}
-
-\item{endDays}{vector of the end day for each bucket of data}
-
-\item{buckets}{bucket sizes}
-
-\item{microCeph}{vector of microcephaly incidence for each bucket}
-
-\item{births}{vector of total briths for each bucket}
-
-\item{data_locals}{corresponding vector of location names for the microcephaly data}
-
-\item{inc_startDays}{start day vector for incidence data}
-
-\item{inc_endDays}{end day vector for incidence data}
-
-\item{inc_locals}{vector of location names for incidence data}
-
-\item{inc_buckets}{sampling window vector for incidence data}
-
-\item{inc_ZIKV}{vector of ZIKV incidence for each time point}
-
-\item{inc_NH}{vector of population size over time}
-
-\item{peak_startDays}{vector of initial allowable day of incidence peak time}
-
-\item{peak_endDays}{vector of end allowable day of incidence peak time}
-
-\item{peak_locals}{vector of corresponding location name}
-
-\item{unique_locations}{vector of all unique location names}
-
-\item{allPriors}{defaults to NULL. Arguments for parameter priors, if desired.}
-
-\item{version}{usually just leave this as "normal". I've added a "forecast" version which expects parameters to do with the lack of second wave.}
+\item{version}{usually just leave this as "binomial", indicating assumed binomially distributed errors. I've added a "forecast" version which expects parameters to do with the lack of second wave.}
 }
 \value{
 a single value for the posterior
 }
 \description{
-Simplifies the call to the posterior function using closures
+Simplifies the call to the posterior function using closures. This function is set up to work with the lazymcmc package, found at github.com/jameshay218/lazymcmc
 }
 

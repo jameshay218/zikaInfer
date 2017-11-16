@@ -5,7 +5,8 @@
 \title{Posterior function for forecasting analysis}
 \usage{
 posterior_known_inc_seir(pars, startDays, endDays, buckets, microCeph, births,
-  zikv, nh, inc_buckets, inc_start, inc_end, valid_days_micro, valid_days_inc)
+  zikv, nh, inc_buckets, inc_start, inc_end, valid_days_micro, valid_days_inc,
+  solver = "rlsoda")
 }
 \arguments{
 \item{pars}{model parameters}
@@ -29,6 +30,8 @@ posterior_known_inc_seir(pars, startDays, endDays, buckets, microCeph, births,
 \item{inc_start}{vector of all start days for ZIKV reporting buckets}
 
 \item{inc_end}{vector of all end days for reporting ZIKV buckets}
+
+\item{solver}{which ODE solver to use, either "rlsoda" or "lsoda"}
 }
 \value{
 a single value for the posterior

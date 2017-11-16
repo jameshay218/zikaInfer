@@ -2,7 +2,7 @@
 % Please edit documentation in R/post_analyses.R
 \name{get_lower_micro_bound}
 \alias{get_lower_micro_bound}
-\title{Lower microbound}
+\title{Lower microcephaly risk bound}
 \usage{
 get_lower_micro_bound(chain, limit = 0.001, scale = 1)
 }

@@ -25,8 +25,7 @@ void initmodSEIR(void (* odeparms)(int *, double *))
 /* Derivatives and 1 output variable */
 void SEIR_model_lsoda (int *neq, double *t, double *y, double *ydot, double *yout, int *ip)
 {
-
-  double S_M = y[0]; // Susceptible mosquitoes
+double S_M = y[0]; // Susceptible mosquitoes
   double E_M = y[1]; // Exposed mosquitoes
   double I_M = y[2]; // Infected mosquitoes
 
@@ -39,8 +38,8 @@ void SEIR_model_lsoda (int *neq, double *t, double *y, double *ydot, double *you
   double N_H = S_H + E_H + I_H + R_H;
   double N_M = S_M + E_M + I_M;
     
-  double lambda_M = b*p_HM*(I_H)/N_H;
-  double lambda_H = b*p_MH*I_M/N_H + 1.0/(7.0*N_H);
+  double lambda_M = b*p_HM*(I_H)/N_H; // + 1.0/(7.0*N_H);
+  double lambda_H = (b*p_MH*I_M/N_H);// + 1.0/(7.0*N_H);
 
   
   // Changes in mosquito population
@@ -69,4 +68,5 @@ void SEIR_model_lsoda (int *neq, double *t, double *y, double *ydot, double *you
 
     ydot[7] = E_H/D_EH - E_H/L_H;
   }
+
 }

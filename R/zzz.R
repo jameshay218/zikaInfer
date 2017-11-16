@@ -1,5 +1,6 @@
 C_SEIR_model_rlsoda <- NULL
 C_SEIR_model_lsoda <- NULL
+C_initmodSEIR <- NULL
 #' @useDynLib zikaProj, .registration = TRUE
 #' @importFrom Rcpp evalCpp
 #' @import stats
@@ -12,4 +13,6 @@ C_SEIR_model_lsoda <- NULL
 .onLoad <- function(...) {
   C_SEIR_model_rlsoda<<- getNativeSymbolInfo("SEIR_model_rlsoda", PACKAGE = "zikaProj")
   C_SEIR_model_lsoda <<- getNativeSymbolInfo("SEIR_model_lsoda", PACKAGE = "zikaProj")
+  C_initmodSEIR <<- getNativeSymbolInfo("initmodSEIR", PACKAGE = "zikaProj")
+  
 }

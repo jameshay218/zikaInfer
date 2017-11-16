@@ -15,7 +15,7 @@ setupListPars(duration = 2 * 365, version = 1)
 list of times, initial conditions, and ODE parameters
 }
 \description{
-Sets up the default list of parameters and initial conditions to be used by \code{\link{generate_multiple_data}}. Can specify which version of the model to use. Passing 1 gives the simple model with no age classes, otherwise gives the parameters for the model with age classes.
+Sets up the default list of parameters and initial conditions to be used by \code{\link{solveSEIRModel}}. Can specify which version of the model to use. Passing 1 gives the simple model with no age classes, otherwise gives the parameters for the model with age classes.
 }
 \seealso{
 \code{\link{setupParsLong}}

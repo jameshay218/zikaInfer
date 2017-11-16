@@ -29,6 +29,8 @@ posterior_known_inc(pars, startDays, endDays, buckets, microCeph, births, zikv,
 \item{inc_start}{vector of all start days for ZIKV reporting buckets}
 
 \item{inc_end}{vector of all end days for reporting ZIKV buckets}
+
+\item{solver}{which ODE solver to use, either "rlsoda" or "lsoda"}
 }
 \value{
 a single value for the posterior

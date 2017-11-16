@@ -5,8 +5,8 @@
 \title{Posterior function for the simple SEIR model with incidence only}
 \usage{
 posterior_inc(ts, values, names, local, inc_startDays, inc_endDays, inc_locals,
-  inc_buckets, inc_ZIKV, inc_NH, unique_locations, allPriors = NULL,
-  inc_valid_days = NULL, inc_valid_local = NULL)
+  inc_buckets, inc_ZIKV, inc_NH, unique_locations, inc_valid_days = NULL,
+  inc_valid_local = NULL, solver = "rlsoda")
 }
 \arguments{
 \item{ts}{time vector over which to solve the ODE model}
@@ -29,11 +29,11 @@ posterior_inc(ts, values, names, local, inc_startDays, inc_endDays, inc_locals,
 
 \item{unique_locations}{vector of all unique locations to be tested}
 
-\item{allPriors}{defaults to FALSE. Arguments for parameter priors, if desired.}
-
 \item{inc_valid_days}{vector of all days included in the incidence data}
 
 \item{inc_valid_local}{vector of locals corresponding to the days in inc_valid_days}
+
+\item{solver}{which ODE solver to use, either "rlsoda" or "lsoda"}
 
 \item{inc_local}{vector of all location names corresponding to the incidence table}
 }

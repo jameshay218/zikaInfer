@@ -17,6 +17,6 @@ plot_MCMC(chains, parTab = NULL, filename = "mcmcplots.pdf")
 nothing - saves plots to pdf
 }
 \description{
-Given an MCMC chain and optionally the parameter table, plots the MCMC chains and densities using coda
+Given a list of MCMC chains and optionally the parameter table, plots the MCMC chains and densities using coda
 }
 

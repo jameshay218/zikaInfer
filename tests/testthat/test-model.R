@@ -6,12 +6,12 @@ test_that("integrators agree", {
   pars <- c(pars, "L_H"=70*365, "N_H"=1000000,"density"=3,"constSeed"=100)
   y0s <- generate_y0s(pars["N_H"], pars["density"])
 
-  lsoda_y <- solveModelSimple_lsoda(ts, y0s, pars, TRUE)
+  lsoda_y <- solveSEIRModel_lsoda(ts, y0s, pars, TRUE)
   class(lsoda_y) <- "matrix"
   at <- attributes(lsoda_y)
   attributes(lsoda_y) <- at[names(at) %in% c("class","dim","dimnames")]
   
-  rlsoda_y <- solveModelSimple_rlsoda(ts,y0s,pars,TRUE)
+  rlsoda_y <- solveSEIRModel_rlsoda(ts,y0s,pars,TRUE)
   expect_equal(rlsoda_y,lsoda_y, tolerance=1e-5)
 })
 
@@ -35,19 +35,19 @@ speed_test <- function(){
     y0s <- generate_y0s(pars["N_H"], pars["density"])
 
     a <- function(){
-        lsoda_y <- solveModelSimple_lsoda(ts, y0s, pars, TRUE)
+        lsoda_y <- solveSEIRModel_lsoda(ts, y0s, pars, TRUE)
     }
     b <- function(){
-        rlsoda_y <- solveModelSimple_rlsoda(ts,y0s,pars,TRUE)
+        rlsoda_y <- solveSEIRModel_rlsoda(ts,y0s,pars,TRUE)
         rlsoda_y[,"I_H"] <- (abs(rlsoda_y[,"I_H"])  + rlsoda_y[,"I_H"])/2
     }
 
     c <- function(){
-        rlsoda_y <- solveModelSimple_rlsoda(ts,y0s,pars,TRUE)
+        rlsoda_y <- solveSEIRModel_rlsoda(ts,y0s,pars,TRUE)
         rlsoda_y[,"I_H"] <- cpp_if(rlsoda_y[,"I_H"])
     }
     d <- function(){
-        rlsoda_y <- solveModelSimple_rlsoda(ts,y0s,pars,TRUE)
+        rlsoda_y <- solveSEIRModel_rlsoda(ts,y0s,pars,TRUE)
         rlsoda_y[rlsoda_y[,"I_H"] < 0,"I_H"] <- 0
     }
     res <- microbenchmark::microbenchmark(a(),b(),c(),d())

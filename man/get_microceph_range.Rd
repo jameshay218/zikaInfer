@@ -4,12 +4,13 @@
 \alias{get_microceph_range}
 \title{Microcephaly risk range}
 \usage{
-get_microceph_range(chain, state = NULL, runs, limit = 0.001, scale = 1)
+get_microceph_range(chain, location = NULL, runs, limit = 0.001,
+  scale = 1)
 }
 \arguments{
 \item{chain}{the MCMC chain}
 
-\item{state}{the given state to subset by, if present.}
+\item{location}{the given location to subset by, if present.}
 
 \item{runs}{number of samples to take}
 
@@ -21,6 +22,6 @@ get_microceph_range(chain, state = NULL, runs, limit = 0.001, scale = 1)
 a list with three vectors. 1: first day of significant risk, 2: last day of significant risk; 3: the number of days spent at risk
 }
 \description{
-Getting microcephaly risk curve range from a chain for a given state
+Getting microcephaly risk curve range from a chain for a given location
 }
 

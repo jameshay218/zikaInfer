@@ -4,12 +4,12 @@
 \alias{calculate_BIC}
 \title{BIC calculation}
 \usage{
-calculate_BIC(chain, state, parTab, allDat, incDat)
+calculate_BIC(chain, location, parTab, allDat, incDat)
 }
 \arguments{
 \item{chain}{the MCMC chain to be tested}
 
-\item{state}{the subset state to take. Note that 'local' must be a column to subset rows by.}
+\item{location}{the subset location to take. Note that 'local' must be a column to subset rows by.}
 
 \item{parTab}{the parameter table used for this chain}
 
@@ -21,6 +21,6 @@ calculate_BIC(chain, state, parTab, allDat, incDat)
 a single BIC value
 }
 \description{
-Given an MCMC chain melted by state and subset state, calculates the BIC for the given chain
+Given an MCMC chain melted by location and subset location, calculates the BIC for the given chain
 }
 

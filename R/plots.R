@@ -37,7 +37,7 @@ to.svg <- function(expr, filename, ..., verbose=TRUE) {
 
 #' Plot MCMC chains
 #'
-#' Given an MCMC chain and optionally the parameter table, plots the MCMC chains and densities using coda
+#' Given a list of MCMC chains and optionally the parameter table, plots the MCMC chains and densities using coda
 #' @param chains list of MCMC chains
 #' @param parTab optional parameter table
 #' @param filename the name of the file to save to
@@ -98,25 +98,6 @@ plot_random_microceph_curves <- function(chain, runs){
         index <- index+1
     }
   return(myPlot)
-}
-
-#' Translates state code to name
-#'
-#' As described
-#' @param state the state code to be changed
-#' @return a string
-#' @export
-get_state_name <- function(state){
-    country_names <- c("pernambuco"="Pernambuco","amapa"="Amapá","amazonas" ="Amazonas",
-                     "distritofederal" = "Distrito Federal","bahia"="Bahia","saopaulo"="São Paulo",
-                     "paraiba"="Paraíba","maranhao"="Maranhão","ceara"="Ceará","sergipe"="Sergipe",
-                     "riodejaneiro"="Rio de Janeiro","piaui"="Piauí","riograndedonorte"="Rio Grande Norte",
-                     "minasgerais"="Minas Gerais", "matogrosso"="Mato Grosso","alagoas"="Alagoas",
-                     "para"="Pará","acre"="Acre","espiritosanto"="Espírito Santo","goias"="Goiás",
-                     "tocantins"="Tocantins","matogrossodosul"="Mato Grosso do Sul",
-                     "matogrossdosul"="Mato Grosso do Sul","parana"="Paraná","riograndedosul"="Rio Grande do Sul",
-                     "rondonia"="Rondônia","roraima"="Roraima","santacatarina"="Santa Catarina")
-    return(country_names[state])
 }
 
 

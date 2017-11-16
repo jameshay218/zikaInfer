@@ -13,6 +13,6 @@ createParTable(saveFile = NULL)
 a matrix of needed settings for the MCMC algorithm. For each parameter, gives a name, lower and upper bounds, initial step sizes and whether or not the parameter should be fixed.
 }
 \description{
-Sets up the parameter table for use in \code{\link{run_metropolis_MCMC}}
+Sets up the parameter table for use in MCMC
 }
 

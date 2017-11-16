@@ -1,19 +1,19 @@
 #' BIC calculation
 #' 
-#' Given an MCMC chain melted by state and subset state, calculates the BIC for the given chain
+#' Given an MCMC chain melted by location and subset location, calculates the BIC for the given chain
 #' @param chain the MCMC chain to be tested
-#' @param state the subset state to take. Note that 'local' must be a column to subset rows by.
+#' @param location the subset location to take. Note that 'local' must be a column to subset rows by.
 #' @param parTab the parameter table used for this chain
 #' @param allDat the microcephaly data
 #' @param incDat the incidence data
 #' @return a single BIC value
 #' @export
-calculate_BIC <- function(chain, state, parTab, allDat, incDat){
-  tmpDat <- allDat[allDat$local==state,]
-  tmpInc <- incDat[allDat$local==state,]
+calculate_BIC <- function(chain, location, parTab, allDat, incDat){
+  tmpDat <- allDat[allDat$local==location,]
+  tmpInc <- incDat[allDat$local==location,]
   n <- nrow(tmpDat) + nrow(tmpInc)
   
-  tmpChain <- chain[chain$state==state,]
+  tmpChain <- chain[chain$location==location,]
   maxLik <- -max(tmpChain$lnlike)
   B <- length(parTab[parTab$fixed==0,"values"])*log(n)
   return(2*maxLik + B)
@@ -58,32 +58,31 @@ calc_post_var <- function(chain){
 
 #' DIC
 #'
-#' Calculates DIC from a given MCMC chain. Optionally can look at subset by state.
+#' Calculates DIC from a given MCMC chain. Optionally can look at subset by location.
 #' @param chain the MCMC chain with a lnlike column and all columns (number of columns will be used
-#' @param state optionally, subset the chain by a given state
+#' @param location optionally, subset the chain by a given location
 #' @return a single DIC value
 #' @export
-calculate_DIC <- function(chain,state=NULL){
+calculate_DIC <- function(chain,location=NULL){
     tmpChain <- chain
-    if(!is.null(state)) tmpChain <- chain[chain$state==state,]
-    
+    if(!is.null(location)) tmpChain <- chain[chain$location==location,]
     DIC <- calc_post_mean(tmpChain) + calc_post_var(tmpChain)/2
     return(DIC)
 }
 
 #' Microcephaly risk range
 #'
-#' Getting microcephaly risk curve range from a chain for a given state
+#' Getting microcephaly risk curve range from a chain for a given location
 #' @param chain the MCMC chain
-#' @param state the given state to subset by, if present.
+#' @param location the given location to subset by, if present.
 #' @param runs number of samples to take
 #' @param limit the risk limit to consider as being at risk
 #' @param scale scales microcephaly risk curve by assumed reporting proportion
 #' @return a list with three vectors. 1: first day of significant risk, 2: last day of significant risk; 3: the number of days spent at risk
-get_microceph_range <- function(chain,state=NULL,runs, limit=0.001,scale=1){
-    ## If there is a state column and a state is specified, subset chain by this
-    if(!is.null(chain$state) & !is.null(state)){
-        chain <- chain[chain$state==state,]
+get_microceph_range <- function(chain,location=NULL,runs, limit=0.001,scale=1){
+    ## If there is a location column and a location is specified, subset chain by this
+    if(!is.null(chain$location) & !is.null(location)){
+        chain <- chain[chain$location==location,]
     } 
 
     ## Get random samples from chain
@@ -112,10 +111,10 @@ get_microceph_range <- function(chain,state=NULL,runs, limit=0.001,scale=1){
             index <- index+1
         }
     }
-    return(list(lower_lim,upper_lim,range_lim))
+    return(list("lower_lim"=lower_lim,"upper_lim"=upper_lim,"range"=range_lim))
 }
 
-#' Lower microbound
+#' Lower microcephaly risk bound
 #'
 #' For a given MCMC chain, calculates the first day at risk
 #' @param chain the MCMC chain to run over
@@ -203,7 +202,7 @@ get_max_micro_day <- function(chain,scale=1){
 
 #' Load MCMC chains
 #'
-#' From a working directory with MCMC chains (files ending _slice_chain.csv), reads these in and puts them into an MCMC list
+#' From a working directory with MCMC chains (files ending chain.csv), reads these in and puts them into an MCMC list
 #' @param location the path to the directory to read from
 #' @param asList if TRUE, returns the MCMC chains as a list
 #' @param convertMCMC if TRUE, converts the chains to mcmc objects (coda)
@@ -214,7 +213,7 @@ get_max_micro_day <- function(chain,scale=1){
 #' @return the list or data frame of MCMC chains
 #' @export
 load_mcmc_chains <- function(location="",asList=FALSE, convertMCMC=FALSE,unfixed=TRUE, thin=1, burnin=100000,unique_names=TRUE){
-    chains <- Sys.glob(file.path(location,"*slice_chain.csv"))
+    chains <- Sys.glob(file.path(location,"*chain.csv"))
     if(length(chains) < 1){
         message("Error - no chains found")
         return(NULL)
@@ -261,7 +260,7 @@ load_mcmc_chains <- function(location="",asList=FALSE, convertMCMC=FALSE,unfixed
 #' @export
 read_inipars <- function(location=""){
     pars <- Sys.glob("*inipars.csv")
-  read_pars <- fread(pars[1],data.table=FALSE)       
+    read_pars <- fread(pars[1],data.table=FALSE)       
 }
 
 #' Attack rate simeq
@@ -300,23 +299,6 @@ calculate_AR <- function(r0){
     attacks <- sapply(r0, function(x) nleqslv::nleqslv(runif(1,0.5,0.8),simeq,R0=x)$x)
 }
 
-
-#' State conversion
-#'
-#' Contains a vector of the brazilian state names to convert lower-case simplified names to actual strings
-#' @param name the vector or scalar of lower case state names
-#' @return the same vector but with actual strings
-#' @export
-convert_name_to_state <- function(name){
-  country_names <- c("pernambuco"="Pernambuco","amapa"="Amapá","amazonas" ="Amazonas","distritofederal" = "Distrito Federal",
-                     "bahia"="Bahia","saopaulo"="São Paulo","paraiba"="Paraíba","maranhao"="Maranhão","ceara"="Ceará",
-                     "sergipe"="Sergipe","riodejaneiro"="Rio de Janeiro","piaui"="Piauí","riograndedonorte"="Rio Grande Norte",
-                     "minasgerais"="Minas Gerais", "matogrosso"="Mato Grosso","alagoas"="Alagoas","para"="Pará","acre"="Acre",
-                     "espiritosanto"="Espírito Santo","goias"="Goiás","tocantins"="Tocantins","matogrossodosul"="Mato Grosso do Sul",
-                     "matogrossdosul"="Mato Grosso do Sul","parana"="Paraná","riograndedosul"="Rio Grande do Sul","rondonia"="Rondônia",
-                     "roraima"="Roraima","santacatarina"="Santa Catarina", "colombia"="Colombia","northeast"="Northeast Brazil")
-  return(country_names[name])
-}
 
 #' Post calculations
 #'
@@ -377,88 +359,6 @@ combine_chains <- function(chains){
     return(do.call("rbind",chains))
 }
 
-
-#' Get states lowercase
-#'
-#' Gives a vector of all states in Brazil. Names are actual names, values are lower case
-#' @return vector of all states
-#' @export
-get_states <- function(){
-    states <- c(
-    "Acre"="acre",
-    "Alagoas"="alagoas",
-    "Amapá"="amapa",
-    "Amazonas"="amazonas",
-    "Bahia"="bahia",
-    "Ceará"="ceara",
-    "Distrito Federal"="distritofederal",
-    "Espírito Santo"="espiritosanto",      
-    "Goiás"="goias",
-    "Maranhão"="maranhao",
-    "Mato Grosso do Sul"="matogrossdosul",
-    "Mato Grosso"="matogrosso",
-    "Minas Gerais"="minasgerais",
-    "Pará"="para",
-    "Paraíba"="paraiba",
-    "Paraná"="parana",
-    "Pernambuco"="pernambuco",
-    "Piauí"="piaui",
-    "Rio de Janeiro"="riodejaneiro",
-    "Rio Grande do Norte"="riograndedonorte",
-    "Rio Grande do Sul"="riograndedosul",
-    "Rondônia"="rondonia",
-    "Roraima"="roraima",
-    "São Paulo"="saopaulo",
-    "Santa Catarina"="santacatarina",
-    "Sergipe"="sergipe",
-    "Tocantins"="tocantins",
-    "Colombia"="colombia",
-    "Northeast Brazil"="northeast"
-  )
-  return(states)
-}
-
-
-#' Get states uppercase
-#'
-#' Gives a vector of all states in Brazil. Names are lowercase names, values are actual names
-#' @return vector of all states
-#' @export
-states_to_title <- function(){
-  states <- c(
-      "acre"="Acre",
-      "alagoas"="Alagoas",
-      "amapa"="Amapá",
-      "amazonas"="Amazonas",
-      "bahia"="Bahia",
-      "ceara"="Ceará",
-      "distritofederal"="Distrito Federal",
-      "espiritosanto"= "Espírito Santo",
-      "goias"="Goiás",
-      "maranhao"="Maranhão",
-      "matogrossdosul"="Mato Grosso do Sul",
-      "matogrosso"="Mato Grosso",
-      "minasgerais"="Minas Gerais",
-      "para"="Pará",
-      "paraiba"="Paraíba",
-      "parana"="Paraná",
-      "pernambuco"="Pernambuco",
-      "piaui"="Piauí",
-      "riodejaneiro"= "Rio de Janeiro",
-      "riograndedonorte"="Rio Grande do Norte",
-      "riograndedosul"= "Rio Grande do Sul",
-      "rondonia"= "Rondônia",
-      "roraima"="Roraima",
-      "saopaulo"="São Paulo",
-      "santacatarina"="Santa Catarina",
-      "sergipe"="Sergipe",
-      "tocantins"="Tocantins",
-      "colombia"="Colombia",
-      "northeast"="Northeast Brazil"
-  )
-  return(states)
-}
-
 #' Summarise MCMC chain
 #'
 #' Gives the summary statistics and quantiles of all columns from an MCMC chain
@@ -470,141 +370,39 @@ summarise_chain <- function(chain){
   return(cbind(tmp$statistics,tmp$quantiles))
 }
 
-#' Isolate state from chain
+#' Isolate location from chain
 #'
-#' Given the name of a state and its corresponding index, returns only those parameters relevant to that state from the MCMC chain
-#' @param local the name of the state
-#' @param i the index of the state used for indexing the right column (for example, first state in the table is 0, second is 1 etc...)
+#' Given the name of a location and its corresponding index, returns only those parameters relevant to that location from the MCMC chain
+#' @param local the name of the location
+#' @param i the index of the location used for indexing the right column (for example, first location in the table is 0, second is 1 etc...)
 #' @param chains the MCMC chain to extract from
 #' @param parTab the parameter table used to generate this MCMC chain. This is needed to ensure that parameter names are correct
 #' @param extraNames vector of additional names in the MCMC chain
-#' @return an MCMC chain for just this state, with R0 and attack rate calculated
+#' @return an MCMC chain for just this location, with R0 and attack rate calculated
 #' @export
-isolate_state <- function(local, i, chains, parTab,extraNames=NULL){
-    ## Create a vector of the parameter names associated with this state
-    state_pars <- parTab[parTab$local==local,"names"]
-    if(i >= 1) state_pars <- paste(state_pars,".",i,sep="")
-    stateNames <- c(state_pars,parTab[parTab$local=="all","names"],extraNames)
+isolate_location <- function(local, i, chains, parTab,extraNames=NULL){
+    ## Create a vector of the parameter names associated with this location
+    location_pars <- parTab[parTab$local==local,"names"]
+    if(i >= 1) location_pars <- paste(location_pars,".",i,sep="")
+    locationNames <- c(location_pars,parTab[parTab$local=="all","names"],extraNames)
 
     ## Create vector of non-indexed names to name the final chain
     blankNames <- parTab[parTab$local==local,"names"]
     blankNames <- c(blankNames,parTab[parTab$local=="all","names"],extraNames)
     
-    ## Get only those parameters related to this state and rename the chain
-    tmpChain <- chains[,stateNames]
+    ## Get only those parameters related to this location and rename the chain
+    tmpChain <- chains[,locationNames]
     colnames(tmpChain) <- blankNames
 
     ## Calculate RO and attack rate
     r0 <- r0.vector(tmpChain)
     attackRate <- calculate_AR(r0)
 
-    ## Create a new chain with only state specific parameters
-    newChain <- cbind(tmpChain, R0=r0,AR=attackRate,state=local)
+    ## Create a new chain with only location specific parameters
+    newChain <- cbind(tmpChain, R0=r0,AR=attackRate,location=local)
     return(newChain)
 }
 
-#' Convert name to factor
-#'
-#' Function to convert state strings to factors (with correct accents etc)
-#' @param states the vector of lower case state names to convert
-#' @return the converted states with proper naming and factored
-#' @export
-convert_name_to_state_factor <- function(states){
-    order <- get_correct_order(normalised=TRUE)
-    country_names <- c("pernambuco"="Pernambuco","amapa"="Amapá",
-                       "amazonas" ="Amazonas","distritofederal" = "Distrito Federal","bahia"="Bahia",
-                       "saopaulo"="São Paulo","paraiba"="Paraíba","maranhao"="Maranhão","ceara"="Ceará",
-                       "sergipe"="Sergipe","riodejaneiro"="Rio de Janeiro","piaui"="Piauí",
-                       "riograndedonorte"="Rio Grande Norte","minasgerais"="Minas Gerais",
-                       "matogrosso"="Mato Grosso","alagoas"="Alagoas","para"="Pará","acre"="Acre",
-                     "espiritosanto"="Espírito Santo","goias"="Goiás","tocantins"="Tocantins","matogrossodosul"="Mato Grosso do Sul","matogrossdosul"="Mato Grosso do Sul","parana"="Paraná","riograndedosul"="Rio Grande do Sul","rondonia"="Rondônia","roraima"="Roraima","santacatarina"="Santa Catarina")
-  states <- factor(country_names[states],levels=order)
-  return(states)
-}
-
-#' Subset epidemic states
-#'
-#' Gets those states that fulfill the epidemic criteria of 2sd above mean since July for 3 months
-#' @param dat the data frame of data to look through (microcephaly or incidence)
-#' @param micro if TRUE, looks at microcephaly data. Incidence data otherwise
-#' @param lim in days, the start of the period of consideration
-#' @return a list with a vector of epidemic and non-epidemic states
-#' @export
-get_epidemic_states <- function(dat,micro=TRUE,lim=575){
-    if(micro){
-        include <- NULL
-        exclude <- NULL
-        for(local in unique(dat$local)){
-            tmpDat <- dat[dat$local==local,c("startDay","microCeph")]
-            tmp <- tmpDat[tmpDat$startDay < lim,2]
-            mean <- mean(tmp)
-            sd <- sd(tmp)
-            a <- tmpDat[tmpDat$startDay >= lim,2] >= (mean + 2*sd)
-            if(any(cumul_true(a) >= 3)){
-                include <- c(include, local)
-            } else {
-                exclude <- c(exclude, local)
-            }
-        }
-    } else  {
-        include <- NULL
-        exclude <- NULL
-        for(local in unique(dat$local)){
-            tmpDat <- dat[dat$local==local,c("startDay","inc")]
-            tmp <- tmpDat[tmpDat$startDay < lim,2]
-            mean <- mean(tmp)
-            sd <- sd(tmp)
-            a <- tmpDat[tmpDat$startDay >= lim,2] >= (mean + 2*sd)
-            if(any(cumul_true(a) >= 3)){
-                include <- c(include, local)
-            } else {
-                exclude <- c(exclude, local)
-            }
-        }
-    }
-    return(list("include"=include,"exclude"=exclude))
-}
-
-#' Read all data
-#'
-#' Function to read in microcephaly and incidence data. Converts strings to factors, and orders them by microcephaly cases
-#' @param microCephFile full filepath to microcephaly data
-#' @param incDatFile full filepath ot incidence data
-#' @param epidemicStates if TRUE, gets only epidemic states. Otherwise gives all states
-#' @param order if TRUE, orders the states by per capita microcephaly rate
-#' @param convert if TRUE, converts strings to factors
-#' @return a list of microcephaly and incidence data
-#' @export
-read_all_data <- function(microCephFile="~/net/home/zika/data/microcephaly_data.csv",
-                          incDatFile="~/net/home/zika/data/inc_data.csv",
-                          epidemicStates=FALSE, order=TRUE, convert=TRUE){
-    ## Read in microcephaly data
-    allDat <- read.csv(microCephFile,stringsAsFactors=FALSE)
-
-    ## Read in incidence data
-    incDat <- read.csv(incDatFile,stringsAsFactors=FALSE)
-
-    if(epidemicStates){
-        states <- get_epidemic_states()
-        allDat <- allDat[allDat$local %in% states$include,]
-        incDat <- incDat[incDat$local %in% states$include,]
-    }
-
-    ## Convert to characters and factors
-    if(convert){
-        allDat$local <- as.character(allDat$local)
-        allDat$local <- convert_name_to_state_factor(allDat$local)
-        incDat$local <- as.character(incDat$local)
-        incDat$local <- convert_name_to_state_factor(incDat$local)
-    }
-    if(order){
-        order <- get_correct_order(named=convert,normalised=TRUE)
-        allDat$local <- factor(allDat$local,levels=order)
-        incDat$local <- factor(incDat$local,levels=order)
-    }
-    
-    return(list(microDat=allDat,incDat=incDat))
-}
 
 #' Cumulative true
 #'
@@ -613,53 +411,20 @@ read_all_data <- function(microCephFile="~/net/home/zika/data/microcephaly_data.
 #' @return a vector counting number of successive TRUEs
 #' @export
 cumul_true <- function(x)  {
-  #x <- !x
-  rl <- rle(x)
-  len <- rl$lengths
-  v <- rl$values
-  cumLen <- cumsum(len)
-  z <- x
-  # replace the 0 at the end of each zero-block in z by the
-  # negative of the length of the preceding 1-block....
-  iDrops <- c(0, diff(v)) < 0
-  z[ cumLen[ iDrops ] ] <- -len[ c(iDrops[-1],FALSE) ]
-  # ... to ensure that the cumsum below does the right thing.
-  # We zap the cumsum with x so only the cumsums for the 1-blocks survive:
-  x*cumsum(z)
+    rl <- rle(x)
+    len <- rl$lengths
+    v <- rl$values
+    cumLen <- cumsum(len)
+    z <- x
+    ## replace the 0 at the end of each zero-block in z by the
+    ## negative of the length of the preceding 1-block....
+    iDrops <- c(0, diff(v)) < 0
+    z[ cumLen[ iDrops ] ] <- -len[ c(iDrops[-1],FALSE) ]
+    ## ... to ensure that the cumsum below does the right thing.
+    ## We zap the cumsum with x so only the cumsums for the 1-blocks survive:
+    x*cumsum(z)
 }
 
-#' State order
-#'
-#' Gets the correct state order for all plots, sorted by number of microcephaly cases
-#' @param birth_dat the data frame of data
-#' @param named if TRUE, converts the state names to full names
-#' @param normalised if TRUE, orders by per birth microcephaly rate
-#' @return a vector of ordered state names
-#' @export
-get_correct_order <- function(named=TRUE,normalised=FALSE){
-    birth_dat <- read.csv("~/net/home/zika/data/microcephaly_data.csv",stringsAsFactors=FALSE)
-    if(named) birth_dat$local <- convert_name_to_state(birth_dat$local)
-    if(normalised){
-        order <- names(sort(sapply(unique(birth_dat$local),function(x) sum(birth_dat[birth_dat$local==x,"microCeph"]/birth_dat[birth_dat$local==x,"births"])),decreasing = TRUE))
-    } else {
-        order <- names(sort(sapply(unique(birth_dat$local),function(x) sum(birth_dat[birth_dat$local==x,"microCeph"])),decreasing = TRUE))
-    }
-    return(order)
-}
-
-## Converts the simplified state to its full name as a character
-convert_name_to_state <- function(name){
-  country_names <- c("colombia"="Colombia","pernambuco"="Pernambuco","amapa"="Amapá","amazonas" ="Amazonas",
-                     "distritofederal" = "Distrito Federal","bahia"="Bahia","saopaulo"="São Paulo",
-                     "paraiba"="Paraíba","maranhao"="Maranhão","ceara"="Ceará","sergipe"="Sergipe",
-                     "riodejaneiro"="Rio de Janeiro","piaui"="Piauí","riograndedonorte"="Rio Grande Norte",
-                     "minasgerais"="Minas Gerais", "matogrosso"="Mato Grosso","alagoas"="Alagoas",
-                     "para"="Pará","acre"="Acre","espiritosanto"="Espírito Santo","goias"="Goiás",
-                     "tocantins"="Tocantins","matogrossodosul"="Mato Grosso do Sul",
-                     "matogrossdosul"="Mato Grosso do Sul","parana"="Paraná","riograndedosul"="Rio Grande do Sul",
-                     "rondonia"="Rondônia","roraima"="Roraima","santacatarina"="Santa Catarina")
-  return(country_names[name])
-}
 
 #' Median and quantiles
 #'

@@ -5,7 +5,8 @@
 \title{Simulation multi-state microcephaly and incidence data}
 \usage{
 generate_multiple_data(ts = seq(0, 3003, by = 1), parTab, weeks = FALSE,
-  dataRangeMicro, dataRangeInc, noise = FALSE, peakTimeRange = NULL)
+  dataRangeMicro, dataRangeInc, noise = FALSE, peakTimeRange = NULL,
+  solver = "rlsoda")
 }
 \arguments{
 \item{parTab}{Table of all parameters needed to solve the SEIR model and microcephaly simulation for each unique state. See \code{\link{setupParTable}}}
@@ -19,6 +20,8 @@ generate_multiple_data(ts = seq(0, 3003, by = 1), parTab, weeks = FALSE,
 \item{noise}{bool indicating if noise should be added to the data}
 
 \item{peakTimeRange}{the allowable prior range for ZIKV incidence peak time}
+
+\item{solver}{which ODE solver to use, either "rlsoda" or "lsoda"}
 
 \item{t_pars}{vector of two components - the total run time in days and the time step for the ODE solver}
 }

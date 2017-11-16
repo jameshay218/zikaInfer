@@ -26,6 +26,6 @@ load_mcmc_chains(location = "", asList = FALSE, convertMCMC = FALSE,
 the list or data frame of MCMC chains
 }
 \description{
-From a working directory with MCMC chains (files ending _slice_chain.csv), reads these in and puts them into an MCMC list
+From a working directory with MCMC chains (files ending chain.csv), reads these in and puts them into an MCMC list
 }
 

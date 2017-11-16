@@ -9,8 +9,11 @@
 #' @param noise bool indicating if noise should be added to the data
 #' @param peakTimeRange the allowable prior range for ZIKV incidence peak time
 #' @return a data frame of microcephaly births, total births and corresponding times; a data frame of ZIKV incidence data; a data frame describing the ZIKV epidemic peak times for each location included in the simulation
+#' @param solver which ODE solver to use, either "rlsoda" or "lsoda"
 #' @export
-generate_multiple_data <- function(ts=seq(0,3003,by=1), parTab,weeks=FALSE, dataRangeMicro, dataRangeInc,noise=FALSE, peakTimeRange=NULL){
+generate_multiple_data <- function(ts=seq(0,3003,by=1), parTab,weeks=FALSE,
+                                   dataRangeMicro, dataRangeInc,noise=FALSE,
+                                   peakTimeRange=NULL, solver="rlsoda"){
     if(is.null(dataRangeMicro)) dataRangeMicro <- c(0,max(ts))
     if(is.null(dataRangeInc)) dataRangeInc <- c(0,max(ts))
 
@@ -23,7 +26,7 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), parTab,weeks=FALSE, data
     ## Get all unique places that data should be created for
     places <- unique(parTab$local)
     places <- places[places!="all"]
-   
+    
     overallMicroDat <- NULL
     incDat <- NULL
     peakTimes <- NULL
@@ -40,10 +43,9 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), parTab,weeks=FALSE, data
 
         ## Generate starting population sizes
         y0s <- generate_y0s(pars["N_H"], pars["density"])
+        
         ## Solve the ODE model
-        y <- solveSEIRModel_rlsoda(ts, y0s, pars, TRUE)
-        #y <- solveSEIRModel_lsoda(ts, y0s, pars, TRUE)
-
+        y <- solveSEIRModel(ts, y0s, pars, solver, compatible=TRUE)
 
         ######################################
         ## MICROCEPHALY DATA
@@ -85,9 +87,8 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), parTab,weeks=FALSE, data
         inc <- diff(y[,"incidence"])
         inc[inc < 0] <- 0
         inc <- sum_buckets(inc, inc_buckets)
+        perCapInc  <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
 
-        perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
-        
         if(noise){
             if(!any(parTab$names=="inc_sd")){
                 inc <- rbinom(length(perCapInc),pars["N_H"], perCapInc)
@@ -95,6 +96,8 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), parTab,weeks=FALSE, data
                 tmp <- rnorm(length(perCapInc),perCapInc*pars["N_H"],pars["inc_sd"])
                 inc <- sapply(tmp, function(x) max(0,x))
             }
+        } else {
+            inc <- perCapInc*pars["N_H"]
         }
         
         ## Needs to be to the nearest integer
@@ -120,9 +123,9 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), parTab,weeks=FALSE, data
         
         ## Only return data in the desired range
         tmpMicroDat <- tmpMicroDat[tmpMicroDat[,"startDay"] >= dataRangeMicro[1] & tmpMicroDat[,"endDay"] <= dataRangeMicro[2],]
-       
+        
         tmpIncDat <- tmpIncDat[tmpIncDat[,"startDay"] >= dataRangeInc[1] & tmpIncDat[,"endDay"] <= dataRangeInc[2],]
-                         
+        
         incDat <- rbind(incDat, tmpIncDat)
         overallMicroDat <- rbind(overallMicroDat,tmpMicroDat)
     }
