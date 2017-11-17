@@ -1,69 +1,3 @@
-create_f <- function(parTab,data,PRIOR_FUNC,incDat,perCap,...){
-  microDat <- data
-  incDat <- incDat
-
-  startDays <- microDat$startDay
-  endDays <- microDat$endDay
-  buckets <- microDat$buckets
-  births <- microDat$births
-  microCeph <- microDat$microCeph
-  
-  zikv <- incDat$inc
-  nh <- incDat$N_H
-  inc_buckets <- incDat$buckets
-  inc_start <- incDat$startDay
-  inc_end <- incDat$endDay
-  
-  names_pars <- parTab$names
-  f <- function(values){
-      names(values) <- names_pars
-      y <- model_forecast(values, startDays, endDays,
-                          buckets, microCeph, births,
-                          zikv, nh, inc_buckets,
-                          inc_start, inc_end,perCap,...)
-      return(y)
-  }
-}
-
-model_forecast <- function(pars, startDays, endDays,
-                           buckets, microCeph, births,
-                           zikv, nh, inc_buckets,
-                           inc_start, inc_end,
-                           valid_days_micro, valid_days_inc,
-                           perCap=FALSE){
-    ## Generate microcephaly curve for these parameters
-    probs <- generate_micro_curve(pars)
-
-    ## Get daily actual incidence based on data
-    inc <- rep(zikv/nh/inc_buckets, inc_buckets)/pars["incPropn"]
-
-    ## Generate probability of observing a microcephaly case on a given day
-    probM <- generate_probM_aux(inc, probs, pars["baselineProb"])
-    
-    ## Get subset of times for the data we have incidence data
-    tmp_buckets <- buckets[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
-    tmp_births <- births[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
-    
-    ## Need only buckets for 
-    probM <- average_buckets(probM, tmp_buckets)
-
-    ## Get daily observed microcephaly cases
-    if(perCap) {
-        probM <- probM*tmp_births*pars["propn"]
-    } else {
-        probM <- probM*pars["propn"]
-    }
-    
-    tmpStart <- startDays[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
-    tmpEnd <- endDays[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
-
-    ## Reported on mean of start and end report day
-    meanDays <- (tmpStart + tmpEnd)/2
-    return(data.frame("x"=meanDays,"y"=probM))
-}
-
-
-
 generate_peak_time_table <- function(dat, incDat){
     all_states <- get_epidemic_locations(dat)$include
     peakTimes <- rep(858,length(all_states))
@@ -141,14 +75,11 @@ main_model_fits <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/multi_
     incDat$local <- convert_name_to_state_factor(incDat$local)
     
     peakTimes <- generate_peak_time_table(dat,incDat)
-   
-  
     
     labels <- rep(getDaysPerMonth(3),4)
     labels <- c(0,cumsum(labels))
     labels_names <- as.yearmon(as.Date(labels,origin="2013-01-01"))
     
-   
     microBounds <- NULL
     for(i in 1:length(tmp)) microBounds <- rbind(microBounds, tmp[[i]][["microBounds"]])
     incBounds <- NULL
@@ -202,8 +133,9 @@ main_model_fits <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/multi_
      return(p)
 }
 
-
-indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph.csv",
+#' @export
+indiv_model_fit <- function(chainWD="",
+                            datFile = "~/Documents/Zika/Data/northeast_microceph.csv",
                             incFile = "~/Documents/Zika/Data/northeast_zikv.csv",
                             local = "bahia",
                             localName = "Northeast Brazil NEJM",
@@ -220,8 +152,8 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
     ts <- seq(0,3003,by=1)
     if(is.null(parTab)) parTab <- read_inipars(chainWD)
 
-    dat <- read.csv(datFile,stringsAsFactors = FALSE)
-    dat <- dat[dat$local == local,]
+    microDat <- read.csv(datFile,stringsAsFactors = FALSE)
+    microDat <- microDat[microDat$local == local,]
 
     incDat <- NULL
     if(!is.null(incFile)){
@@ -231,40 +163,41 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
         peakTime <- incDat[which.max(incDat$inc),"meanDay"]
     }
 
-    if(forecast) f <- create_f(parTab,data,NULL,incDat=incDat, perCap=TRUE)
-    else f <- create_forecast_normal(local, parTab, ts, weeks)
+    if(forecast){
+        f <- create_forecast_function(parTab, microDat, incDat, ts, FALSE)
+    } else {
+        f <- create_forecast_function(parTab,microDat,incDat,ts,TRUE)
+    }
     
     samples <-  sample(nrow(chain), runs)
     microCurves <- NULL
     for(i in 1:length(samples)){
         pars <- get_index_pars(chain,samples[i])
-        microCurves <- rbind(microCurves, f(pars))
+        microCurves <- rbind(microCurves, f(pars)$micro)
     }
     
-    predict_bounds <- as.data.frame(t(sapply(unique(microCurves$x),function(x) quantile(microCurves[microCurves$x==x,"y"],c(0.025,0.5,0.975)))[c(1,3),]))
+    predict_bounds <- as.data.frame(t(sapply(unique(microCurves$x),function(x) quantile(microCurves[microCurves$x==x,"microCeph"],c(0.025,0.5,0.975)))[c(1,3),]))
     bestPars <- get_best_pars(chain)
-    best_predict <- f(bestPars)
+    best_predict <- f(bestPars)$micro
     predict_bounds <- cbind(predict_bounds, best_predict[,2])
     colnames(predict_bounds) <- c("lower","upper","best")
     predict_bounds$time <- best_predict[,1]
     
     if(!(local %in% parTab$local)){
-        dat$local <- "bahia"
+        microDat$local <- "bahia"
         if(!is.null(incDat)) incDat$local <- "bahia"
         local <- "bahia"
     }
-    dat <- dat[,c("startDay","endDay","microCeph","buckets","births","local")]
+    microDat <- microDat[,c("startDay","endDay","microCeph","buckets","births","local")]
     if(!is.null(incDat)) incDat <- incDat[,c("startDay","endDay","buckets","inc","N_H","local")]
 
     labels <- rep(getDaysPerMonth(3),4)
     labels <- c(0,cumsum(labels))
     labels_names <- as.yearmon(as.Date(labels,origin="2013-01-01"))
-    print("wow")
-    tmp <- plot_setup_data(chain, dat, incDat,parTab, ts, local,200,365, noMonths=36,noWeeks=150,perCap=TRUE)
-    print("wow2")
+    tmp <- plot_setup_data(chain, microDat, incDat,parTab, ts, local,200,365, noMonths=36,noWeeks=150,perCap=TRUE, forecast=forecast)
     microBounds <- tmp[["microBounds"]]
     incBounds <- tmp[["incBounds"]]
-    dat$meanDay <- rowMeans(dat[,c("startDay","endDay")])
+    microDat$meanDay <- rowMeans(microDat[,c("startDay","endDay")])
     if(!is.null(incDat)){
         incDat$meanDay <- rowMeans(incDat[,c("startDay","endDay")])
         incDat$local <- localName
@@ -277,10 +210,10 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
     peakTimes$local <- localName
     
     p <- ggplot() +
-        geom_ribbon(data=microBounds,aes(ymin=lower,ymax=upper,x=time),fill="blue",alpha=0.5) +
-        geom_ribbon(data=incBounds,aes(ymin=lower/incScale,ymax=upper/incScale,x=time),fill="green",alpha=0.5) +
-        geom_line(data=microBounds,aes(x=time,y=best),colour="blue") +
-        geom_line(data=incBounds,aes(x=time,y=best/incScale),colour="green")
+        geom_ribbon(data=microBounds,aes(ymin=lower,ymax=upper,x=x),fill="blue",alpha=0.5) +
+        geom_ribbon(data=incBounds,aes(ymin=lower/incScale,ymax=upper/incScale,x=x),fill="green",alpha=0.5) +
+        geom_line(data=microBounds,aes(x=x,y=best),colour="blue") +
+        geom_line(data=incBounds,aes(x=x,y=best/incScale),colour="green")
     if(!is.null(incFile)){
         p <- p +
             geom_ribbon(data=predict_bounds,aes(ymin=lower,ymax=upper,x=time),fill="purple",alpha=0.5) +
@@ -294,7 +227,7 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
              geom_vline(data=peakTimes,
                         aes(xintercept=peakTime,group=local),col="black",lty="dashed")
     }
-    p <- p + geom_point(data=dat, aes(x=meanDay, y = microCeph/births), size=0.6) +
+    p <- p + geom_point(data=microDat, aes(x=meanDay, y = microCeph/births), size=0.6) +
         facet_wrap(~local,scales="free_y",ncol=1) +
         scale_y_continuous(limits=c(0,ylim),breaks=seq(0,ylim,by=ylim/5),expand=c(0,0),sec.axis=sec_axis(~.*(incScale),name="Reported per capita\nZIKV infection incidence (red)"))+
         theme_classic()

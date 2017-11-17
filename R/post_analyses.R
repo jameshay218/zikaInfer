@@ -259,7 +259,7 @@ load_mcmc_chains <- function(location="",asList=FALSE, convertMCMC=FALSE,unfixed
 #' @return the full parameter table
 #' @export
 read_inipars <- function(location=""){
-    pars <- Sys.glob("*inipars.csv")
+    pars <- Sys.glob(file.path(location,"*inipars.csv"))
     read_pars <- fread(pars[1],data.table=FALSE)       
 }
 

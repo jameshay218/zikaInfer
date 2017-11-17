@@ -351,7 +351,6 @@ posterior_known_inc_seir <- function(pars, startDays, endDays,
                                      buckets, microCeph, births,
                                      zikv, nh, inc_buckets,
                                      inc_start, inc_end,
-                                     valid_days_micro, valid_days_inc,
                                      solver="rlsoda"){
     lik <- 0
 
@@ -415,6 +414,9 @@ posterior_known_inc_seir <- function(pars, startDays, endDays,
     ## Note that this is on a log scale here
     bp <- exp(pars["baselineProb"])
     
+    tmp_buckets <- buckets[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
+    tmp_births <- births[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
+    tmp_microCeph <- microCeph[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
     ## Getting non-aborted births, (1-a)p_m(t)
     probM_a <- generate_probM_forecast(inc, probs, bp,
                                        pars["abortion_rate"], pars["birth_reduction"],
@@ -431,7 +433,8 @@ posterior_known_inc_seir <- function(pars, startDays, endDays,
     
     probM[which(ts < switch_time_m)] <- probM[which(ts < switch_time_m)]*pars["propn"]
     probM[which(ts >= switch_time_m)] <- probM[which(ts >= switch_time_m)]*pars["propn2"]
-    probM <- average_buckets(probM,buckets)
+
+    probM <- average_buckets(probM,tmp_buckets)
     
     ## Births after prediction time are not realised births - it may be that some of these
     ## were avoided at time t-40 from switch_time_behaviour
@@ -439,15 +442,16 @@ posterior_known_inc_seir <- function(pars, startDays, endDays,
     prediction_time <- pars["predicted_births"]
     
     ## Births after a certain time are predicted and not actual births
-    predicted_births <- births[which(startDays >= prediction_time)]
+    predicted_births <- tmp_births[which(startDays >= prediction_time)]
     
     ## Can calculate the number of aborted births from microcephaly measurements
     ## and estimated microcephaly risk
     probM_b[which(ts < switch_time_behaviour)] <- 0
 
     probM_abortions <- probM_b/probM_a
-    probM_abortions <- average_buckets(probM_abortions,buckets)
-    aborted_births <- microCeph*probM_abortions
+    probM_abortions[is.nan(probM_abortions)] <- 0
+    probM_abortions <- average_buckets(probM_abortions,tmp_buckets)
+    aborted_births <- tmp_microCeph*probM_abortions
     
     ## Aborted births for the predicted birth time  
     aborted_births <- aborted_births[which(startDays >= prediction_time)]
@@ -457,9 +461,9 @@ posterior_known_inc_seir <- function(pars, startDays, endDays,
     inferred_births <- (1-pars["avoided_births"])*predicted_births - aborted_births
     
     ## The actual number of births after the prediction time are inferred
-    births2 <- births
+    births2 <- tmp_births
     births2[which(startDays >= prediction_time)] <- as.integer(inferred_births)
-    lik <- lik + (1-pars["inc_weight"])*likelihood_probM(microCeph,births2,probM)
+    lik <- lik + (1-pars["inc_weight"])*likelihood_probM(tmp_microCeph,births2,probM)
 
     return(lik)
 }

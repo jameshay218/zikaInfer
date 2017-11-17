@@ -21,9 +21,11 @@ parTabSetup <- function(locationNames, version,locationInfo,
     ## Fix reporting proportion of microcephaly relative to this
     message(cat("Reference location: ",norm_location,"\n",sep=""))
     
-    parTab <- parTabSetup_aux(locationInfo,version, sharedProb=sharedProb,
-                              locationNormLik=normLik,locationWeights=locationWeights,
-                              forecast=forecast)
+    parTab <- parTabSetup_aux(locationInfo, version,sharedProb=sharedProb,
+                            parFile = "", locationParFile = "",
+                            locationNormLik=normLik,locationWeights=locationWeights,
+                            forecast=forecast)
+
     if(locationWeights) parTab[parTab$names=="location_weight","values"] <- 1/length(locationNames)
     else parTab[parTab$names=="location_weight","values"] <- 1
     ## If not using incidence data, need to fix incidence proportion and baseline inc parameters
@@ -102,8 +104,9 @@ generateStartingParTab <- function(parTab, peakTimes=NULL,restrictedR0=TRUE,allo
         }
         for(local in stateNames){
             tmp_starts <- allowableStarts[allowableStarts$local == local,]
-            startTab[startTab$local == local & startTab$names == "density","values"] <- as.numeric(tmp_starts[runif(1,1,nrow(tmp_starts)),"density"])
-            startTab[startTab$local == local & startTab$names == "t0","values"] <- as.numeric(tmp_starts[runif(1,1,nrow(tmp_starts)),"t0"])
+            index <- runif(1,1,nrow(tmp_starts))
+            startTab[startTab$local == local & startTab$names == "density","values"] <- as.numeric(tmp_starts[index,"density"])
+            startTab[startTab$local == local & startTab$names == "t0","values"] <- as.numeric(tmp_starts[index,"t0"])
         }
     }
     return(startTab)

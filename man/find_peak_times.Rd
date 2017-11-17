@@ -4,12 +4,14 @@
 \alias{find_peak_times}
 \title{Find peak times}
 \usage{
-find_peak_times(parTab, ts = seq(0, 3003, by = 1))
+find_peak_times(parTab, ts = seq(0, 3003, by = 1), solver = "rlsoda")
 }
 \arguments{
 \item{parTab}{table of parameters with names, values and corresponding state}
 
 \item{ts}{vector of time in days in solve model over}
+
+\item{solver}{which ODE solver to use}
 }
 \value{
 a vector of peak times for each state in the parameter table

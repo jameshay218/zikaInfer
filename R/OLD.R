@@ -1,4 +1,240 @@
 
+
+#' Plot single best trajectory
+#'
+#' For a given run name and state, plots the best zika and microcephaly incidence plot
+#' @param local the name of the state to be fitted
+#' @param chain the MCMC chain to use
+#' @param realDat the data frame of real data that was fitted to
+#' @param parTab the parameter table as returned by \code{\link{setupParTable}}
+#' @param ts vector of time parameters
+#' @param runs the number of runs to use for prediction intervals
+#' @param incDat incidence data set, if to be included in the plot
+#' @param ylabel boolean whether or not to add y axis label
+#' @param xlabel boolean whether or not to add x axis label
+#' @param mcmcPars a named vector of the burnin, adaptive period and thinning
+#' @param ylimM ylimit for the microcephaly plot
+#' @param ylimI ylimit for the incidence plot
+#' @param startDay if realDat is not provided, need to provide the first day on which we want to see predicted microcephaly numbers
+#' @param months if realDat not provided, need to provide the number of months of forecasted data that we wish to see
+#' @param weeks if no incidence data provided, number of weeks over which we should plot the data
+#' @param xlim OPTIONAL x coordinate limits
+#' @return a ggplot object with the incidence plots
+#' @export
+plot_best_trajectory_single <- function(local, chain=NULL, realDat=NULL, parTab=NULL, ts=NULL, runs=100,incDat=NULL, ylabel=TRUE,xlabel=TRUE, mcmcPars=c("burnin"=50000,"adaptive_period"=100000,"thin"=50),ylimM=NULL, ylimI=NULL, startDay=NULL,months=NULL,weeks=NULL, xlim=NULL){
+    allDat <- plot_setup_data(chain,realDat, incDat,parTab, ts,local,runs, startDay, months,weeks)
+    bestMicro <- allDat$bestMicro
+    bestInc <- allDat$bestInc
+    incBounds <- allDat$incBounds
+    microBounds <- allDat$microBounds
+    dat <- allDat$data
+    incDat <- allDat$incDat
+    if(is.null(xlim)) xlim <- c(min(dat[,"startDay"]),max(dat[,"endDay"]))
+    
+    quantiles <- unique(microBounds[,"quantile"])
+    botM <- microBounds[microBounds[,"quantile"]==quantiles[1],c("time","micro")]
+    topM <- microBounds[microBounds[,"quantile"]==quantiles[2],c("time","micro")]
+
+    botI <- incBounds[incBounds[,"quantile"]==quantiles[1],c("time","inc")]
+    topI <-incBounds[incBounds[,"quantile"]==quantiles[2],c("time","inc")]
+    polygonM <- create_polygons(botM, topM)
+    polygonI <- create_polygons(botI, topI)
+
+    tmp_p_I <- polygonI
+    tmp_p_I <- tmp_p_I[tmp_p_I$x >= xlim[1] & tmp_p_I$x <= xlim[2],]
+    polygonI <- tmp_p_I
+
+    polygonM <- polygonM[polygonM$x >= xlim[1] & polygonM <= xlim[2],]
+
+    xlabs <- generate_x_labels(xlim[1],xlim[2])
+
+    myPlot <- microceph_plot(dat,microBounds,bestMicro,polygonM,local,xlim,ylimM,xlabs)
+    incPlot <- inc_plot(incBounds,bestInc,polygonI,ylimI,xlim,incDat)
+
+    if(!ylabel){
+        myPlot <- myPlot + ylab("") + theme(plot.margin=unit(c(0,0.4,-0.2,-0.3),"cm"))
+        incPlot <- incPlot + ylab("") + theme(plot.margin=unit(c(0,0.4,-0.2,-0.3),"cm"))
+    }
+    if(!xlabel) myPlot <- myPlot + xlab("")
+    
+    if(is.null(ylimM)) ylimM <- max(1.2*microBounds$micro)
+    if(is.null(ylimI)) ylimI <- max(1.2*incBounds$inc)
+    ylabInc <- NULL
+    if(ylabel) ylabInc <- "Per capita incidence"
+    myPlot <- add_inc_plot(myPlot, ylimM, incBounds,bestInc,polygonI,ylimI,ylabInc,incDat)
+    return(myPlot)
+}
+
+microceph_plot <- function(dat, microBounds, bestMicro, polygonM, local, xlim, ylim, xlabs){
+    xlabels <- xlabs$labels
+    xlabBreaks <- xlabs$positions
+    
+    myPlot <- ggplot() + 
+        geom_line(data=microBounds,aes_string(y="micro",x="time",group="quantile"),lwd=0.5,linetype=2,col="blue",alpha=0.5) +
+        geom_line(data=bestMicro,aes_string(y="number",x="day"),col="blue",lwd=0.5) +
+        geom_polygon(data=polygonM,aes_string(x="x",y="y"),alpha=0.2,fill="blue")+
+        scale_x_continuous(labels=xlabels,breaks=xlabBreaks,limits=xlim)+
+        theme_bw() +
+        ylab("Microcephaly cases (blue)") +
+        xlab("Date") +
+        ggtitle(convert_name_to_state(local)) + 
+        theme(
+            panel.grid.minor=element_blank(),
+            plot.title=element_text(size=12,hjust=0.5),
+            axis.text.x=element_text(size=10,hjust=1,angle=45),
+            axis.text.y=element_text(size=10),
+            axis.title.x=element_text(size=10),
+            axis.title.y=element_text(size=10),
+            plot.margin=unit(c(0.1,0.8,0.1,0.1),"cm")
+        )
+    if(!is.null(dat$microCeph)) myPlot <- myPlot + geom_point(data=dat,aes_string(y="microCeph",x="meanDay"),col="black",size=1)
+    if(!is.null(ylim)) myPlot <- myPlot + scale_y_continuous(limits=c(0,ylim))
+    return(myPlot)
+}
+
+add_inc_plot <- function(p1, ylimMicro,incBounds, bestInc, polygonI, ylimI,ylab=NULL,incDat=NULL){
+    modscale <- ylimI/ylimMicro
+
+    tmpInc <- bestInc
+    tmpInc$inc <- tmpInc$inc/modscale
+
+    tmpBounds <- incBounds
+    tmpBounds$inc <- tmpBounds$inc/modscale
+
+    tmpPoly <- polygonI
+    tmpPoly$y <- tmpPoly$y/modscale
+
+    p2 <- p1 +  geom_line(data=tmpBounds,aes_string(y="inc",x="time",group="quantile"),linetype=2,col="red",size=0.5,alpha=0.5)+  
+        geom_line(data=tmpInc,aes_string(y="inc",x="time"),col="red",lwd=0.5)+
+        geom_polygon(data=tmpPoly,aes_string(x="x",y="y"),alpha=0.2,fill="red")
+    if(!is.null(ylab)){
+        p2 <- p2 +        
+            scale_y_continuous(limits=c(0,ylimMicro),sec.axis=sec_axis(~.*modscale,name=ylab))
+    } else {
+        p2 <- p2 + scale_y_continuous(limits=c(0,ylimMicro),sec.axis=sec_axis(~.*modscale))
+
+    }
+    if(!is.null(incDat$inc)){
+        incDat$meanDay <- rowMeans(incDat[,c("startDay","endDay")])
+        incDat$perCapInc <- incDat[,"inc"]/incDat[,"N_H"]
+        incDat$perCapInc <- incDat$perCapInc/modscale
+        p2 <- p2 + geom_point(data=incDat,aes_string(x="meanDay",y="perCapInc"),col="black",size=1, shape=3)
+    }
+    return(p2)
+}
+
+inc_plot <- function(incBounds, bestInc, polygonI, ylimI,xlim, incDat=NULL){
+    incPlot <- ggplot() +
+        geom_line(data=incBounds,aes_string(y="inc",x="time",group="quantile"),linetype=2,col="red",size=0.5,alpha=0.5) +
+        geom_line(data=bestInc,aes_string(y="inc",x="time"),col="red",lwd=0.5)+
+        geom_polygon(data=polygonI,aes_string(x="x",y="y"),alpha=0.2,fill="red")+
+        scale_x_continuous(limits=xlim)
+    
+    if(!is.null(ylimI)) incPlot <- incPlot + scale_y_continuous(limits=c(0,ylimI))
+
+    incPlot <- incPlot + 
+        ylab("\nPer capita incidence (red)")+
+        xlab("")+
+        theme(
+            panel.background=element_rect(fill=NA),
+            panel.grid=element_blank(),
+            axis.line.y = element_line(colour="black"),
+            axis.text.y=element_text(size=8,colour="black"),
+            axis.title.y=element_text(size=10,angle=-90),
+            axis.text.x=element_blank(),
+            axis.title.x=element_text(size=10),
+            plot.margin=unit(c(0.1,0.8,0.1,0.1),"cm")
+            
+        )
+    
+    if(!is.null(incDat$inc)){
+        incDat$meanDay <-rowMeans(incDat[,c("startDay","endDay")])
+        incDat$perCapInc <- incDat[,"inc"]/incDat[,"N_H"]
+        incPlot <- incPlot + geom_point(data=incDat,aes_string(x="meanDay",y="perCapInc"),col="black",size=1, shape=3)
+    }
+    return(incPlot)
+}
+
+
+overlapPlots <- function(p1,p2, centre_plot=TRUE){
+    
+                                        # extract gtable
+    g1 <- ggplot_gtable(ggplot_build(p1))
+    g2 <- ggplot_gtable(ggplot_build(p2))
+    
+                                        # overlap the panel of 2nd plot on that of 1st plot
+    
+    name=se=t=r=NULL
+    pp <- c(subset(g1$layout, name == "panel", se = t:r))
+    g <- gtable_add_grob(g1, g2$grobs[[which(g2$layout$name == "panel")]], pp$t, 
+                         pp$l, pp$b, pp$l)
+    if(centre_plot) return(g)
+    
+                                        # axis tweaks
+    ia <- which(g2$layout$name == "axis-l")
+    if(!is.null(ia) & !is.null(ia)){
+        ga <- g2$grobs[[ia]]
+        ax <- ga$children[[2]]
+        ax$widths <- rev(ax$widths)
+        ax$grobs <- rev(ax$grobs)
+        ax$grobs[[1]]$x <- ax$grobs[[1]]$x - unit(1, "npc") + unit(0.1, "cm")
+    }
+
+    g <- gtable_add_cols(g, g2$widths[g2$layout[ia, ]$l], length(g$widths) - 1)
+    g <- gtable_add_grob(g, ax, pp$t, length(g$widths)-1, pp$b)
+    g <- gtable_add_grob(g, g2$grobs[[7]], pp$t, length(g$widths), pp$b)
+    
+                                        # draw it
+    return(g)
+}
+
+#' Plot all best trajectoroes
+#'
+#' For a given run name and state, plots the best zika and microcephaly incidence for all states
+#' @param chain the MCMC chain of estimated parameters
+#' @param realDat the data frame of data used for fitting
+#' @param parTab the parameter table used for fitting
+#' @param ts vector of times to solve model over
+#' @param runs the number of runs to use for prediction intervals
+#' @param incDat optional data frame of actual incidence data
+#' @param mcmcPars a named vector of the burnin, adaptive period and thinning
+#' @param ylimM ylimit for the microcephaly plot
+#' @param ylimI ylimit for the incidence plot
+#' @param startDay if realDat is not provided, need to provide the first day on which we want to see predicted microcephaly numbers
+#' @param months if realDat not provided, need to provide the number of months of forecasted data that we wish to see
+#' @param weeks if no incidence data provided, number of weeks over which we should plot the data
+#' @return a ggplot object with the incidence plots
+#' @export
+plot_best_trajectory_multi <- function(chain, realDat, parTab, ts, runs=100, incDat=NULL, mcmcPars=c("burnin"=50000,"adaptive"=100000,"thin"=50), ylimM=NULL,ylimI=NULL,startDay=NULL,months=NULL,weeks=NULL,ncol=4,xlim=NULL){
+    ps <- NULL
+    states <- unique(parTab$local)
+    states <- states[states != "all"]
+
+    for(i in 1:length(states)){
+        ps[[i]] <- plot_best_trajectory_single(states[i], chain, realDat, parTab, ts, runs, incDat=incDat, ylabel=FALSE, xlabel=FALSE, mcmcPars,ylimM,ylimI,startDay,months,weeks,xlim)
+    }
+
+    if(length(states) <= 1) return(ps[[1]])
+
+    ncols <- ceiling(length(states)/ncol)
+    order <- get_correct_order(FALSE,TRUE)
+    order1 <- as.numeric(sapply(order, function(x) which(x == states)))
+    order1 <- order1[!is.na(order1)]
+    ps <- ps[order1]
+    allPlot <- do.call("plot_grid",c(ps,ncol=ncols))
+    return(allPlot)
+}
+
+
+
+
+create_polygons <- function(lower,upper){
+    bounds <- NULL
+    bounds <- rbind(lower[rev(rownames(lower)),],upper)
+    colnames(bounds) <- c("x","y")
+    return(bounds)    
+}
+
     
 #' Adaptive Metropolis-within-Gibbs Random Walk Algorithm.
 #'

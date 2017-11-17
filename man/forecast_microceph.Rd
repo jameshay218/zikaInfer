@@ -4,8 +4,8 @@
 \alias{forecast_microceph}
 \title{Microcephaly incidence forecast}
 \usage{
-forecast_microceph(chain, microParChain = NULL, parTab, ts, runs,
-  origin = "2013-01-01")
+forecast_microceph(chain, microParChain = NULL, parTab, microDat, incDat, ts,
+  runs, origin = "2013-01-01")
 }
 \arguments{
 \item{chain}{the MCMC chain to simulate from}
@@ -13,6 +13,10 @@ forecast_microceph(chain, microParChain = NULL, parTab, ts, runs,
 \item{microParChain}{the MCMC chain for microcephaly parameters}
 
 \item{parTab}{the parameter table matching the generated MCMC chain}
+
+\item{microDat}{the microcephaly data used for model fitting}
+
+\item{incDat}{the ZIKV incidence data used for model fitting}
 
 \item{ts}{the vector of times to solve the model over}
 

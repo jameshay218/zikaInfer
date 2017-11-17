@@ -5,8 +5,8 @@
 \title{Get plot data}
 \usage{
 plot_setup_data(chain, dat = NULL, incDat = NULL, parTab, ts, local,
-  runs = NULL, startDay = NULL, noMonths = 12, noWeeks = 52,
-  perCap = FALSE)
+  runs = NULL, startDay = 0, noMonths = 12, noWeeks = 52,
+  perCap = FALSE, forecast = FALSE)
 }
 \arguments{
 \item{chain}{the MCMC chain}

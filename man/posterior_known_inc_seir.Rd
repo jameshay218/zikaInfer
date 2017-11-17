@@ -5,8 +5,7 @@
 \title{Posterior function for forecasting analysis}
 \usage{
 posterior_known_inc_seir(pars, startDays, endDays, buckets, microCeph, births,
-  zikv, nh, inc_buckets, inc_start, inc_end, valid_days_micro, valid_days_inc,
-  solver = "rlsoda")
+  zikv, nh, inc_buckets, inc_start, inc_end, solver = "rlsoda")
 }
 \arguments{
 \item{pars}{model parameters}

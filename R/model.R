@@ -310,9 +310,10 @@ sum_n_vector <- function(v,n){
 #' Given a table of parameters as returned by \code{\link{setupParTable}}, finds the time of peak ZIKV incidence for each state
 #' @param parTab table of parameters with names, values and corresponding state
 #' @param ts vector of time in days in solve model over
+#' @param solver which ODE solver to use
 #' @return a vector of peak times for each state in the parameter table
 #' @export
-find_peak_times <- function(parTab, ts=seq(0,3003,by=1)){
+find_peak_times <- function(parTab, ts=seq(0,3003,by=1),solver="rlsoda"){
     unique_states <- unique(parTab$local)
     unique_states <- unique_states[unique_states != "all"]
     peakTimes <- NULL
@@ -327,9 +328,10 @@ find_peak_times <- function(parTab, ts=seq(0,3003,by=1)){
         ## Generate starting y0 for the current parameter values
         y0s <- generate_y0s(as.numeric(pars["N_H"]),as.numeric(pars["density"]))
         
-        y <- solveModelSimple_rlsoda(ts,y0s,pars,TRUE)
+        y <- solveSEIRModel(ts,y0s,pars,solver)
+
         ## Extract peak time
-        peakTime <- y[which.max(diff(y[,"incidence"])),1]
+        peakTime <- y[1,which.max(diff(y["incidence",]))]
         message(peakTime)
         peakTimes[place] <- peakTime
     }
@@ -343,19 +345,24 @@ find_peak_times <- function(parTab, ts=seq(0,3003,by=1)){
 #' @param chain the MCMC chain to simulate from
 #' @param microParChain the MCMC chain for microcephaly parameters
 #' @param parTab the parameter table matching the generated MCMC chain
+#' @param microDat the microcephaly data used for model fitting
+#' @param incDat the ZIKV incidence data used for model fitting
 #' @param ts the vector of times to solve the model over
 #' @param runs number of draws to make to get uncertainty
 #' @param origin the date from which to forecast from
 #' @return a table of incidence and dates
 #' @export
-forecast_microceph <- function(chain,microParChain=NULL,parTab, ts,runs,origin="2013-01-01"){
+forecast_microceph <- function(chain,microParChain=NULL,parTab,
+                               microDat, incDat, ts,runs,
+                               origin="2013-01-01"){
     unique_states <- unique(parTab$local)
     unique_states <- unique_states[unique_states != "all"]
     
     allMicroBounds <- NULL
+    allIncBounds <- NULL
     for(local in unique_states){
         allMicro <- NULL
-
+        allInc <- NULL
         ## Need random samples from recent chain and microcephaly saved chain
         samples <- sample(nrow(chain),runs)
         if(!is.null(microParChain)) sample_micro <- sample(nrow(microParChain),runs)
@@ -363,6 +370,9 @@ forecast_microceph <- function(chain,microParChain=NULL,parTab, ts,runs,origin="
 
         ## For each sample
         for(i in samples){
+            tmpMicro <- microDat[microDat$local == local,]
+            tmpInc <- incDat[incDat$local == local,]
+            
             ## Get these pars
             pars <- get_index_pars(chain, i)
             ## Also get the sampled microcephaly pars
@@ -370,18 +380,43 @@ forecast_microceph <- function(chain,microParChain=NULL,parTab, ts,runs,origin="
                 micro_pars <- as.numeric(microParChain[sample_micro[index],])
                 pars[colnames(microParChain)] <- micro_pars
             }
-            tmp <- forecast_microceph_indiv(pars, local,parTab,ts)
-            times <- tmp$time
-            allMicro <- rbind(allMicro, tmp)
+            ## This is a bit too hard coded - FIX
+            number <- which(unique(parTab$local)==local)-2
+            
+            ## Format parameter vector correctly
+            state_pars <- parTab[parTab$local==local,"names"]
+            if(number >= 1) state_pars <- paste(state_pars,".",number,sep="")
+            state_pars <- pars[state_pars]
+            names(state_pars) <- parTab[parTab$local==local,"names"]
+            all_pars <- pars[parTab[parTab$local=="all","names"]]
+            
+            new_pars<- c(all_pars,state_pars)
+            
+            tmp <- forecast_model_normal(new_pars, tmpMicro, tmpInc, ts, TRUE)
+            microPred <- tmp$micro
+            incPred <- tmp$inc
+            allMicro <- rbind(allMicro,microPred)
+            allInc <- rbind(allInc, incPred)
             index <- index + 1
         }
+        ## Save and get bounds for microcephaly data
         colnames(allMicro) <- c("day","number")
         microBounds <- as.data.frame(reshape2::melt(sapply(unique(allMicro$day),function(x) c(quantile(allMicro[allMicro$day==x,"number"],c(0.025,0.5,0.975)),"mean"=mean(allMicro[allMicro$day==x,"number"])))))
         colnames(microBounds) <- c("quantile","time","micro")
         microBounds[,"time"] <- times[microBounds[,"time"]]
         microBounds$state <- local
         allMicroBounds <- rbind(microBounds, allMicroBounds)
+
+        ## Save and get bounds for incidence data
+        colnames(allInc) <- c("day","number")
+        incBounds <- as.data.frame(reshape2::melt(sapply(unique(allInc$day),function(x) c(quantile(allInc[allInc$day==x,"number"],c(0.025,0.5,0.975)),"mean"=mean(allInc[allInc$day==x,"number"])))))
+        colnames(incBounds) <- c("quantile","time","micro")
+        incBounds[,"time"] <- times[incBounds[,"time"]]
+        incBounds$state <- local
+        allIncBounds <- rbind(incBounds, allIncBounds)
+      
     }
+    ## Consolidate results for microcephaly incidence
     means <- allMicroBounds[allMicroBounds$quantile=="mean",c("micro","time","state")]
     medians <- allMicroBounds[allMicroBounds$quantile=="50%",c("micro","time","state")]
     lower <- allMicroBounds[allMicroBounds$quantile=="2.5%",c("micro","time","state")]
@@ -394,110 +429,83 @@ forecast_microceph <- function(chain,microParChain=NULL,parTab, ts,runs,origin="
     colnames(res) <- c("mean","time","state","median","lower","upper")
     res$time <- as.Date(res$time,origin=origin)
     
-    res <- res[,c("state","time","mean","median","lower","upper")]
+    microCephRes <- res[,c("state","time","mean","median","lower","upper")]
+
+
+    ## Consolidate results for ZIKV incidence
+    means <- allIncBounds[allIncBounds$quantile=="mean",c("micro","time","state")]
+    medians <- allIncBounds[allIncBounds$quantile=="50%",c("micro","time","state")]
+    lower <- allIncBounds[allIncBounds$quantile=="2.5%",c("micro","time","state")]
+    upper <- allIncBounds[allIncBounds$quantile=="97.5%",c("micro","time","state")]
     
-    return(res)
+    res <- plyr::join(means,medians,by=c("state","time"))
+    res <- plyr::join(res, lower, by=c("state","time"))
+    res <- plyr::join(res, upper, by=c("state","time"))
+
+    colnames(res) <- c("mean","time","state","median","lower","upper")
+    res$time <- as.Date(res$time,origin=origin)
     
+    incRes <- res[,c("state","time","mean","median","lower","upper")]
+    
+    return(list("microCeph"=microCephRes,"ZIKV"=incRes))
 }
 
-#' Microcephaly forecast single pars
-#'
-#' Forecasts monthly microcephaly birth proportion for a single set of model parameters
-#' @param pars the model parameters to solve
-#' @param local the name of the Brazilian state
-#' @param parTab the parameter table to draw names etc. from
-#' @param ts the vector of times to solve the model over. Should be in days, but will be converted to months.
-#' @param weeks if preferred, will return weekly proportions rather than months
-#' @return a data frame of months and proportion microcephaly affected births
-#' @export
-forecast_microceph_indiv <- function(pars,local, parTab, ts, weeks=FALSE){
-    noYears <- floor(max(ts)/365)
-
-    ## Enumerate out either months or weeks
-    if(weeks){
-        weeks <- floor(max(ts)/7)
-        ts <- seq(0,weeks*7,by=1)
-        times <- rep(7, weeks)
-    } else {
-        times <- rep(getDaysPerMonth(),noYears)
-        ts <- seq(0,noYears*365,by=1)
-    }
-    buckets <- times
-    ## Get start and end days for each month - using mid point
-    startDay <- cumsum(times) - times
-    endDay <- cumsum(times)
-    meanDay <- rowMeans(cbind(startDay,endDay))
-
-
-    ## This is a bit too hard coded - FIX
-    number <- which(unique(parTab$local)==local)-2
-    
-    ## Format parameter vector correctly
-    state_pars <- parTab[parTab$local==local,"names"]
-    if(number >= 1) state_pars <- paste(state_pars,".",number,sep="")
-    state_pars <- pars[state_pars]
-    names(state_pars) <- parTab[parTab$local==local,"names"]
-    all_pars <- pars[parTab[parTab$local=="all","names"]]
-    
-    new_pars<- c(all_pars,state_pars)
-
-     ## Generate actual incidence data for these parameters
-    y0s <- generate_y0s(new_pars["N_H"],new_pars["density"])
-    
-    y <- solveSEIRModel_rlsoda(ts, y0s, new_pars,TRUE)
-    inc <- diff(y[,"incidence"])
-    inc[inc < 0] <- 0
-    N_H <- rowSums(y[,5:8])
-    inc_weeks <- floor(max(ts)/7)
-    inc_buckets <- inc_times <- rep(7, inc_weeks)
-    startDayInc <- cumsum(inc_times) - inc_times
-    endDayInc <- cumsum(inc_times)
-    meanDayInc <- rowMeans(cbind(startDayInc,endDayInc))
-
-    inc <- sum_buckets(inc,inc_buckets)
-    N_H <- average_buckets(N_H, inc_buckets)
-    perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
-
-    ## Generate predicted microcephaly incidence for these parameters -
-    ## need to restrict to predictions within the data range
-    probs <- generate_micro_curve(new_pars)
-    probM <- generate_probM(y[,"I_M"], new_pars["N_H"], probs, new_pars["b"], new_pars["p_MH"], new_pars["baselineProb"], 1)
-    probM <- average_buckets(probM, buckets)
-    ## Generate predicted microcephaly cases or per birth incidence depending on what was provided
-    
-    predicted <- probM
-    return(list("microCeph"=data.frame("time"=meanDay,"microceph"=predicted),
-                "ZIKV"=data.frame("time"=meanDayInc,"inc"=perCapInc)))
-}
-
-#' @export
-create_forecast_normal <- function(local, parTab, ts, weeks=FALSE){
-    f <- function(values){
-        forecast_microceph_indiv(values,local, parTab, ts, weeks=FALSE)
-    }
-    return(f)
-}
 
 #' @export
 forecast_known_inc_seir <- function(pars, startDays, endDays,
-                           buckets, microCeph, births,
-                           zikv, nh, inc_buckets,
-                           inc_start, inc_end,
-                           valid_days_micro, valid_days_inc,
-                           perCap=FALSE){
-    ## Generate microcephaly curve for these parameters
-    probs <- generate_micro_curve(pars)
+                                    buckets, births,microCeph,
+                                    zikv, nh, inc_buckets,
+                                    inc_start, inc_end,
+                                    perCap=FALSE, solver="rlsoda"){
+    ## Solve model from start to end of incidence reporting window
     ts <- seq(min(inc_start), max(inc_end)-1,by=1)
+    
+    ## Times after which reporting/birth behaviour changes
     switch_time_i <- pars["switch_time_i"]
     switch_time_m <- pars["switch_time_m"]
     switch_time_behaviour <- pars["switch_time_behaviour"]
     
-    ## If this is one, then we're assuming that ZIKV reporting did not change
+    ## If this parameter is set to 1, then we're assuming that ZIKV reporting did not change
     check_par <- pars["zikv_reporting_change"]
+    ## Generate microcephaly curve for these parameters
+    probs <- generate_micro_curve(pars)
+
+    ## Solve SEIR model
+    y0s <- generate_y0s(as.numeric(pars["N_H"]),as.numeric(pars["density"]))
+    y <- solveSEIRModel(seq(0,3003,by=1), y0s, pars,solver)
+
+    ## Calculate SEIR generated incidence for before switch time
+    calc_inc <- diff(y["incidence",])
+    calc_inc[calc_inc < 0] <- 0
+    N_H <- floor(colSums(y[5:8,]))
+
+    calc_inc <- calc_inc[which(y["time",] >= min(inc_start) & y["time",] < switch_time_i)]
     
-    ## Get daily actual incidence based on data
+    ## Population size before switch time
+    N_H <- N_H[which(y["time",] >= min(inc_start) & y["time",] < switch_time_i)]
+
+    ## Get average buckets for this
+    calc_inc <- sum_buckets(calc_inc,inc_buckets[which(inc_start < switch_time_i)])
+    N_H <- average_buckets(N_H,inc_buckets[which(inc_start < switch_time_i)])
+    
+    ## Calculate per capita incidence from SEIR model
+    ## THIS IS WHAT WE PLOT AS THE MODEL FIT
+    perCapInc <- (1-(1-(calc_inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
+    if(!perCap) perCapInc <- perCapInc*N_H
+    tmpIncStart <- inc_start[which(inc_start < switch_time_i)]
+    tmpIncEnd <- inc_end[which(inc_start < switch_time_i)]
+    tmpIncMean <- (tmpIncStart + tmpIncEnd)/2
+    modelDat <- data.frame("x"=tmpIncMean,"inc"=perCapInc)
+
+    
+    ## Get subset of incidence for these times
     inc_1 <- zikv[which(inc_start < switch_time_i)]
+
+    ## Convert to true underlying incidence
     inc_1 <- inc_1/pars["incPropn"]
+
+    ## Get incidence after switch time with new reporting rate
+    ## Otherwise use old reported rate
     if(check_par == 1){
         inc_2 <- zikv[which(inc_start >= switch_time_i)]/pars["incPropn2"]
     } else {
@@ -505,35 +513,122 @@ forecast_known_inc_seir <- function(pars, startDays, endDays,
     }
     inc <- c(inc_1,inc_2)
     
+    ## Convert to daily incidence
+    ## THIS IS WHAT WE PLOT AS FORECASTED INCIDENCE
     inc <- rep(inc/nh/inc_buckets, inc_buckets)
+
     ## Generate probability of observing a microcephaly case on a given day
-    probM_a <- generate_probM_forecast(inc, probs, pars["baselineProb"],
+    ## Note that this is on a log scale here
+    bp <- exp(pars["baselineProb"])
+    
+    tmp_buckets <- buckets[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
+    tmp_births <- births[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
+    tmp_microCeph <- microCeph[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
+    ## Getting non-aborted births, (1-a)p_m(t)
+    probM_a <- generate_probM_forecast(inc, probs, bp,
                                        pars["abortion_rate"], pars["birth_reduction"],
                                        which(ts == pars["switch_time_behaviour"]), pars["abortion_cutoff"], FALSE)
-
     ## Getting aborted births, ap_m(t)
-    probM_b <- generate_probM_forecast(inc, probs, pars["baselineProb"],
+    probM_b <- generate_probM_forecast(inc, probs, bp,
                                        pars["abortion_rate"], pars["birth_reduction"],
                                        which(ts == pars["switch_time_behaviour"]), pars["abortion_cutoff"], TRUE)
-    ## Get subset of times for the data we have incidence data
+
+    ## So probability of becoming a microcephaly case and being observed is
+    ## the proportion of births that become microcephaly cases of those that
+    ## were not aborted microcephaly cases
     probM <- probM_a/(1-probM_b)
     
     probM[which(ts < switch_time_m)] <- probM[which(ts < switch_time_m)]*pars["propn"]
     probM[which(ts >= switch_time_m)] <- probM[which(ts >= switch_time_m)]*pars["propn2"]
-    probM <- average_buckets(probM,buckets)
-    probM <- probM*births
+
+    ## THIS IS THE FORECASTED MICROCEPHALY CASES
+    probM <- average_buckets(probM,tmp_buckets)
+    
+    ## Births after prediction time are not realised births - it may be that some of these
+    ## were avoided at time t-40 from switch_time_behaviour
+    ## Comment this out if we don't want to use avoided births parameter
+    prediction_time <- pars["predicted_births"]
+    
+    ## Births after a certain time are predicted and not actual births
+    predicted_births <- tmp_births[which(startDays >= prediction_time)]
+    
+    ## Can calculate the number of aborted births from microcephaly measurements
+    ## and estimated microcephaly risk
+    probM_b[which(ts < switch_time_behaviour)] <- 0
+
+    probM_abortions <- probM_b/probM_a
+    probM_abortions[is.nan(probM_abortions)] <- 0
+    probM_abortions <- average_buckets(probM_abortions,tmp_buckets)
+    aborted_births <- tmp_microCeph*probM_abortions
+    
+    ## Aborted births for the predicted birth time  
+    aborted_births_predicted <- aborted_births[which(startDays >= prediction_time)]
+    
+    ## From this, we can infer the true number of births that happened assuming that some births
+    ## were aborted and a proportion of the forecasted births did no occur
+    inferred_births <- (1-pars["avoided_births"])*predicted_births - aborted_births_predicted
+    
+    ## The actual number of births after the prediction time are inferred
+    births2 <- tmp_births
+    births2[which(startDays >= prediction_time)] <- as.integer(inferred_births)
+
+    if(!perCap) probM <- births2*probM
+    
     tmpStart <- startDays[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
     tmpEnd <- endDays[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
     ## Reported on mean of start and end report day
     meanDays <- (tmpStart + tmpEnd)/2
-    return(data.frame("x"=meanDays,"y"=probM))
+    
+    microCephData <- data.frame("x"=meanDays,"microCeph"=probM)
+
+    aborted_data <- data.frame("x"=meanDays,"aborted"=aborted_births)
+    
+    return(list("microCeph"=microCephData,"ZIKV"=modelDat,"aborted"=aborted_data))
 }
 
+
 #' @export
-create_f_forecast <- function(parTab,microDat,incDat){
+forecast_model_normal <- function(pars, microDat,incDat, ts, perCap=FALSE, solver="rlsoda"){
+    ## Generate actual incidence data for these parameters
+    y0s <- generate_y0s(pars["N_H"],pars["density"])
+    y <- solveSEIRModel(ts, y0s, pars,solver)
+    
+    ## Generate predicted microcephaly incidence for these parameters - need to restrict to predictions within the data range
+    probs <- generate_micro_curve(pars)
+    probM <- generate_probM(y["I_M",], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)
+    probM <- probM[which(y["time",] >= min(microDat[,"startDay"]) & y["time",] <= max(microDat[,"endDay"]))]
+    probM <- average_buckets(probM, microDat[,"buckets"])
+    
+    ## Generate predicted microcephaly cases or per birth incidence depending on what was provided
+    if(perCap){
+        predicted <- probM*pars["propn"]
+    } else {
+        predicted <- probM*microDat[,"births"]*pars["propn"]
+    }
+    meanDay <- (microDat$startDay + microDat$endDay)/2
+    predicted <- data.frame(day=meanDay,number=predicted)
+    
+    ## Generate predicted incidence cases
+    N_H <- average_buckets(colSums(y[5:8,]), incDat$buckets)
+    tmpY <- y[,which(y["time",] >= min(incDat[,"startDay"]) & y["time",] <= max(incDat[,"endDay"]))]
+    inc <- diff(tmpY["incidence",])
+    ## At the moment this really needs to be in weeks
+    inc <- sum_buckets(inc, incDat$buckets)
+    perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
+    if(!perCap) perCapInc <- perCapInc*N_H
+    
+    meanDayInc <- (incDat$startDay + incDat$endDay)/2
+    y <- data.frame(time=meanDayInc,inc=perCapInc)
+    return(list("microCeph"=predicted,"ZIKV"=y))
+}
+
+
+
+#' @export
+create_forecast_function <- function(parTab,microDat,incDat, ts=seq(0,3003,by=1), singleWave=TRUE){
 
     startDays <- microDat$startDay
-    endDays <- microDat$endDays
+    endDays <- microDat$endDay
     buckets <- microDat$buckets
     births <- microDat$births
     microCeph <- microDat$microCeph
@@ -545,12 +640,23 @@ create_f_forecast <- function(parTab,microDat,incDat){
     inc_end <- incDat$endDay
     
     names_pars <- parTab$names
-    f <- function(values){
-        names(values) <- names_pars
-        lik <- forecast_known_inc_seir(values, startDays, endDays,
-                                       buckets, microCeph, births,
-                                       zikv, nh, inc_buckets,
-                                       inc_start, inc_end)
-        return(lik)
+    if(singleWave){
+        f <- function(values, perCap=FALSE){
+            names(values) <- names_pars
+            y <- forecast_model_normal(values, microDat, incDat, ts, perCap)
+            return(y)
+        }
+
+    } else {        
+        f <- function(values, perCap=FALSE){
+            names(values) <- names_pars
+            y <- forecast_known_inc_seir(values, startDays, endDays,
+                                         buckets, births,microCeph,
+                                         zikv, nh, inc_buckets,
+                                         inc_start, inc_end, perCap)
+            return(y)
+        }
     }
+    return(f)
 }
+
