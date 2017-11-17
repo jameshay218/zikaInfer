@@ -173,12 +173,12 @@ indiv_model_fit <- function(chainWD="",
     microCurves <- NULL
     for(i in 1:length(samples)){
         pars <- get_index_pars(chain,samples[i])
-        microCurves <- rbind(microCurves, f(pars)$micro)
+        microCurves <- rbind(microCurves, f(pars,TRUE)$micro)
     }
     
     predict_bounds <- as.data.frame(t(sapply(unique(microCurves$x),function(x) quantile(microCurves[microCurves$x==x,"microCeph"],c(0.025,0.5,0.975)))[c(1,3),]))
     bestPars <- get_best_pars(chain)
-    best_predict <- f(bestPars)$micro
+    best_predict <- f(bestPars,TRUE)$micro
     predict_bounds <- cbind(predict_bounds, best_predict[,2])
     colnames(predict_bounds) <- c("lower","upper","best")
     predict_bounds$time <- best_predict[,1]
@@ -204,7 +204,7 @@ indiv_model_fit <- function(chainWD="",
     }
     
     microBounds$local <- localName
-    dat$local <- localName    
+    microDat$local <- localName    
     incBounds[,c("lower","upper","best")] <- incBounds[,c("lower","upper","best")]
     incBounds$local <- localName
     peakTimes$local <- localName
@@ -235,6 +235,7 @@ indiv_model_fit <- function(chainWD="",
         p <- p + theme(axis.text.y=element_text(size=8,family="Arial"),
                       axis.title=element_text(size=8,family="Arial"),
                       strip.text=element_blank(),
+                      axis.text.x=element_text(size=8, family="Arial",hjust=1,angle=45),
                       panel.grid.minor = element_blank())
         if(bot){
             p <- p + theme(
@@ -270,7 +271,7 @@ indiv_model_fit <- function(chainWD="",
     x_lower <- 365
     if(!is.null(xlim)) x_lower <- xlim
     p <- p +
-        scale_x_continuous(limits=c(x_lower,max(labels)),breaks=labels,labels=labels_names)+
+        scale_x_continuous(limits=c(x_lower,max(labels)),breaks=labels,labels=labels_names,expand=c(0,0))+
         ylab("Reported per birth\nmicrocephaly incidence (black)") +
         xlab("")
     return(p)
