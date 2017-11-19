@@ -1,6 +1,6 @@
-devtools::load_all("~/Documents/Zika/zikaProj")
-source("~/Documents/Zika/plots/plottingScripts/plotting_help_functions.R")
-source("~/Documents/Zika/plots/plottingScripts/stat_help.R")
+#source("~/Documents/Zika/plots/plottingScripts/plotting_help_functions.R")
+#source("~/Documents/Zika/plots/plottingScripts/stat_help.R")
+library(zikaProj)
 library(cowplot)
 library(zoo)
 library(ggplot2)
@@ -15,16 +15,17 @@ incScale=0.1
 p <- main_model_fits(chainWD,datFile,incDatFile,runs,datCutOff,incScale)
 
 
-chainWD = "~/Documents/Zika/28.02.2017_chains/northeast/model_1"
-datFile = "~/Documents/Zika/Data/northeast_microceph.csv"
-incFile = "~/Documents/Zika/Data/northeast_zikv.csv"
-local = "bahia"
+topDir <- "/media/james/JH USB/outputs/"
+chainWD <- paste0(topDir, "northeast_forecast")
+datFile = "~/Documents/Zika/Data/brazil/Northeast/northeast_microceph.csv"
+incFile = "~/Documents/Zika/Data/brazil/Northeast/northeast_zikv.csv"
+local = "northeast"
 localName = "Northeast Brazil NEJM"
 incScale=0.01
 runs=200
 ylim=0.02
 p1 <- indiv_model_fit(chainWD,datFile,incFile,local,
-                      localName,incScale,runs,ylim,TRUE,xlim=730)
+                      localName,incScale,runs,ylim,TRUE,xlim=730, parTab=parTab, chain=chain)
 p1
 
 
@@ -37,7 +38,7 @@ incScale=0.01
 runs= 100
 ylim <- 0.05
 
-p1 <- zikaProj::indiv_model_fit(chainWD,datFile,incFile,local,localName,incScale,runs,ylim,TRUE,xlim=730)
+p1 <- zikaProj::indiv_model_fit(chainWD,datFile,incFile,local,localName,incScale,runs,ylim,TRUE,xlim=730, parTab=parTab)
 p1
 
 

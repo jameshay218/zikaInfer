@@ -134,8 +134,7 @@ main_model_fits <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/multi_
 }
 
 #' @export
-indiv_model_fit <- function(chainWD="",
-                            datFile = "~/Documents/Zika/Data/northeast_microceph.csv",
+indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph.csv",
                             incFile = "~/Documents/Zika/Data/northeast_zikv.csv",
                             local = "bahia",
                             localName = "Northeast Brazil NEJM",
@@ -150,7 +149,6 @@ indiv_model_fit <- function(chainWD="",
                             forecast=FALSE,
                             weeks=FALSE){
     ts <- seq(0,3003,by=1)
-    if(is.null(parTab)) parTab <- read_inipars(chainWD)
 
     microDat <- read.csv(datFile,stringsAsFactors = FALSE)
     microDat <- microDat[microDat$local == local,]
@@ -162,7 +160,7 @@ indiv_model_fit <- function(chainWD="",
         incDat$meanDay <- rowMeans(incDat[,c("startDay","endDay")])
         peakTime <- incDat[which.max(incDat$inc),"meanDay"]
     }
-
+    
     if(forecast){
         f <- create_forecast_function(parTab, microDat, incDat, ts, FALSE)
     } else {
@@ -171,14 +169,17 @@ indiv_model_fit <- function(chainWD="",
     
     samples <-  sample(nrow(chain), runs)
     microCurves <- NULL
+    
+    f1 <- create_forecast_function(parTab, microDat, incDat,ts,TRUE)
     for(i in 1:length(samples)){
         pars <- get_index_pars(chain,samples[i])
-        microCurves <- rbind(microCurves, f(pars,TRUE)$micro)
+        if(forecast) pars["baselineProb"] <- exp(pars["baselineProb"])
+        microCurves <- rbind(microCurves, f1(pars,TRUE)$microCeph)
     }
-    
-    predict_bounds <- as.data.frame(t(sapply(unique(microCurves$x),function(x) quantile(microCurves[microCurves$x==x,"microCeph"],c(0.025,0.5,0.975)))[c(1,3),]))
+    predict_bounds <- as.data.frame(t(sapply(unique(microCurves$day),function(x) quantile(microCurves[microCurves$day==x,"number"],c(0.025,0.5,0.975)))[c(1,3),]))
     bestPars <- get_best_pars(chain)
-    best_predict <- f(bestPars,TRUE)$micro
+    if(forecast) bestPars["baselineProb"] <- exp(bestPars["baselineProb"])
+    best_predict <- f1(bestPars,TRUE)$microCeph
     predict_bounds <- cbind(predict_bounds, best_predict[,2])
     colnames(predict_bounds) <- c("lower","upper","best")
     predict_bounds$time <- best_predict[,1]

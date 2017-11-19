@@ -100,3 +100,38 @@ plot_random_microceph_curves <- function(chain, runs){
   return(myPlot)
 }
 
+
+#' Format MCMC chain
+#'
+#' Formats an MCMC chain to be plotted in Figure 1
+#' @export
+make_micro_dat <- function(chain, samp_no,scale=FALSE){
+  samples <- sample(nrow(chain), samp_no)
+  microCurves <- matrix(nrow=samp_no,ncol=40*7)
+  trimesterCurves <- matrix(nrow=samp_no,ncol=40*7)
+  tm1 <- tm2 <- tm3 <- numeric(samp_no)
+  i <- 1
+  for(samp in samples){
+    pars <- chain[samp,]
+    pars <- as.numeric(chain[samp,])
+    names(pars) <- colnames(chain)
+    probs <- generate_micro_curve(pars)
+    probs <- probs
+    tm1[i] <- mean(probs[1:14*7])
+    tm2[i] <- mean(probs[(14*7 + 1):(28*7)])
+    tm3[i] <- mean(probs[(28*7 + 1):length(probs)])
+    microCurves[i,] <- probs
+    i <- i + 1
+  }
+  #microCurves <- microCurves/max(microCurves)
+   means <- colMeans(microCurves)
+  lower <- apply(microCurves,2,function(x) quantile(x, 0.025))
+  upper <- apply(microCurves,2,function(x) quantile(x,0.975))
+  if(scale){
+    means <- means/max(upper)
+    lower <- lower/max(upper)
+    upper <- upper/max(upper)
+  }
+  dat <- data.frame(weeks=1:(40*7),means,upper,lower)
+  return(dat)
+}

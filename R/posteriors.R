@@ -212,7 +212,7 @@ posterior_simple_buckets <- function(ts, y0s, pars,
 
         ## Bucket data by sampling windows
         inc <- sum_buckets(inc,inc_buckets)
-        N_H <- average_buckets(N_H, inc_buckets)
+        N_H <- as.integer(average_buckets(N_H, inc_buckets))
 
         ## Modify with baseline reporting rate and reporting accuracy
         perCapInc <- (1-(1-(inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]
@@ -384,7 +384,7 @@ posterior_known_inc_seir <- function(pars, startDays, endDays,
 
     ## Get average buckets for this
     calc_inc <- sum_buckets(calc_inc,inc_buckets[which(inc_start < switch_time_i)])
-    N_H <- average_buckets(N_H,inc_buckets[which(inc_start < switch_time_i)])
+    N_H <- as.integer(average_buckets(N_H,inc_buckets[which(inc_start < switch_time_i)]))
     
     ## Calculate per capita incidence from SEIR model
     perCapInc <- (1-(1-(calc_inc/N_H))*(1-pars["baselineInc"]))*pars["incPropn"]

@@ -400,9 +400,9 @@ forecast_microceph <- function(chain,microParChain=NULL,parTab,
             index <- index + 1
         }
         ## Save and get bounds for microcephaly data
-        colnames(allMicro) <- c("day","number")
-        microBounds <- as.data.frame(reshape2::melt(sapply(unique(allMicro$day),function(x) c(quantile(allMicro[allMicro$day==x,"number"],c(0.025,0.5,0.975)),"mean"=mean(allMicro[allMicro$day==x,"number"])))))
-        colnames(microBounds) <- c("quantile","time","micro")
+        colnames(allMicro) <- c("number","day")
+        microBounds <- as.data.frame(reshape2::melt(sapply(unique(allMicro$day),function(x) c(quantile(allMicro[allMicro$day==x,"number"],c(0.025,0.5,0.975)),"mean"=mean(allMicro[allMicro$day==x,"day"])))))
+        colnames(microBounds) <- c("quantile","time","number")
         microBounds[,"time"] <- times[microBounds[,"time"]]
         microBounds$state <- local
         allMicroBounds <- rbind(microBounds, allMicroBounds)
@@ -410,7 +410,7 @@ forecast_microceph <- function(chain,microParChain=NULL,parTab,
         ## Save and get bounds for incidence data
         colnames(allInc) <- c("day","number")
         incBounds <- as.data.frame(reshape2::melt(sapply(unique(allInc$day),function(x) c(quantile(allInc[allInc$day==x,"number"],c(0.025,0.5,0.975)),"mean"=mean(allInc[allInc$day==x,"number"])))))
-        colnames(incBounds) <- c("quantile","time","micro")
+        colnames(incBounds) <- c("quantile","time","number")
         incBounds[,"time"] <- times[incBounds[,"time"]]
         incBounds$state <- local
         allIncBounds <- rbind(incBounds, allIncBounds)
