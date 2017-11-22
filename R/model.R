@@ -76,10 +76,10 @@ b.calc <- function(params,R0){
 #' Density calculation
 #'
 #' Calculates the density needed to generate a given R0 value, assuming that all other parameters are fixed.
-#' @param params Vector of parameters matching those returned by \code{\link{setupListPars}}
+#' @param params Vector of parameters matching those returned by setupListPars
 #' @param R0 desired R0 value
 #' @return A single value for mosquito density
-#' @export
+#' @export density.calc
 density.calc <- function(params,R0){
     NH <- params["N_H"]
     NM <- params["N_H"]*params["density"]
@@ -100,7 +100,6 @@ density.calc <- function(params,R0){
     density <- NM/NH
 
     return(unname(density))
-    
 }
 
 #' Generates y0s

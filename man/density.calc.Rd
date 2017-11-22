@@ -7,7 +7,7 @@
 \method{density}{calc}(params, R0)
 }
 \arguments{
-\item{params}{Vector of parameters matching those returned by \code{\link{setupListPars}}}
+\item{params}{Vector of parameters matching those returned by setupListPars}
 
 \item{R0}{desired R0 value}
 }
