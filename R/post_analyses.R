@@ -260,7 +260,12 @@ load_mcmc_chains <- function(location="",asList=FALSE, convertMCMC=FALSE,unfixed
 #' @export
 read_inipars <- function(location=""){
     pars <- Sys.glob(file.path(location,"*inipars.csv"))
-    read_pars <- fread(pars[1],data.table=FALSE)       
+    if(length(pars) > 0){
+        read_pars <- data.table::fread(pars[1],data.table=FALSE)
+    } else {
+        read_pars <- NULL
+    }
+    return(read_pars)
 }
 
 #' Attack rate simeq

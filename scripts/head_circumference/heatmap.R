@@ -1,3 +1,7 @@
+##############################
+## JAMES HAY 20.11.2017 - jameshay218@gmail.com
+## DEPRECATED CODE, originally used to generated mixture distribution of head circumferences given a distribution of head sizes for microcephaly affected babies and non-microcephaly affected babies
+
 library(ggplot2)
 library(reshape2)
 library(reldist)

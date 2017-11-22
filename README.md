@@ -70,7 +70,7 @@ chain <- read.csv(result$file)
 chain <- chain[chain$sampno >= mcmcPars["adaptive_period"],]
 covMat <- cov(chain[,2:(ncol(chain)-1)])
 startTab$values <- get_best_pars(chain)
-mvrPars <- list(covMat,2.38/sqrt(nrow(parTab[parTab$fixed==0,])),w=0.8)
+mvrPars <- list(covMat,2.38/sqrt(nrow(startTab[startTab$fixed==0,])),w=0.8)
 mcmcPars["popt"] <- 0.234
 
 ## Run MCMC chain using multivariate sampler
@@ -103,6 +103,7 @@ data(exampleParTab)
 ts <- seq(0,3003,by=1)
 
 ## Read in data
+## Note that "2013-01-01" is considered to be day 0
 data(bahiaMicroDat)
 data(bahiaIncDat)
 data(bahiaPeakTimes)
@@ -125,7 +126,7 @@ chain <- read.csv(result$file)
 chain <- chain[chain$sampno >= mcmcPars["adaptive_period"],]
 covMat <- cov(chain[,2:(ncol(chain)-1)])
 startTab$values <- get_best_pars(chain)
-mvrPars <- list(covMat,2.38/sqrt(nrow(parTab[parTab$fixed==0,])),w=0.8)
+mvrPars <- list(covMat,2.38/sqrt(nrow(startTab[startTab$fixed==0,])),w=0.8)
 mcmcPars["popt"] <- 0.234
 
 ## Run MCMC chain using multivariate sampler
@@ -134,11 +135,12 @@ final <- lazymcmc::run_MCMC(parTab=startTab, data=bahiaMicroDat, mcmcPars=mcmcPa
                     OPT_TUNING=0.2, ts=ts,incDat=bahiaIncDat,peakTimes=NULL)
                    
 chain <- read.csv(final$file)
-chain <- chain[chain$sampno >= mcmcPars["adaptive_period"],(which(exampleParTab$fixed == 0) + 1)]
-plot(coda::as.mcmc(chain))
 
 ## Look at inferred risk curve
 plot_random_microceph_curves(chain,100)
+
+chain <- chain[chain$sampno >= mcmcPars["adaptive_period"],(which(exampleParTab$fixed == 0) + 1)]
+plot(coda::as.mcmc(chain))
 
 ```
 ## License

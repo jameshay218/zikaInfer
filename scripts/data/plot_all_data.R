@@ -1,5 +1,11 @@
-devtools::load_all("~/Documents/Zika/zikaProj")
-#library(zikaProj)
+##############
+## JAMES HAY 20.11.2017 - jameshay218@gmail.com
+## Reads in all of the microcephaly and incidence data and produces
+## incidence plots.
+## The "Reading in data" section must be modified to specify full file paths to all of the
+## incidence data. The save locations of the plots are specified throughout the script in sections
+## labelled "Save plots"
+library(zikaProj)
 library(cowplot)
 library(zoo)
 library(ggplot2)
@@ -31,8 +37,9 @@ ne_zikv <- ne_zikv[,c("startDay","endDay","inc","N_H","local")]
 use_states <- all_states <- zikaProj::get_epidemic_locations(brazilMicro,TRUE)$include
 
 ## Combine all data into a list, generate mean report days, and get full location names
-allDats <- list("Brazil"=brazilMicro,"Brazil Inc"=brazilIncFaria,"Brazil 2017"=brazilInc2017, "Colombia"=colombiaMicro,
-                "Reports"=stateDat,"Northeast micro"=ne_micro,"Northeast inc"=ne_zikv)
+allDats <- list("Brazil"=brazilMicro,"Brazil Inc"=brazilIncFaria,"Brazil 2017"=brazilInc2017,
+                "Colombia"=colombiaMicro,"Reports"=stateDat,
+                "Northeast micro"=ne_micro,"Northeast inc"=ne_zikv)
 
 allDats <- lapply(allDats, function(x){
     x$meanDay <- (x$startDay + x$endDay)/2
@@ -134,52 +141,7 @@ p_inc2017 <- ggplot() +
   xlab("") +
   scale_x_continuous(breaks=labels_inc,labels=labels_names_inc)
 
-# Save plots --------------------------------------------------------------
-###################
-## Save plot
-cairo_ps("FigS1.eps",width=7,height=8,family="Arial")
-p1
-dev.off()
 
-cairo_pdf("FigS1.pdf",width=7,height=8,family="Arial")
-p1
-dev.off()
-
-png("FigS1.png",width=7,height=8,family="Arial",units = "in",res=300)
-p1
-dev.off()
-##################
-
-
-###################
-## Save plot inc
-cairo_ps("FigS2.eps",width=7,height=8,family="Arial")
-p_inc
-dev.off()
-
-cairo_pdf("FigS2.pdf",width=7,height=8,family="Arial")
-p_inc
-dev.off()
-
-png("FigS2.png",width=7,height=8,family="Arial",units = "in",res=300)
-p_inc
-dev.off()
-##################
-
-###################
-## Save plot inc 2017
-cairo_ps("FigS_2017inc.eps",width=7,height=8,family="Arial")
-p_inc2017
-dev.off()
-
-cairo_pdf("FigS_2017inc",width=7,height=8,family="Arial")
-p_inc2017
-dev.off()
-
-png("FigS_2017inc.png",width=7,height=8,family="Arial",units = "in",res=300)
-p_inc2017
-dev.off()
-##################
 
 # Report data plots -------------------------------------------------------
 otherDat <- rbind(colombiaMicro,stateDat, ne_micro)
@@ -317,24 +279,54 @@ text <- ggplot(textDat) + geom_label(aes(x=x,label=))
 p2 <- plot_grid(p2_ne,p2_c,p2_b,p2_p,p2_r,ncol=1,align="v",rel_heights=c(1,1,1,1,1.4))
 p3 <- plot_grid(p1,p2,rel_widths=c(2,1))
 
-png("Fig2_data.png",width=10,height=8,units="in",res=300)
-p3
-dev.off()
 
-cairo_ps("Fig2_data.eps",width=10,height=8,family="Arial")
-p3
-dev.off()
-cairo_ps("Fig2_data.pdf",width=10,height=8,family="Arial")
-p3
-dev.off()
+# Save plots --------------------------------------------------------------
 ###################
 ## Save plot
-cairo_ps("Fig1F.eps",width=3,height=6,family="Arial")
-p2
+cairo_ps("microtableau_data.eps",width=7,height=8,family="Arial")
+print(p1)
 dev.off()
 
-cairo_pdf("Fig1F.pdf",width=3.5,height=7,family="Arial")
-p2
+png("microtableau.png",width=7,height=8,family="Arial",units = "in",res=300)
+print(p1)
+dev.off()
+##################
+
+
+###################
+## Save plot inc
+cairo_ps("faria2016_zikv_incidence_data.eps",width=7,height=8,family="Arial")
+print(p_inc)
+dev.off()
+
+png("faria2016_zikv_incidence_data.png",width=7,height=8,family="Arial",units = "in",res=300)
+print(p_inc)
+dev.off()
+##################
+
+###################
+## Save plot inc 2017
+cairo_ps("report2017_zikv_incidence_data.eps",width=7,height=8,family="Arial")
+print(p_inc2017)
+dev.off()
+
+png("report2017_zikv_incidence_data.png",width=7,height=8,family="Arial",units = "in",res=300)
+print(p_inc2017)
+dev.off()
+##################
+
+###################
+## Save plots
+png("all_data.png",width=10,height=8,units="in",res=300)
+print(p3)
+dev.off()
+
+cairo_ps("all_data.eps",width=10,height=8,family="Arial")
+print(p3)
+dev.off()
+
+cairo_ps("report_data.eps",width=3,height=6,family="Arial")
+print(p2)
 dev.off()
 ##################
 

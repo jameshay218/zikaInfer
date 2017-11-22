@@ -80,7 +80,6 @@ b.calc <- function(params,R0){
 #' @param R0 desired R0 value
 #' @return A single value for mosquito density
 #' @export
-#' @seealso \code{\link{r0.calc}}
 density.calc <- function(params,R0){
     NH <- params["N_H"]
     NM <- params["N_H"]*params["density"]
@@ -393,34 +392,34 @@ forecast_microceph <- function(chain,microParChain=NULL,parTab,
             new_pars<- c(all_pars,state_pars)
             
             tmp <- forecast_model_normal(new_pars, tmpMicro, tmpInc, ts, TRUE)
-            microPred <- tmp$micro
-            incPred <- tmp$inc
+            microPred <- tmp$microCeph
+            incPred <- tmp$ZIKV
             allMicro <- rbind(allMicro,microPred)
             allInc <- rbind(allInc, incPred)
             index <- index + 1
         }
         ## Save and get bounds for microcephaly data
-        colnames(allMicro) <- c("number","day")
-        microBounds <- as.data.frame(reshape2::melt(sapply(unique(allMicro$day),function(x) c(quantile(allMicro[allMicro$day==x,"number"],c(0.025,0.5,0.975)),"mean"=mean(allMicro[allMicro$day==x,"day"])))))
-        colnames(microBounds) <- c("quantile","time","number")
+        colnames(allMicro) <- c("microCeph","time")
+        microBounds <- as.data.frame(reshape2::melt(sapply(unique(allMicro$time),function(x) c(quantile(allMicro[allMicro$time==x,"microCeph"],c(0.025,0.5,0.975)),"mean"=mean(allMicro[allMicro$time==x,"microCeph"])))))
+        colnames(microBounds) <- c("quantile","time","microCeph")
         microBounds[,"time"] <- times[microBounds[,"time"]]
         microBounds$state <- local
         allMicroBounds <- rbind(microBounds, allMicroBounds)
 
         ## Save and get bounds for incidence data
-        colnames(allInc) <- c("day","number")
-        incBounds <- as.data.frame(reshape2::melt(sapply(unique(allInc$day),function(x) c(quantile(allInc[allInc$day==x,"number"],c(0.025,0.5,0.975)),"mean"=mean(allInc[allInc$day==x,"number"])))))
-        colnames(incBounds) <- c("quantile","time","number")
+        colnames(allInc) <- c("time","inc")
+        incBounds <- as.data.frame(reshape2::melt(sapply(unique(allInc$time),function(x) c(quantile(allInc[allInc$time==x,"inc"],c(0.025,0.5,0.975)),"mean"=mean(allInc[allInc$time==x,"inc"])))))
+        colnames(incBounds) <- c("quantile","time","inc")
         incBounds[,"time"] <- times[incBounds[,"time"]]
         incBounds$state <- local
         allIncBounds <- rbind(incBounds, allIncBounds)
       
     }
     ## Consolidate results for microcephaly incidence
-    means <- allMicroBounds[allMicroBounds$quantile=="mean",c("micro","time","state")]
-    medians <- allMicroBounds[allMicroBounds$quantile=="50%",c("micro","time","state")]
-    lower <- allMicroBounds[allMicroBounds$quantile=="2.5%",c("micro","time","state")]
-    upper <- allMicroBounds[allMicroBounds$quantile=="97.5%",c("micro","time","state")]
+    means <- allMicroBounds[allMicroBounds$quantile=="mean",c("microCeph","time","state")]
+    medians <- allMicroBounds[allMicroBounds$quantile=="50%",c("microCeph","time","state")]
+    lower <- allMicroBounds[allMicroBounds$quantile=="2.5%",c("microCeph","time","state")]
+    upper <- allMicroBounds[allMicroBounds$quantile=="97.5%",c("microCeph","time","state")]
     
     res <- plyr::join(means,medians,by=c("state","time"))
     res <- plyr::join(res, lower, by=c("state","time"))
@@ -433,10 +432,10 @@ forecast_microceph <- function(chain,microParChain=NULL,parTab,
 
 
     ## Consolidate results for ZIKV incidence
-    means <- allIncBounds[allIncBounds$quantile=="mean",c("micro","time","state")]
-    medians <- allIncBounds[allIncBounds$quantile=="50%",c("micro","time","state")]
-    lower <- allIncBounds[allIncBounds$quantile=="2.5%",c("micro","time","state")]
-    upper <- allIncBounds[allIncBounds$quantile=="97.5%",c("micro","time","state")]
+    means <- allIncBounds[allIncBounds$quantile=="mean",c("inc","time","state")]
+    medians <- allIncBounds[allIncBounds$quantile=="50%",c("inc","time","state")]
+    lower <- allIncBounds[allIncBounds$quantile=="2.5%",c("inc","time","state")]
+    upper <- allIncBounds[allIncBounds$quantile=="97.5%",c("inc","time","state")]
     
     res <- plyr::join(means,medians,by=c("state","time"))
     res <- plyr::join(res, lower, by=c("state","time"))
@@ -495,7 +494,7 @@ forecast_known_inc_seir <- function(pars, startDays, endDays,
     tmpIncStart <- inc_start[which(inc_start < switch_time_i)]
     tmpIncEnd <- inc_end[which(inc_start < switch_time_i)]
     tmpIncMean <- (tmpIncStart + tmpIncEnd)/2
-    modelDat <- data.frame("x"=tmpIncMean,"inc"=perCapInc)
+    modelDat <- data.frame("time"=tmpIncMean,"inc"=perCapInc)
 
     
     ## Get subset of incidence for these times
@@ -579,9 +578,9 @@ forecast_known_inc_seir <- function(pars, startDays, endDays,
     ## Reported on mean of start and end report day
     meanDays <- (tmpStart + tmpEnd)/2
     
-    microCephData <- data.frame("x"=meanDays,"microCeph"=probM)
+    microCephData <- data.frame("time"=meanDays,"microCeph"=probM)
 
-    aborted_data <- data.frame("x"=meanDays,"aborted"=aborted_births)
+    aborted_data <- data.frame("time"=meanDays,"aborted"=aborted_births)
     
     return(list("microCeph"=microCephData,"ZIKV"=modelDat,"aborted"=aborted_data))
 }
@@ -606,7 +605,7 @@ forecast_model_normal <- function(pars, microDat,incDat, ts, perCap=FALSE, solve
         predicted <- probM*microDat[,"births"]*pars["propn"]
     }
     meanDay <- (microDat$startDay + microDat$endDay)/2
-    predicted <- data.frame(day=meanDay,number=predicted)
+    predicted <- data.frame(time=meanDay,microCeph=predicted)
     
     ## Generate predicted incidence cases
     N_H <- average_buckets(colSums(y[5:8,]), incDat$buckets)

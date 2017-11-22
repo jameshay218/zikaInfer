@@ -6,7 +6,7 @@
 \usage{
 plot_setup_data(chain, dat = NULL, incDat = NULL, parTab, ts, local,
   runs = NULL, startDay = 0, noMonths = 12, noWeeks = 52,
-  perCap = FALSE, forecast = FALSE)
+  perCap = FALSE, forecast = FALSE, forecastPostChange = FALSE)
 }
 \arguments{
 \item{chain}{the MCMC chain}

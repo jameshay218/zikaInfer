@@ -17,7 +17,4 @@ A single value for mosquito density
 \description{
 Calculates the density needed to generate a given R0 value, assuming that all other parameters are fixed.
 }
-\seealso{
-\code{\link{r0.calc}}
-}
 

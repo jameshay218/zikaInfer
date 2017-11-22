@@ -1,4 +1,5 @@
 ###########################################
+## JAMES HAY 20.11.2017 - jameshay218@gmail.com
 ## This is a script to generate statistics
 ## for the Zika manuscript. It generates statistics
 ## on the microcephaly and incidence data as follows:

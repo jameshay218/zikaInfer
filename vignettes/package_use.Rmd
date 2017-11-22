@@ -2,18 +2,25 @@
 title: "How to use the package"
 author: "James Hay"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: 
+  rmarkdown::html_vignette:
+    toc: true
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 ```{r setup, echo=FALSE}
+library(zikaProj)
+library(lazymcmc)
 library(kableExtra)
 library(knitr)
 options(knitr.table.format = "html")
 knitr::opts_chunk$set(fig.width=6, fig.height=4) 
 ```
+
+### Introduction
+This vignette describes the work flow for analysis using [`zikaProj`] in detail. Users should be able to follow each section to understand how the cod relates to the methods described in the accompanying methods vignette.
 
 ### Input parameters
 The first step in using this package is to define the set of model parameters. An example table of parameters is provided in the package and can be viewed using the following:
@@ -25,7 +32,7 @@ data(exampleParTab)
 pars <- exampleParTab$values
 names(pars) <- exampleParTab$names
 ```
-Refer to the documentation of `?exampleParTab` for a description of the parameter table columns and their uses.
+Refer to the documentation of `?exampleParTab` for a description of the parameter table columns and their uses. Similarly, users can use the `parTabSetup` function to generate a new parameter table from scratch.
 
 ### Transmission model
 The transmission component of the model is an SEIR model with mosquito vectors, described [here](ADD LINK TO VIGNETTE SECTION). The model can be solved as follows:
@@ -40,13 +47,15 @@ plot(y[,"I_H"],type='l',col="red",
      xlab="Time (days)", ylab="ZIKV incidence in humans")
 ```
 
-This SEIR model is then used to generate a per-capita risk of infection at any given time. Note that there is a suite of accompanying functions:
+This SEIR model is then used to generate a per-capita risk of infection at any given time within the `generate_probM` function. Note that there is a suite of accompanying functions, for example:
 ```{r}
 ## Calculate R0
-r0.calc(pars)
+print(r0.calc(pars))
 
 ## Find the mosquito density required for a desired R0
-density.calc(pars, R0=3)
+print(density.calc(pars, R0=3))
+
+print(calculate_AR(r0=3))
 ```
 
 ### The gestational risk model
@@ -56,6 +65,7 @@ risk <- generate_micro_curve(pars)
 plot(risk,type='l',col="blue",
      xlab="Gestational time at infection (days)",ylab="Prob of congenital abnormality")
 ```
+The main version used in the accompanying analyses is model version 1, the gamma risk model.
 
 ### Combined model
 Taken together, the per capita incidence model and gestational risk model are combined to give the expected proportion of microcephaly affected births observed in a given day.
@@ -66,7 +76,7 @@ plot(probM,type='l',col="green",
 ```
 
 ## Simulate data
-
+Incidence and microcephaly incidence data can be simulated using the `generate_multiple_data` function. The idea is to generate fake data with known parameters that represent actual observed data:
 ```{r}
 library(ggplot2)
 
@@ -77,6 +87,10 @@ simDat <- generate_multiple_data(ts, parTab=exampleParTab, weeks=FALSE,
 microDat <- simDat[[1]]
 incDat <- simDat[[2]]
 peakTimes <- simDat[[3]]
+
+## Save simulated data
+write.table(microDat,"sim_microDat.csv",sep=",",row.names=FALSE)
+write.table(incDat,"sim_incDat.csv",sep=",",row.names=FALSE)
 
 ## Check the generated data
 ggplot(incDat) + 
@@ -90,11 +104,75 @@ ggplot(incDat) +
 ```
 
 ## Re-estimate model parameters
+Parameter estimation is done using the [`lazymcmc`](www.github.com/jameshay218/lazymcmc) package as follows:
+```{r}
+library(lazymcmc)
+## Generate random starting points for MCMC chain
+## Note that we have to constrain the starting points for R0 and the epidemic seed time
+## such that trajectory is near expected peak time
+startTab <- generateStartingParTab(exampleParTab, bahiaPeakTimes, restrictedR0=TRUE,"")
+
+## MCMC control parameters
+mcmcPars <- c("adaptive_period"=2000,"iterations"=5000,"opt_freq"=1000,"thin"=10,"save_block"=100,"popt"=0.44)
+
+## Run MCMC chain using univariate sampler
+result <- lazymcmc::run_MCMC(parTab=startTab, data=microDat, mcmcPars=mcmcPars,filename="test",
+                    CREATE_POSTERIOR_FUNC = create_posterior, mvrPars=NULL,PRIOR_FUNC=NULL,
+                    OPT_TUNING=0.2, ts=ts,incDat=incDat,peakTimes=NULL)
+
+## Use these results to get covariance matrix to run multivariate sampler
+chain <- read.csv(result$file)
+chain <- chain[chain$sampno >= mcmcPars["adaptive_period"],]
+covMat <- cov(chain[,2:(ncol(chain)-1)])
+startTab$values <- get_best_pars(chain)
+mvrPars <- list(covMat,2.38/sqrt(nrow(startTab[startTab$fixed==0,])),w=0.8)
+mcmcPars["popt"] <- 0.234
+
+## Run MCMC chain using multivariate sampler
+final <- lazymcmc::run_MCMC(parTab=startTab, data=bahiaMicroDat, mcmcPars=mcmcPars,filename="test",
+                    CREATE_POSTERIOR_FUNC = create_posterior, mvrPars=mvrPars,PRIOR_FUNC=NULL,
+                    OPT_TUNING=0.2, ts=ts,incDat=bahiaIncDat,peakTimes=NULL)
+```
 
 ## Assess chain convergence
+The MCMC chain should then be checked for correct convergence using the functions available in [`lazymcmc`], which uses the [`coda`] package.
+```{r}
+library(data.table)
+library(coda)
+# Function to read in MCMC chains if possible and then calculate convergence diagnostics
+read_and_check <- function(wd, parTab, burnin){
+  chain <- lazymcmc::load_mcmc_chains(wd, parTab, TRUE,1,burnin, TRUE,FALSE,FALSE)
+  if(length(chain[[1]]) > 1){
+    ess <- ess_diagnostics(chain[[1]],200)
+    gelman <- gelman_diagnostics(chain[[1]], 1.1)
+    minESS <- min(ess$ESS)
+    whichMinESS <- names(which.min(ess$ESS))
+    maxGelman <- gelman$WorstGelman[1]
+    maxGelmanName <- gelman$WorstGelman[2]
+    mpsrf <- gelman$WorstGelman[3]
+    rerun <- gelman$Rerun | minESS < 200
+  } else {
+    minESS <- NA
+    whichMinESS <- NA
+    maxGelman <- NA
+    maxGelmanName <- NA
+    mpsrf <- NA
+    rerun <- TRUE
+  }
+  return(list(minESS,whichMinESS,maxGelman,maxGelmanName,mpsrf,rerun))
+}
 
-## Plot model fits
+dir <- getwd() ## The working directory that the MCMC chain was run
+## The parameter table used in this run will 
+## be saved in the working directory
+parTab <- read_inipars(dir) 
+res <- read_and_check(dir, parTab, mcmcPars["adaptive_period"])
+print(res)
+```
 
-## Plot microcephaly risk curve
+## Plot inferred microcephaly risk curve
+```{r}
+plot_random_microceph_curves(chain,100)
+indiv_model_fit("sim_microDat.csv","sim_incDat.csv", "bahia","Simulated data",0.015,200,0.01, 730, FALSE, TRUE, parTab, chain, FALSE, FALSE)
+```
 
-## Check parameter posterior densities

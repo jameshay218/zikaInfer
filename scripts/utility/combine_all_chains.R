@@ -1,4 +1,9 @@
-## Reads all MCMC chains in the vector of directories. 
+#######################################
+## JAMES HAY 20.11.2017 - jameshay218@gmail.com
+## Reads all MCMC chains in the vector of directories. You should specify the "topDir", which contains all of the subfolders.
+## "runNames" is then the full folder path (within this topDir) that contains each of the MCMC chains. Note that
+## the script expects folders within these indicating which version of the model was run ie. model_1, model_2
+## "correctRunNames" is simply used to reformat the run names into a neater form
 ## Adds states, run name, model version and chain number.
 #############################################
 library(data.table)
@@ -6,19 +11,29 @@ library(coda)
 library(zikaProj)
 library(nleqslv)
 
-saveFile <- "~/Documents/Zika/combinedChains.csv"
-topDir <- "/media/james/JH USB/outputs/"
+saveFile <- "~/Documents/Zika/combinedChains.csv" ## Where to save the results
+topDir <- "~/net/home/zika/outputs/" ## Where are the MCMC chains saved?
 thin <- 100
-burnin <- 750000
+## Thin the read in MCMC chains - this speeds up the code massively and prevents
+## the creation of a massive final csv file
+burnin <- 750000 ## Iterations to discard
 
-runNames <- c("bahia/bahia","colombia_inc/colombia","northeast/northeast")
+runNames <- c("bahia/bahia","colombia_inc/colombia","northeast/northeast",
+              "colombia_inc_month/colombia","colombia_peak/colombia","multi_3","multi_3_varied",
+              "reports_2_inc","reports_2_weeks","reports_3","reports_3_inc",
+              "reports_3_varied_inc","riograndedonorte/riograndedonorte")
 
-correctedRunNames <- c("bahia/bahia"="Brazil, Bahia (reports)",
+correctedRunNames <- c("bahia/bahia"="Bahia, Brazil (reports)",
                        "colombia_inc/colombia"="Colombia",
-                       "northeast/northeast"="Northeast Brazil")
+                       "northeast/northeast"="Northeast Brazil",
+                       "colombia_inc_month/colombia"="Colombia (monthly)",
+                       "colombia_peak/colombia"="Colombia (peak only)",
+                       "multi_3"="Brazil Model 3 states",
+                       "reports_3" = "Reports 3 states, no incidence",
+                       "reports_3_inc"="Reports 3 states",
+                       "riograndedonorte/riograndedonorte"="Rio Grande do Norte, Brazil (reports)")
 
-
-models <- c("model_1")
+models <- c("model_1","model_2")
 extraMicroParNames <-c("chain","mode","maxWeek","lower","upper","range","max","tr1","tr2","tr3")
 extraStateParNames <- c("R0","AR","chain","state")
 
@@ -64,10 +79,11 @@ for(run in runNames){
             for(i in indices){
                 print(states[i+1])
                 tmpChain1 <- isolate_location(states[i+1],i,tmpChain,parTab,"chain")
-                tmpChain1 <- tmpChain1[,colnames(tmpChain1) %in% parNames]
-                tmpChain1$R0 <- r0.vector(tmpChain1)
-                tmpChain1$AR <- calculate_AR(tmpChain1$R0)
-                stateChain <- rbind(stateChain,tmpChain1)
+                tmpChain2 <- tmpChain1[,colnames(tmpChain1) %in% parNames]
+                tmpChain2$R0 <- r0.vector(tmpChain1)
+                tmpChain2$AR <- calculate_AR(tmpChain1$R0)
+                tmpChain2$state <- states[i+1]
+                stateChain <- rbind(stateChain,tmpChain2)
             }
             ## If only one state/location, just deal with this on its own
         } else {
@@ -90,6 +106,10 @@ for(run in runNames){
         allChain <- rbind(allChain, meltChain)
     }
 }
+
+## Format and save
+allChain <- allChain[allChain$runName %in% names(correctedRunNames),]
+allChain$runName <- as.character(allChain$runName)
 allChain$runName <- correctedRunNames[allChain$runName]
 allChain$chain <- as.factor(allChain$chain)
 allChain$state <- as.factor(allChain$state)

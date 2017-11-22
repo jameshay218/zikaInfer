@@ -34,11 +34,15 @@ source("bahia_forecasts.R") # Yes
 source("nejm_forecasts.R") # Yes
 source("rio_forecasts.R") # Yes
 
+source("bahia_forecasts_noreportingchange.R") # Yes
+source("nejm_forecasts_noreportingchange.R") # Yes
+
 all_jobs <- list(jobs_bahia, jobs_nejm, jobs_colombia,
                  jobs_rio,jobs_pernambuco,
                  jobs_multi3, jobs_reports3, jobs_reports2,
-                 jobs_bahia_forecasts, jobs_nejm_forecasts,
-                 jobs_rio_forecasts)
+                 jobs_bahia_forecast, jobs_nejm_forecasts,
+                 jobs_rio_forecasts,  jobs_nejm_forecastsB,
+                 jobs_bahia_forecastsB)
 
 statuses <- NULL
 for(i in 1:length(all_jobs)){

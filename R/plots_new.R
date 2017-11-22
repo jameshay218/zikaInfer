@@ -33,7 +33,6 @@ generate_peak_time_table <- function(dat, incDat){
         peakTimes <- merge(peakTimes, fariaPeaks, by="local",all=TRUE)
     }
     return(peakTimes)
-
 }
 
 #' @export
@@ -147,6 +146,7 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
                             parTab=NULL,
                             chain=NULL,
                             forecast=FALSE,
+                            forecastPostChange=FALSE,
                             weeks=FALSE){
     ts <- seq(0,3003,by=1)
 
@@ -173,12 +173,28 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
     f1 <- create_forecast_function(parTab, microDat, incDat,ts,TRUE)
     for(i in 1:length(samples)){
         pars <- get_index_pars(chain,samples[i])
+        ## If we want to assume that no behaviour changed then we need to manually set these parameters
+        ## for forecasting method
+        if(forecastPostChange){
+          pars["incPropn2"] <- pars["incPropn"]
+          pars["abortion_rate"] <- pars["avoided_births"] <- pars["birth_reduction"] <- 0
+          pars["propn2"] <- pars["propn"]
+        }
+        ## If forecasting version, we had baseline prob on exponential scale
         if(forecast) pars["baselineProb"] <- exp(pars["baselineProb"])
         microCurves <- rbind(microCurves, f1(pars,TRUE)$microCeph)
     }
-    predict_bounds <- as.data.frame(t(sapply(unique(microCurves$day),function(x) quantile(microCurves[microCurves$day==x,"number"],c(0.025,0.5,0.975)))[c(1,3),]))
+    predict_bounds <- as.data.frame(t(sapply(unique(microCurves$time),function(x) quantile(microCurves[microCurves$time==x,"microCeph"],c(0.025,0.5,0.975)))[c(1,3),]))
     bestPars <- get_best_pars(chain)
+    ## If forecasting version, we had baseline prob on exponential scale
     if(forecast) bestPars["baselineProb"] <- exp(bestPars["baselineProb"])
+    ## If we want to assume that no behaviour changed then we need to manually set these parameters
+    ## for forecasting method
+    if(forecastPostChange){
+      bestPars["incPropn2"] <- bestPars["incPropn"]
+      bestPars["abortion_rate"] <- bestPars["avoided_births"] <- bestPars["birth_reduction"] <- 0
+      bestPars["propn2"] <- bestPars["propn"]
+    }
     best_predict <- f1(bestPars,TRUE)$microCeph
     predict_bounds <- cbind(predict_bounds, best_predict[,2])
     colnames(predict_bounds) <- c("lower","upper","best")
@@ -195,7 +211,7 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
     labels <- rep(getDaysPerMonth(3),4)
     labels <- c(0,cumsum(labels))
     labels_names <- as.yearmon(as.Date(labels,origin="2013-01-01"))
-    tmp <- plot_setup_data(chain, microDat, incDat,parTab, ts, local,200,365, noMonths=36,noWeeks=150,perCap=TRUE, forecast=forecast)
+    tmp <- plot_setup_data(chain, microDat, incDat,parTab, ts, local,200,365, noMonths=36,noWeeks=150,perCap=TRUE, forecast=forecast, forecastPostChange=forecastPostChange)
     microBounds <- tmp[["microBounds"]]
     incBounds <- tmp[["incBounds"]]
     microDat$meanDay <- rowMeans(microDat[,c("startDay","endDay")])
@@ -208,7 +224,11 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
     microDat$local <- localName    
     incBounds[,c("lower","upper","best")] <- incBounds[,c("lower","upper","best")]
     incBounds$local <- localName
+    data(locationInfo)
+    peakTimes <- locationInfo[locationInfo$rawName == local,c("peakTime","peakTimeRange")]
     peakTimes$local <- localName
+    peakTimes$peakUpper <- peakTimes$peakTime + peakTimes$peakTimeRange/2
+    peakTimes$peakLower <- peakTimes$peakTime - peakTimes$peakTimeRange/2
     
     p <- ggplot() +
         geom_ribbon(data=microBounds,aes(ymin=lower,ymax=upper,x=x),fill="blue",alpha=0.5) +
@@ -216,14 +236,16 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
         geom_line(data=microBounds,aes(x=x,y=best),colour="blue") +
         geom_line(data=incBounds,aes(x=x,y=best/incScale),colour="green")
     if(!is.null(incFile)){
+      p <- p + geom_line(data=incDat,aes(x=meanDay,y=inc/N_H/incScale),col="red",linetype="longdash")
+      if(forecast){
         p <- p +
             geom_ribbon(data=predict_bounds,aes(ymin=lower,ymax=upper,x=time),fill="purple",alpha=0.5) +
-            geom_line(data=predict_bounds,aes(x=time,y=best),colour="purple") +
-            geom_line(data=incDat,aes(x=meanDay,y=inc/N_H/incScale),col="red",linetype="longdash")
+            geom_line(data=predict_bounds,aes(x=time,y=best),colour="purple")
+      }
     } else {
         p <- p +
             geom_rect(data=peakTimes,
-                      aes(xmin=start,xmax=end,ymin=0,ymax=Inf,group=local),
+                      aes(xmin=peakUpper,xmax=peakLower,ymin=0,ymax=Inf,group=local),
                       alpha=0.5,fill="red") +
              geom_vline(data=peakTimes,
                         aes(xintercept=peakTime,group=local),col="black",lty="dashed")
