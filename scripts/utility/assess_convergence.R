@@ -8,9 +8,14 @@ library(lazymcmc)
 library(zikaProj)
 library(coda)
 
-## Location of all the MCMC chains
-chainwd <- "~/net/home/zika/outputs/"
+## Location of all the MCMC chains - this should be the top level directory that contains
+## the MCMC chain subfolders
+#chainwd <- "~/net/home/zika/outputs/"
+chainwd <- "/media/james/JH USB/Forecast_runs/"
 setwd(chainwd)
+## This might vary depending on the subfolder - you should either specify each one, or run this script
+## for each length of chain
+burnin <- 500000
 
 minESS <- NULL
 minESSName <- NULL
@@ -52,15 +57,9 @@ read_and_check <- function(wd, parTab, burnin){
 
 ## Go through each directory
 for(dir in allDirs){
-  print(dir)
-  ## If this is a forecasting analysis, run slightly differently
-    if(length(grep("forecast",dir)) == 0){
-      parTab <- read_inipars(dir)
-      res <- read_and_check(dir, parTab, 750000)
-    } else {
-      parTab <- read.csv("~/net/home/zika/inputs/parTab_fixed_switch_early.csv")
-      res <- read_and_check(dir, parTab, 50000)
-    }
+    print(dir)
+    parTab <- read_inipars(dir) ## Read initial parameter table from working directory
+    res <- read_and_check(dir, parTab, burnin) ## Check convergence
     minESS <- c(minESS, res[[1]])
     minESSName <- c(minESSName, res[[2]])
     
@@ -72,4 +71,4 @@ for(dir in allDirs){
 
 convergence <- data.frame(allDirs, minESS,minESSName,maxGelman,maxGelmanName,mpsrf,reruns)
 colnames(convergence) <- c("runName","minESS","whichMinESS","maxGelman","whichMaxGelman","mpsrf","rerun")
-write.table(convergence, "~/Documents/Zika/convergenceCheck.csv",sep=",",row.names=FALSE)
+write.table(convergence, "~/Documents/Zika/convergenceCheck_forecasts.csv",sep=",",row.names=FALSE)
