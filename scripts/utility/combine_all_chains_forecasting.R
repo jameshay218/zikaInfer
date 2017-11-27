@@ -49,7 +49,7 @@ for(run in runNames){
     }
     ## Load MCMC chain from this run
     tmpChain <- zikaProj::load_mcmc_chains(dir,FALSE,FALSE,FALSE,thin,burnin,TRUE)
-    parTab <- read.csv("~/net/home/zika/inputs/parTab_forecast.csv",stringsAsFactors=FALSE)
+    parTab <- read.csv("~/net/home/zika1/zika/inputs/parTab_forecast.csv",stringsAsFactors=FALSE)
 
     parTab[parTab$names %in% c("L_H","N_H"),"values"] <- as.numeric(incDat[1,c("L_H","N_H")])
     parTab[parTab$names == "L_H","values"] <- parTab[parTab$names == "L_H","values"]*365
@@ -60,7 +60,7 @@ for(run in runNames){
     ## Calculating abortions
     for(i in 1:nrow(tmpChain)){
         pars <- get_index_pars(tmpChain,i)
-        pars["baselineProb"] <- exp(pars["baselineProb"])
+        #pars["baselineProb"] <- exp(pars["baselineProb"])
         aborted[i] <- sum(f(pars,TRUE)$aborted$aborted)
     }
     tmpChain$abortions <- aborted

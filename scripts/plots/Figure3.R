@@ -12,8 +12,9 @@ library(hexbin)
 library(RColorBrewer)
 library(zikaProj)
 
-chainWD <- "~/net/home/zika/outputs/"
-parTab <- read.csv("~/net/home/zika/inputs/parTab_fixed_switch_early.csv",stringsAsFactors=FALSE)
+#chainWD <- "~/net/home/zika/outputs/"
+chainWD <- "/media/james/JH USB/Forecast_runs/"
+parTab <- read.csv("~/net/home/zika1/zika/inputs/parTab_fixed_switch_early.csv",stringsAsFactors=FALSE)
 
 
 heatmap_theme <- theme(axis.text.x=element_text(size=8,family="Arial",color="black"),
@@ -26,17 +27,17 @@ heatmap_theme <- theme(axis.text.x=element_text(size=8,family="Arial",color="bla
                        strip.text=element_text(size=8,family="Arial")) + theme_bw()
 
 # 2d densities ------------------------------------------------------------
-bahia_chain <- as.data.frame(lazymcmc::load_mcmc_chains(paste0(chainWD,"bahia_forecast"),parTab,FALSE,100,50000,
+bahia_chain <- as.data.frame(lazymcmc::load_mcmc_chains(paste0(chainWD,"bahia_forecast"),parTab,FALSE,1,500000,
                                           TRUE,FALSE,FALSE)[["chain"]])
 bahia_chain$propn_increase <- bahia_chain$incPropn2/bahia_chain$incPropn
 
 bahia_chain_noreportingchange <- as.data.frame(lazymcmc::load_mcmc_chains(
                                                              paste0(chainWD,"bahia_forecast_noreportingchange"),
-                                                             parTab,FALSE,100,50000,
+                                                             parTab,FALSE,1,500000,
                                                              TRUE,FALSE,FALSE)[["chain"]])
 
 datFile = "~/Documents/Zika/Data/brazil/microceph_reports_2016.csv"
-incFile = "~/Documents/Zika/Data/brazil//zika_inc_reports.csv"
+incFile = "~/Documents/Zika/Data/brazil/zika_inc_reports.csv"
 local <- "bahia"
 microDat <- read.csv(datFile,
                      stringsAsFactors=FALSE)
@@ -52,8 +53,7 @@ aborted <- NULL
 
 for(i in 1:nrow(bahia_chain_noreportingchange)){
     pars <- get_index_pars(bahia_chain_noreportingchange,i)
-    pars["baselineProb"] <- exp(pars["baselineProb"])
-    aborted[i] <- sum(f(pars,TRUE)$aborted$aborted)
+    aborted[i] <- sum(f(pars,FALSE)$aborted$aborted)
 }
 bahia_chain_noreportingchange$abortions <- aborted
 
@@ -65,12 +65,12 @@ heatmap_theme <- heatmap_theme + theme(
 )
 
 p1 <- ggplot() + geom_hex(data=bahia_chain,aes(x=birth_reduction,y=propn_increase,fill=..density..))+ 
-    scale_fill_gradient2(low="darkturquoise",mid="#FAFDB8",high="#9E0142",midpoint= 0.005) +
+    scale_fill_gradient2(low="#5E4FA2",mid="#FAFDB8",high="#9E0142",midpoint= 0.0035) +
 ylab("Relative increase in\n ZIKV reporting rate") +
     xlab("Proportion decrease in\nZIKV affected births") +
     labs(fill="Density") + heatmap_theme
 p2 <- ggplot() + geom_hex(data=bahia_chain,aes(x=propn_increase,y=propn,fill=..density..))+ 
-    scale_fill_gradient2(low="darkturquoise",mid="#FAFDB8",high="#9E0142",midpoint= 0.005) +
+    scale_fill_gradient2(low="#5E4FA2",mid="#FAFDB8",high="#9E0142",midpoint= 0.006) +
 ylab("Microcephaly reporting\nrate in first wave") +
     xlab("Relative increase in\n ZIKV reporting rate") +
     labs(fill="Density") + heatmap_theme
@@ -81,7 +81,7 @@ scale_x_continuous(limits=c(0,1),breaks=seq(0,1,by=0.25)) +
     xlab("Relative reduction in infection\nrisk in pregnant women") +
     labs(fill="Density") + heatmap_theme
 p4 <- ggplot() + geom_hex(data=bahia_chain_noreportingchange,aes(x=abortion_rate,y=abortions,fill=..density..),bins=200)+ 
-    scale_fill_gradient2(low="turquoise4",mid="#FAFDB8",high="#9E0142",midpoint= 0.002) +
+    scale_fill_gradient2(low="turquoise4",mid="#FAFDB8",high="#9E0142",midpoint= 0.0025) +
 ylab("Total number of microcephaly\naffected births aborted") +
     xlab("Proportion of microcephaly\naffected births aborted") +
     labs(fill="Density") + heatmap_theme
@@ -101,6 +101,11 @@ fig3
 dev.off()
 
 cairo_ps("Fig3.eps",width=7,height=6,family="Arial")
+fig3
+dev.off()
+
+
+svg("Fig3.svg",width=7,height=6,family="Arial")
 fig3
 dev.off()
 

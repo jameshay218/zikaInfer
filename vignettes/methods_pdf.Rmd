@@ -4,6 +4,7 @@ date: '`r Sys.Date()`'
 output:
   pdf_document:
     toc: yes
+    number_sections: yes
   html_document:
     toc: yes
   rmarkdown::html_vignette:
@@ -133,31 +134,10 @@ A summary of data included in the analyses can be found in Table 1. Some data so
 
 Numbers of live births were obtained for Brazil from the SINASC/CGIAE/SVS/MS system.[@Johansson2016, @Zoca2016] For Colombia, live births were obtained from a publication of microcephaly and ZIKV incidence in Colombia.[@Cuevas2016] Where reporting of live births was incomplete, we estimated the number of live births by averaging the number of births in the previous two years for the same dates.
 
-```{r, echo=FALSE}
-data_sources <- read.csv("data_sources.csv", stringsAsFactors=FALSE)
-data_sources <- data_sources[,colnames(data_sources) != "FullSource"]
-colnames(data_sources) <- c("Country","Location","Incidence type","Resolution","Digitised?","Source")
-kable(data_sources,"html", caption="Table 1. Summary of datasets included in the analysis") %>%
-kable_styling(font_size=10)
-```
-
-
 ## Model parameters
 Model parameters related to ZIKV transmission were obtained from the literature as described in Table 2. Parameters were predominately chosen based on a previously published transmission model, with point values adjusted to give a generation time of approximately 20 days.[@Ferguson2016] Given a fixed generation time, the shape of the SEIR model predicted incidence curve was allowed to vary depending on the value of $R_0$. As $R_0$ is comprised of multiple correlated parameters, all components of $R_0$ other than the vector density per human were fixed at arbitrary values.
-```{r, echo=FALSE}
-parameters <- read.csv("model_parameters.csv", stringsAsFactors=FALSE)
-kable(parameters,"html", caption="Table 2. Summary of model parameters") %>%
-kable_styling(font_size=10)
-```
-a [@Sheppard1969]; b [@Lessler2016]; c [@Majumder2016]; d [@Ferguson2016]; e [@BahiaLifeExpectancy]; f[@ColombiaLifeExpectancy]; g [@BahiaPopn]; h[@ColombiaPopn].
 
 ## Vital statistics
-```{r, echo=FALSE}
-colnames(vital_statistics) <- c("State/Country","Population size (2015)a,b","Life expectancy (years) (2014)c,d")
-vital_statistics <- vital_statistics[!(vital_statistics$`State/Country` %in% c("Colombia 2014","Colombia 2016","Ceará")),]
-kable(vital_statistics,"html", caption="Table 3. Vital statistics")
-```
-a [@BrazilPopn]; b [@ColombiaPopn]; c [@BahiaLifeExpectancy]; d[@ColombiaLifeExpectancy].
 
 # Model fitting
 Using the expected number of observed microcephaly cases as described above, we fit the model to available microcephaly incidence and live birth data to estimate model parameters. The likelihood function and fitting algorithm are described below.

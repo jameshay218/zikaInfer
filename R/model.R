@@ -620,10 +620,35 @@ forecast_model_normal <- function(pars, microDat,incDat, ts, perCap=FALSE, solve
     return(list("microCeph"=predicted,"ZIKV"=y))
 }
 
-
+#' Model function for CRS prediction
+#'
+#' Using the microcephaly risk model, produces a forecast of CRS affected births for all time periods and calculates a likelihood of observing given CRS cases. Uses reported incidence as per capita risk (after dividing my reporting rate).
+#' @export
+forecast_CRS <- function(pars, startDays, endDays,
+                                buckets, microCeph, births,
+                                inc, nh, inc_buckets,
+                                inc_start, inc_end, perCap=FALSE){
+    switch_time <- pars["switch_time"]
+     ## Generate microcephaly curve for these parameters
+    probs <- generate_micro_curve(pars)
+    ## Use incidence data to get daily incidence
+    ## Get incidence before and after the switch time - different reporting rates
+    inc <- inc/pars["incPropn"]
+    inc <- rep(inc/nh/inc_buckets, inc_buckets)
+    ## Generate probability of observing a microcephaly case on a given day
+    probM <- generate_probM_aux(inc, probs, pars["baselineProb"])
+    
+    probM[startDays < switch_time] <- probM[startDays < switch_time]*pars["propn"]
+    probM[startDays >= switch_time] <- probM[startDays >= switch_time]*pars["propn2"]
+   
+    probM <- average_buckets(probM,buckets)
+    if(!perCap) probM <- probM*births
+    
+    return(probM)
+}
 
 #' @export
-create_forecast_function <- function(parTab,microDat,incDat, ts=seq(0,3003,by=1), singleWave=TRUE){
+create_forecast_function <- function(parTab,microDat,incDat, ts=seq(0,3003,by=1), singleWave=TRUE, salvador=FALSE){
 
     startDays <- microDat$startDay
     endDays <- microDat$endDay
@@ -645,6 +670,15 @@ create_forecast_function <- function(parTab,microDat,incDat, ts=seq(0,3003,by=1)
             return(y)
         }
 
+    } else if(salvador){
+        f <- function(values, perCap=FALSE){
+            names(values) <- names_pars
+            y <- forecast_CRS(values, startDays, endDays,
+                              buckets, births,microCeph,
+                              zikv, nh, inc_buckets,
+                              inc_start, inc_end, perCap)
+            return(y)
+        }
     } else {        
         f <- function(values, perCap=FALSE){
             names(values) <- names_pars

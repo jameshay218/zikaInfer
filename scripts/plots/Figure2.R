@@ -13,7 +13,7 @@ library(ggplot2)
 library(extrafont)
 
 ## Where are the MCMC chains stored
-topDir <- "~/net/home/zika/outputs/"
+topDir <- "/media/james/JH USB/Forecast_runs/"
 
 ###################################################
 ## NEJM Northeast Brazil model fit
@@ -104,7 +104,9 @@ runs= 100
 ylim <- 0.03
 bahia_forecast <- indiv_model_fit(datFile,incFile, local, localName,
                               incScale, runs, ylim,xlim=730,bot=FALSE,standalone=TRUE,
-                              parTab=parTab, chain=chain, forecast=TRUE, forecastPostChange=TRUE, weeks=FALSE)
+                              parTab=parTab, chain=chain, forecast=TRUE, forecastPostChange=TRUE, weeks=FALSE) +
+    theme(axis.text.x=element_text(angle=0,hjust=0.5),                                                                            
+          legend.position="top")
 
 ###################################################
 ## NEJM Northeast Brazil FORECAST fit
@@ -154,11 +156,15 @@ dev.off()
 ####################
 ## ESSAY FIGURE 2
 ## Need forecast_plots.R too
-fig2 <- plot_grid(bahia_forecast,trend_plot,ncol=1,align="hv")
+fig2 <- plot_grid(bahia_forecast,trend_plot,ncol=1,align="hv",rel_heights = c(1.3,1))
 png("Fig2.png",width=6,height=6,units="in",res=300)
 print(fig2)
 dev.off()
 
-cairo_ps("Fig2.eps",width=6,height=6,family="Arial")
+svg("Fig2.svg",width=7.5,height=6,family="Arial")
+print(fig2)
+dev.off()
+
+cairo_ps("Fig2.eps",width=7.5,height=6,family="Arial")
 print(fig2)
 dev.off()

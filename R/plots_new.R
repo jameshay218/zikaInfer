@@ -231,40 +231,40 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
     peakTimes$peakLower <- peakTimes$peakTime - peakTimes$peakTimeRange/2
     
     p <- ggplot() +
-        geom_ribbon(data=microBounds,aes(ymin=lower,ymax=upper,x=x),fill="blue",alpha=0.5) +
-        geom_ribbon(data=incBounds,aes(ymin=lower/incScale,ymax=upper/incScale,x=x),fill="green",alpha=0.5) +
-        geom_line(data=microBounds,aes(x=x,y=best),colour="blue") +
-        geom_line(data=incBounds,aes(x=x,y=best/incScale),colour="green")
+        geom_ribbon(data=microBounds,aes(ymin=lower,ymax=upper,x=x,fill="Model microcephaly (two waves)"),alpha=0.5) +
+        geom_ribbon(data=incBounds,aes(ymin=lower/incScale,ymax=upper/incScale,x=x,fill="Model ZIKV"),alpha=0.5) +
+        geom_line(data=microBounds,aes(x=x,y=best,colour="Model microcephaly (two waves)")) +
+        geom_line(data=incBounds,aes(x=x,y=best/incScale,colour="Model ZIKV"))
     if(!is.null(incFile)){
-      p <- p + geom_line(data=incDat,aes(x=meanDay,y=inc/N_H/incScale),col="red",linetype="longdash")
-      if(forecast){
-        p <- p +
-            geom_ribbon(data=predict_bounds,aes(ymin=lower,ymax=upper,x=time),fill="purple",alpha=0.5) +
-            geom_line(data=predict_bounds,aes(x=time,y=best),colour="purple")
-      }
+        p <- p + geom_line(data=incDat,aes(x=meanDay,y=inc/N_H/incScale,col="Reported ZIKV"),linetype="longdash")
+        if(forecast){
+            p <- p +
+                geom_ribbon(data=predict_bounds,aes(ymin=lower,ymax=upper,x=time,fill="Model microcephaly (single wave)"),alpha=0.5) +
+                geom_line(data=predict_bounds,aes(x=time,y=best,colour="Model microcephaly (single wave)"))
+        }
     } else {
         p <- p +
             geom_rect(data=peakTimes,
                       aes(xmin=peakUpper,xmax=peakLower,ymin=0,ymax=Inf,group=local),
                       alpha=0.5,fill="red") +
-             geom_vline(data=peakTimes,
-                        aes(xintercept=peakTime,group=local),col="black",lty="dashed")
+            geom_vline(data=peakTimes,
+                       aes(xintercept=peakTime,group=local),col="black",lty="dashed")
     }
-    p <- p + geom_point(data=microDat, aes(x=meanDay, y = microCeph/births), size=0.6) +
+    p <- p + geom_point(data=microDat, aes(x=meanDay, y = microCeph/births,col="Reported microcephaly"), size=0.6) +
         facet_wrap(~local,scales="free_y",ncol=1) +
         scale_y_continuous(limits=c(0,ylim),breaks=seq(0,ylim,by=ylim/5),expand=c(0,0),sec.axis=sec_axis(~.*(incScale),name="Reported per capita\nZIKV infection incidence (red)"))+
         theme_classic()
     if(standalone){
         p <- p + theme(axis.text.y=element_text(size=8,family="Arial"),
-                      axis.title=element_text(size=8,family="Arial"),
-                      strip.text=element_blank(),
-                      axis.text.x=element_text(size=8, family="Arial",hjust=1,angle=45),
-                      panel.grid.minor = element_blank())
+                       axis.title=element_text(size=8,family="Arial"),
+                       strip.text=element_blank(),
+                       axis.text.x=element_text(size=8, family="Arial",hjust=1,angle=45),
+                       panel.grid.minor = element_blank())
         if(bot){
             p <- p + theme(
-                      axis.text.x=element_blank(),
-                      axis.title.x=element_blank(),
-                      axis.ticks.x = element_blank())
+                         axis.text.x=element_blank(),
+                         axis.title.x=element_blank(),
+                         axis.ticks.x = element_blank())
             }
 
 
@@ -294,9 +294,30 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
     x_lower <- 365
     if(!is.null(xlim)) x_lower <- xlim
     p <- p +
-        scale_x_continuous(limits=c(x_lower,max(labels)),breaks=labels,labels=labels_names,expand=c(0,0))+
+        scale_x_continuous(limits=c(x_lower,max(labels)),breaks=labels,labels=labels_names)+#,expand=c(0,0))+
         ylab("Reported per birth\nmicrocephaly incidence (black)") +
-        xlab("")
+        xlab("") +
+        geom_blank(data=data.frame(x=rep(0,5),
+                                   group=c("Model microcephaly (two waves)",
+                                           "Model ZIKV",
+                                           "Reported ZIKV",
+                                           "Model microcephaly (single wave)",
+                                           "Reported microcephaly")),
+                   aes(y=x,color=group,fill=group))+
+        scale_colour_manual(name="",values=c("Model microcephaly (two waves)"="purple",
+                                             "Model ZIKV"="green",
+                                             "Reported ZIKV"="red",
+                                             "Model microcephaly (single wave)"="blue",
+                                             "Reported microcephaly"="black"))+
+        scale_fill_manual(name="",values=c("Model microcephaly (two waves)"="purple",
+                                           "Model ZIKV"="green",
+                                           "Reported ZIKV"=NA,
+                                           "Model microcephaly (single wave)"="blue",
+                                           "Reported microcephaly"=NA)) +
+        theme(legend.position=c(1,1),
+              legend.justification = c(1,1),
+              legend.text=element_text(size=8,family="Arial"),
+              legend.background = element_blank())
     return(p)
 }
 

@@ -278,19 +278,19 @@ NumericVector generate_probM_forecast(NumericVector riskI, NumericVector probM, 
 	// Prob of getting ZIKV associated microceph and didn't get baseline up to now
 	// Or got baseline microceph this day
 	// Or both happened on this day
-	day_prob = tmp1*tmp_bp + tmp_bp*bp + tmp1*(1-tmp_bp)*bp*tmp_bp;
+	day_prob = tmp1*tmp_bp + tmp_bp*bp + tmp1*bp*tmp_bp;
 	day_prob = aborted_prop*day_prob;
 	
 	/* If after switch time but not within abortion time, just modified infection risk */
       } else if(j >= switch_t){
 	
 	tmp1 = riskI[j]*(1-birth_reduction)*probM[j-(testDay-probM_size)];
-	day_prob = tmp1*tmp_bp + tmp_bp*bp + tmp1*(1-tmp_bp)*bp*tmp_bp;
+	day_prob = tmp1*tmp_bp + tmp_bp*bp + tmp1*bp*tmp_bp;
 	/* Otherwise, just normal risk of getting infected multiplied by risk of
 	   microcephaly given infection in that gestational week */
       } else {
 	tmp1 = riskI[j]*probM[j-(testDay-probM_size)];
-	day_prob = tmp1*tmp_bp + tmp_bp*bp + tmp1*(1-tmp_bp)*bp*tmp_bp;
+	day_prob = tmp1*tmp_bp + tmp_bp*bp + tmp1*bp*tmp_bp;
 	day_prob = day_prob*(1-aborted_prop_before);
       }
       tmp += day_prob;

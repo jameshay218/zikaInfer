@@ -412,7 +412,7 @@ posterior_known_inc_seir <- function(pars, startDays, endDays,
 
     ## Generate probability of observing a microcephaly case on a given day
     ## Note that this is on a log scale here
-    bp <- exp(pars["baselineProb"])
+    bp <- pars["baselineProb"]
     
     tmp_buckets <- buckets[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
     tmp_births <- births[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
@@ -509,13 +509,15 @@ posterior_CRS <- function(pars, startDays, endDays,
     ## Get incidence before and after the switch time - different reporting rates
     inc <- inc/pars["incPropn"]
     inc <- rep(inc/nh/inc_buckets, inc_buckets)
-    
     ## Generate probability of observing a microcephaly case on a given day
     probM <- generate_probM_aux(inc, probs, pars["baselineProb"])
+    
     probM[startDays < switch_time] <- probM[startDays < switch_time]*pars["propn"]
     probM[startDays >= switch_time] <- probM[startDays >= switch_time]*pars["propn2"]
+
    
     probM <- average_buckets(probM,buckets)
+
     lik <- likelihood_probM(microCeph,births,probM)
 
     return(lik)
