@@ -27,13 +27,13 @@ heatmap_theme <- theme(axis.text.x=element_text(size=8,family="Arial",color="bla
                        strip.text=element_text(size=8,family="Arial")) + theme_bw()
 
 # 2d densities ------------------------------------------------------------
-bahia_chain <- as.data.frame(lazymcmc::load_mcmc_chains(paste0(chainWD,"bahia_forecast"),parTab,FALSE,1,500000,
+bahia_chain <- as.data.frame(lazymcmc::load_mcmc_chains(paste0(chainWD,"bahia_forecast"),parTab,FALSE,1,100000,
                                           TRUE,FALSE,FALSE)[["chain"]])
 bahia_chain$propn_increase <- bahia_chain$incPropn2/bahia_chain$incPropn
 
 bahia_chain_noreportingchange <- as.data.frame(lazymcmc::load_mcmc_chains(
                                                              paste0(chainWD,"bahia_forecast_noreportingchange"),
-                                                             parTab,FALSE,1,500000,
+                                                             parTab,FALSE,1,100000,
                                                              TRUE,FALSE,FALSE)[["chain"]])
 
 datFile = "~/Documents/Zika/Data/brazil/microceph_reports_2016.csv"
