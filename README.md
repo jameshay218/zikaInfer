@@ -4,7 +4,7 @@
 ## Introduction
 This repository contains code and methodology to allow the user to estimate a gestational risk profile for congenital diseases caused by teratogenic pathogens (namely microcephaly caused by Zika virus (ZIKV) infection). The full model description can be found in the accompanying vignette here:
 
-[Model methodology](https://jameshay218.github.io/driftSim/inst/doc/methods.html)
+[Model methodology](https://jameshay218.github.io/zikaProj/inst/doc/methods.html)
 
 The package itself can be split into a number of sections:
 
@@ -14,7 +14,7 @@ The package itself can be split into a number of sections:
 4. Functions for post-MCMC statistics and analysis
 5. Plotting functions
 
-A full working R script is provided below, but users should refer to the [extended usage](https://jameshay218.github.io/driftSim/inst/doc/package_use.html) vignette for a full breakdown of the work flow.
+A full working R script is provided below, but users should refer to the [extended usage](https://jameshay218.github.io/zikaProj/inst/doc/package_use.html) vignette for a full breakdown of the work flow.
 
 ## Installation
 Installation should be straightforward, though there are two dependencies on non-CRAN packages which can be found here: 
