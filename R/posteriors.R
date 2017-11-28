@@ -412,7 +412,7 @@ posterior_known_inc_seir <- function(pars, startDays, endDays,
 
     ## Generate probability of observing a microcephaly case on a given day
     ## Note that this is on a log scale here
-    bp <- pars["baselineProb"]
+    bp <- exp(pars["baselineProb"])
     
     tmp_buckets <- buckets[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
     tmp_births <- births[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
