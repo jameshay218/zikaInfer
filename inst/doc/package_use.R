@@ -77,7 +77,7 @@ library(lazymcmc)
 startTab <- generateStartingParTab(exampleParTab, peakTimes, restrictedR0=TRUE,"")
 
 ## MCMC control parameters
-mcmcPars <- c("adaptive_period"=10000,"iterations"=20000,"opt_freq"=1000,"thin"=10,"save_block"=100,"popt"=0.44)
+mcmcPars <- c("adaptive_period"=20000,"iterations"=50000,"opt_freq"=1000,"thin"=10,"save_block"=100,"popt"=0.44)
 
 ## Run MCMC chain using univariate sampler
 result <- lazymcmc::run_MCMC(parTab=startTab, data=microDat, mcmcPars=mcmcPars,filename="test_univariate",
