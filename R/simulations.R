@@ -13,7 +13,7 @@
 #' @export
 generate_multiple_data <- function(ts=seq(0,3003,by=1), parTab,weeks=FALSE,
                                    dataRangeMicro, dataRangeInc,noise=FALSE,
-                                   peakTimeRange=NULL, solver="rlsoda"){
+                                   peakTimeRange=NULL, solver="rlsoda", tstep=1){
     if(is.null(dataRangeMicro)) dataRangeMicro <- c(0,max(ts))
     if(is.null(dataRangeInc)) dataRangeInc <- c(0,max(ts))
 
@@ -52,8 +52,9 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), parTab,weeks=FALSE,
         ######################################
         ## Generate simulated microcephaly data using solved ODE model and pregnancy risk curve
         y[y[,"I_M"] < 0,"I_M"] <- 0
-        probM <- generate_probM(y[,"I_M"], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], 1)*pars["propn"]
-        probM <- average_buckets(probM, buckets)
+        print(tstep)
+        probM <- generate_probM(y[,"I_M"], pars["N_H"], probs, pars["b"], pars["p_MH"], pars["baselineProb"], tstep)*pars["propn"]
+        probM <- average_buckets(probM, buckets/tstep)
 
         ## Total number of births each observation point is from populatoin size
         yearBirths <- pars["N_H"]/(pars["L_H"]/365)
@@ -118,7 +119,7 @@ generate_multiple_data <- function(ts=seq(0,3003,by=1), parTab,weeks=FALSE,
 ######################################
         
         ## Add in times etc
-        tmpMicroDat <- data.frame("startDay" = cumsum(buckets)-buckets,"endDay" =cumsum(buckets),"buckets"=buckets,"microCeph"=microDat,"births"=rep(births,length(buckets)),"local"=place,stringsAsFactors=FALSE)
+        tmpMicroDat <- data.frame("startDay" = cumsum(buckets)-buckets,"endDay"=cumsum(buckets),"buckets"=buckets,"microCeph"=microDat,"births"=rep(births,length(buckets)),"local"=place,stringsAsFactors=FALSE)
         tmpIncDat <- data.frame("startDay" = cumsum(inc_buckets)-inc_buckets,"endDay" =cumsum(inc_buckets),"buckets"=inc_buckets,"inc"=inc,"N_H"=N_H,"local"=place,stringsAsFactors=FALSE)
         
         ## Only return data in the desired range

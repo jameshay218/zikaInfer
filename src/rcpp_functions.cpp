@@ -134,7 +134,7 @@ NumericVector generate_probM_aux(NumericVector riskI, NumericVector probM, doubl
 //' @export
 //[[Rcpp::export]]
 NumericVector generate_probM(NumericVector IM, double NH, NumericVector probM, double b, double pMH, double bp, double tstep){
-  NumericVector foi = generate_foi(IM, NH, b, pMH, tstep);
+  NumericVector foi = generate_foi(IM, NH, b, pMH, 1);
   NumericVector riskS = generate_riskS(foi, tstep);
   NumericVector riskI = generate_riskI(foi, riskS, tstep);
   return(generate_probM_aux(riskI, probM, bp));

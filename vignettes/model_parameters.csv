@@ -1,16 +1,16 @@
 Parameter,Description,Component,Value,Lower Bound,Upper Bound,Source,Notes
-1/μ_M,Lifespan of mosquitoes,SEIR,5 days,N/A,N/A,a,
-σ_H,Intrinsic latency period,SEIR,6 days,N/A,N/A,b,
-σ_M,Extrinsic latency period,SEIR,8.4 days,N/A,N/A,c,
-γ_H,Human infectious period,SEIR,4 days,N/A,N/A,"c,d",
+1/μ_M,Lifespan of mosquitoes,SEIR,5 days,N/A,N/A,"a, d",
+σ_H,Intrinsic latency period,SEIR,4 days,N/A,N/A,"b, d",
+σ_M,Extrinsic latency period,SEIR,8.4 days,N/A,N/A,"c, d",
+γ_H,Human infectious period,SEIR,6 days,N/A,N/A,"c, d",
 p_HM,Probability of transmission from human to mosquito given bite,SEIR,0.5,N/A,N/A,,Arbitrarily fixed - component of R0
 p_MH,Probability of transmission from mosquito to human given bite,SEIR,0.5,N/A,N/A,,Arbitrarily fixed - component of R0
 b,Per vector per day bite rate,SEIR,0.5,N/A,N/A,,Arbitrarily fixed - component of R0
 α,Microcephaly curve rate parameter (mean/variance),Gamma risk curve,Estimated,0,10000,,
 β,Microcephaly curve shape parameter (mean*α),Gamma risk curve,Estimated,0,100000,,
 c,Microcephaly curve scaling parameter,Gamma risk curve,Estimated,0,100,,
-1/μ_H,Human lifespan,SEIR,Location-specific,N/A,N/A,"e,f",
-N_H,Human population size,SEIR,Location-specific,N/A,N/A,"g,h",
+1/μ_H,Human lifespan,SEIR,Location-specific,N/A,N/A,"e, f",
+N_H,Human population size,SEIR,Location-specific,N/A,N/A,"g, h",
 d,Mosquito density per human,SEIR,Estimated,Varied,Varied,,Free component of R0. Upper and lower prior range were such that R0 was bounded between 1 and 7.
 t0,Epidemic seed time in days,SEIR,Estimated,0,10000,,Effective seed time of the SEIR epidemic. 01/01/2013 taken as day 0
 ϕ_m,Proportion of observed microcephaly cases,Likelihood,Estimated,0,2,,Reporting rate
