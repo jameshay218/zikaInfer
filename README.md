@@ -13,8 +13,12 @@ The package itself can be split into a number of sections:
 3. Functions to calculate the posterior probability of model parameters given a set of data and an MCMC algorithm to estimate posterior distributions
 4. Functions for post-MCMC statistics and analysis
 5. Plotting functions
+6.
 
 A full working R script is provided below, but users should refer to the [extended usage](https://jameshay218.github.io/zikaProj/inst/doc/package_use.html) vignette for a full breakdown of the work flow.
+
+### Data
+Users should note that all ZIKV infection and microcephaly incidence data used in the accompanying analyses are provided in the accompanying `data` subfolder as .csv files. A summary of these data can be found in the `data/data_sources.csv` file. Note that in these data, the date 01/01/2013 is taken to be day 0, and shown dates are integer-converted dates relative to a baseline of 01/01/2013.
 
 ## Installation
 Installation should be straightforward, though there are two dependencies on non-CRAN packages which can be found here: 
