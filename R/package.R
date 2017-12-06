@@ -1,8 +1,8 @@
 
-#' zikaProj
+#' zikaInfer
 #'
-#' zikaProj
+#' zikaInfer
 #'
 #' @docType package
-#' @name zikaProj
+#' @name zikaInfer
 NULL

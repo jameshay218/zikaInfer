@@ -5,7 +5,7 @@
 ## each of the fits below (see scripts/job_submissions)
 ## Users should also provide the melted, combined MCMC chain
 ## see scripts/utility/combine_all_chains.R
-library(zikaProj)
+library(zikaInfer)
 library(ggplot2)
 library(plyr)
 
@@ -16,10 +16,10 @@ chainwd <- "~/net/home/zika/outputs/"
 
 
 ## Read in individual MCMC chains
-bahia_chain <- zikaProj::load_mcmc_chains(location = paste0(chainwd, "bahia/bahia/model_1"), asList = FALSE,convertMCMC = FALSE,unfixed = FALSE,thin = 10,burnin = 750000)
-colombia_chain <- zikaProj::load_mcmc_chains(location = paste0(chainwd, "colombia_inc/colombia/model_1"), asList = FALSE,convertMCMC = FALSE,unfixed = FALSE,thin = 10,burnin = 750000)
-northeast_chain <- zikaProj::load_mcmc_chains(location = paste0(chainwd, "northeast/northeast/model_1"),asList = FALSE,convertMCMC = FALSE,unfixed = FALSE,thin = 10,burnin = 750000)
-rio_chain <- zikaProj::load_mcmc_chains(location = paste0(chainwd, "riograndedonorte/riograndedonorte/model_1"), asList = FALSE,convertMCMC = FALSE,unfixed = FALSE,thin = 10,burnin = 750000)
+bahia_chain <- zikaInfer::load_mcmc_chains(location = paste0(chainwd, "bahia/bahia/model_1"), asList = FALSE,convertMCMC = FALSE,unfixed = FALSE,thin = 10,burnin = 750000)
+colombia_chain <- zikaInfer::load_mcmc_chains(location = paste0(chainwd, "colombia_inc/colombia/model_1"), asList = FALSE,convertMCMC = FALSE,unfixed = FALSE,thin = 10,burnin = 750000)
+northeast_chain <- zikaInfer::load_mcmc_chains(location = paste0(chainwd, "northeast/northeast/model_1"),asList = FALSE,convertMCMC = FALSE,unfixed = FALSE,thin = 10,burnin = 750000)
+rio_chain <- zikaInfer::load_mcmc_chains(location = paste0(chainwd, "riograndedonorte/riograndedonorte/model_1"), asList = FALSE,convertMCMC = FALSE,unfixed = FALSE,thin = 10,burnin = 750000)
 
 
 ## Format these chains for plotting

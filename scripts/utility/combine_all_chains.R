@@ -8,7 +8,7 @@
 #############################################
 library(data.table)
 library(coda)
-library(zikaProj)
+library(zikaInfer)
 library(nleqslv)
 
 saveFile <- "~/Documents/Zika/combinedChains.csv" ## Where to save the results
@@ -50,7 +50,7 @@ for(run in runNames){
         }
 
         ## Load MCMC chain from this run
-        tmpChain <- zikaProj::load_mcmc_chains(dir,FALSE,FALSE,FALSE,thin,burnin,TRUE)
+        tmpChain <- zikaInfer::load_mcmc_chains(dir,FALSE,FALSE,FALSE,thin,burnin,TRUE)
         parTab <- read_inipars(dir)
         scale <- parTab[which(parTab$names=="propn" & parTab$fixed == 1),"values"]
         print(paste0("Fixed reporting proportion used: ", scale))

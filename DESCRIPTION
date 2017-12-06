@@ -1,13 +1,13 @@
-Package: zikaProj
-Title: zikaProj
+Package: zikaInfer
+Title: zikaInfer
 Version: 1.0.0
 Author: James Hay <james.hay13@imperial.ac.uk>
 Maintainer: James Hay <james.hay13@imperial.ac.uk> <jameshay218@gmail.com>
-Description: zikaProj.
+Description: Infer teratogenic congenital syndrome risk from transmission and incidence data.
 License: GPL-3
 LazyData: true
-URL: https://github.com/jameshay218/zikaProj
-BugReports: https://github.com/jameshay218/zikaProj/issues
+URL: https://github.com/jameshay218/zikaInfer
+BugReports: https://github.com/jameshay218/zikaInfer/issues
 Suggests:
     testthat,
     knitr,

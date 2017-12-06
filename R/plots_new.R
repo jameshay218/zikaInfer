@@ -45,7 +45,7 @@ main_model_fits <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/multi_
                             ){
     setwd(chainWD)
     
-    chain <- zikaProj::load_mcmc_chains(
+    chain <- zikaInfer::load_mcmc_chains(
         location = chainWD,
         asList = FALSE,
         convertMCMC = FALSE,

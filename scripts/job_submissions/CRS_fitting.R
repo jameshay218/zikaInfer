@@ -24,7 +24,7 @@ create_f <- function(parTab,data,PRIOR_FUNC,...){
     return(lik)
   }
 }
-devtools::load_all("~/Documents/Zika/zikaProj")
+devtools::load_all("~/Documents/Zika/zikaInfer")
 
 mcmcPars <- c("iterations"=100000,"adaptive_period"=50000,
                "popt"=0.44,"thin"=10,"save_block"=1000,

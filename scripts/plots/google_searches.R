@@ -1,4 +1,4 @@
-library(zikaProj)
+library(zikaInfer)
 library(ggplot2)
 
 ## Change this to where google trend data is saved

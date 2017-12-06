@@ -218,7 +218,7 @@ solveSEIRModel <- function(ts, y0s, pars, solver="rlsoda", compatible=FALSE){
 solveSEIRModel_lsoda <- function(ts, y0s, pars,makenames=FALSE){
     ## Package ODE pars
     pars <- pars[c("L_M","L_H","D_EM","D_EH","D_IH","b","p_HM","p_MH","t0")]
-    y <- deSolve::ode(y0s, ts, func="SEIR_model_lsoda",parms=pars,dllname="zikaProj",initfunc="initmodSEIR",nout=0, rtol=1e-5,atol=1e-5)
+    y <- deSolve::ode(y0s, ts, func="SEIR_model_lsoda",parms=pars,dllname="zikaInfer",initfunc="initmodSEIR",nout=0, rtol=1e-5,atol=1e-5)
     if(makenames) colnames(y) <- c("time","S_M","E_M","I_M","S_H","E_H","I_H","R_H","incidence")
     return(y)
 }
@@ -234,7 +234,7 @@ solveSEIRModel_lsoda <- function(ts, y0s, pars,makenames=FALSE){
 #' @export
 solveSEIRModel_rlsoda <- function(ts, y0s, pars,compatible=FALSE){
     pars <- pars[c("L_M","L_H","D_EM","D_EH","D_IH","b","p_HM","p_MH","t0")]
-    rlsoda::rlsoda(y0s, ts, C_SEIR_model_rlsoda, parms=pars, dllname="zikaProj", deSolve_compatible = compatible,return_time=TRUE,return_initial=TRUE,atol=1e-5,rtol=1e-5)
+    rlsoda::rlsoda(y0s, ts, C_SEIR_model_rlsoda, parms=pars, dllname="zikaInfer", deSolve_compatible = compatible,return_time=TRUE,return_initial=TRUE,atol=1e-5,rtol=1e-5)
 }
 
 

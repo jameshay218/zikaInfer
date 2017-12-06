@@ -8,7 +8,7 @@
 #############################################
 library(data.table)
 library(coda)
-library(zikaProj)
+library(zikaInfer)
 library(nleqslv)
 
 saveFile <- "~/Documents/Zika/combinedChains_forecasts.csv" ## Where to save the results
@@ -48,7 +48,7 @@ for(run in runNames){
         next
     }
     ## Load MCMC chain from this run
-    tmpChain <- zikaProj::load_mcmc_chains(dir,FALSE,FALSE,FALSE,thin,burnin,TRUE)
+    tmpChain <- zikaInfer::load_mcmc_chains(dir,FALSE,FALSE,FALSE,thin,burnin,TRUE)
     parTab <- read.csv("~/net/home/zika1/zika/inputs/parTab_forecast.csv",stringsAsFactors=FALSE)
 
     parTab[parTab$names %in% c("L_H","N_H"),"values"] <- as.numeric(incDat[1,c("L_H","N_H")])

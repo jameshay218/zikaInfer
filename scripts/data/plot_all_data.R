@@ -5,7 +5,7 @@
 ## The "Reading in data" section must be modified to specify full file paths to all of the
 ## incidence data. The save locations of the plots are specified throughout the script in sections
 ## labelled "Save plots"
-library(zikaProj)
+library(zikaInfer)
 library(cowplot)
 library(zoo)
 library(ggplot2)
@@ -34,7 +34,7 @@ ne_micro <- ne_micro[,c("startDay","endDay","microCeph","births","local")]
 ne_zikv$local <- "northeast"
 ne_zikv <- ne_zikv[,c("startDay","endDay","inc","N_H","local")]
 
-use_states <- all_states <- zikaProj::get_epidemic_locations(brazilMicro,TRUE)$include
+use_states <- all_states <- zikaInfer::get_epidemic_locations(brazilMicro,TRUE)$include
 
 ## Combine all data into a list, generate mean report days, and get full location names
 allDats <- list("Brazil"=brazilMicro,"Brazil Inc"=brazilIncFaria,"Brazil 2017"=brazilInc2017,

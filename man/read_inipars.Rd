@@ -13,6 +13,6 @@ read_inipars(location = "")
 the full parameter table
 }
 \description{
-Read in the initial parameter file, which is the same as the parameter table produced from zikaProj
+Read in the initial parameter file, which is the same as the parameter table produced from zikaInfer
 }
 

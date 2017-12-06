@@ -1,7 +1,7 @@
 library(ggplot2)
 library(gridExtra)
 library(extrafont)
-library(zikaProj)
+library(zikaInfer)
 
 ## See scripts/utility/combine_all_chains.R
 ## This should be a reshape2::melt chain combining all of the runs.

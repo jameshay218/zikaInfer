@@ -1,10 +1,10 @@
-# zikaProj
+# zikaInfer
 > Infer teratogenic congenital syndrome risk from transmission and incidence data
 
 ## Introduction
 This repository contains code and methodology to allow the user to estimate a gestational risk profile for congenital diseases caused by teratogenic pathogens (namely microcephaly caused by Zika virus (ZIKV) infection). The full model description can be found in the accompanying vignette here:
 
-[Model methodology](https://jameshay218.github.io/zikaProj/inst/doc/methods.html)
+[Model methodology](https://jameshay218.github.io/zikaInfer/inst/doc/methods.html)
 
 The package itself can be split into a number of sections:
 
@@ -13,9 +13,9 @@ The package itself can be split into a number of sections:
 3. Functions to calculate the posterior probability of model parameters given a set of data and an MCMC algorithm to estimate posterior distributions
 4. Functions for post-MCMC statistics and analysis
 5. Plotting functions
-6.
+6. Data on ZIKV and microcephaly incidence as provided in the `data` subdirectory.
 
-A full working R script is provided below, but users should refer to the [extended usage](https://jameshay218.github.io/zikaProj/inst/doc/package_use.html) vignette for a full breakdown of the work flow.
+A full working R script is provided below, but users should refer to the [extended usage](https://jameshay218.github.io/zikaInfer/inst/doc/package_use.html) vignette for a full breakdown of the work flow.
 
 ### Data
 Users should note that all ZIKV infection and microcephaly incidence data used in the accompanying analyses are provided in the accompanying `data` subfolder as .csv files. A summary of these data can be found in the `data/data_sources.csv` file. Note that in these data, the date 01/01/2013 is taken to be day 0, and shown dates are integer-converted dates relative to a baseline of 01/01/2013.
@@ -30,13 +30,13 @@ Note that the [`rlsoda`](https://github.com/richfitz/rlsoda) package is just use
 
 To install the package itself, simply type the following:
 ```r
-devtools::install_github("jameshay218/zikaProj")
+devtools::install_github("jameshay218/zikaInfer")
 ```
 
 ## Usage - simulated data
 The script below can be used to generate simulated data and re-estimate the process-generating parameters. This script is included to assure the reader that the inference framework works correctly.
 ```r
-library(zikaProj)
+library(zikaInfer)
 
 ## Read in some example parameters
 ## A table like this is needed to control prior bounds and which parameters are 
@@ -96,7 +96,7 @@ plot(coda::as.mcmc(chain))
 ## Usage - real data
 The script below can be used to estimate posterior densities for data from Bahia, Brazil.
 ```r
-library(zikaProj)
+library(zikaInfer)
 
 ## Read in some example parameters
 ## A table like this is needed to control prior bounds and which parameters are 

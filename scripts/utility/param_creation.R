@@ -2,7 +2,7 @@
 ## JAMES HAY 20.11.2017 - jameshay218@gmail.com
 ## This script is used to create a table of allowable
 ## mosquito density and epidemic seed time parameters
-library(zikaProj)
+library(zikaInfer)
 ## Create allowable parameters for all states
 data(locationInfo)
 states <- unique(locationInfo$rawName)

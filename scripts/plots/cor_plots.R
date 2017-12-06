@@ -1,7 +1,7 @@
 #############################
 ## Forecasting fit analysis
 #############################
-library(zikaProj)
+library(zikaInfer)
 library(ggplot2)
 library(extrafont)
 library(cowplot)
@@ -22,9 +22,9 @@ heatmap_theme <- theme(axis.text.x=element_text(size=8,family="Arial",color="bla
 
 
 # Reading in data ---------------------------------------------------------
-bahia_chain <- zikaProj::load_mcmc_chains(location = paste0(chainWD,"bahia_forecast"),
+bahia_chain <- zikaInfer::load_mcmc_chains(location = paste0(chainWD,"bahia_forecast"),
                                           asList = FALSE,convertMCMC = FALSE,unfixed = FALSE,thin = 1,burnin = 50000)
-nejm_chain <- zikaProj::load_mcmc_chains(location = paste0(chainWD,"northeast_forecast"),
+nejm_chain <- zikaInfer::load_mcmc_chains(location = paste0(chainWD,"northeast_forecast"),
                                           asList = FALSE,convertMCMC = FALSE,unfixed = FALSE,thin = 1,burnin = 50000)
 bahia_chain$propn_increase <- bahia_chain$incPropn2/bahia_chain$incPropn
 nejm_chain$propn_increase <- nejm_chain$incPropn2/nejm_chain$incPropn

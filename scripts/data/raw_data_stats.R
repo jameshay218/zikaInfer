@@ -16,7 +16,7 @@
 ## 4. Summary stats on max cases
 ## 5. Save a .csv file with all of the summary statistics (peak time and max cases)
 ###########################################
-library(zikaProj)
+library(zikaInfer)
 source("plotting_help_functions.R")
 
 brazilIncDat <- read.csv("~/Documents/Zika/Data/brazil/zikv_inc_faria2016.csv",stringsAsFactors = FALSE)

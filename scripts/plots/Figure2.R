@@ -6,7 +6,7 @@
 ## each of the fits below (see scripts/job_submissions)
 ## Users should also check plots/google_searches.R
 ## to produce the bottom half of figure 2.
-library(zikaProj)
+library(zikaInfer)
 library(cowplot)
 library(zoo)
 library(ggplot2)
@@ -95,7 +95,7 @@ comb_plot <- plot_grid(NE_plot,colombia_plot,bahia_plot,rio_plot,ncol=1,align="v
 chainWD = paste0(topDir,"bahia_forecast")
 datFile = "~/Documents/Zika/Data/brazil/microceph_reports_2016.csv"
 incFile <- "~/Documents/Zika/Data/brazil/zika_inc_reports.csv"
-parTab <- read.csv("~/Documents/Zika/zikaProj/scripts/job_submissions/parTab_forecast.csv")
+parTab <- read.csv("~/Documents/Zika/zikaInfer/scripts/job_submissions/parTab_forecast.csv")
 chain <- lazymcmc::load_mcmc_chains(chainWD,parTab,FALSE,1,50000,TRUE,FALSE,FALSE)[["chain"]]
 local = "bahia"
 localName = "Bahia - reports"
@@ -112,7 +112,7 @@ bahia_forecast <- indiv_model_fit(datFile,incFile, local, localName,
 ## NEJM Northeast Brazil FORECAST fit
 topDir <- "~/net/home/zika/outputs/"
 chainWD <- paste0(topDir, "northeast_forecast")
-parTab <- read.csv("~/Documents/Zika/zikaProj/scripts/job_submissions/parTab_forecast.csv")
+parTab <- read.csv("~/Documents/Zika/zikaInfer/scripts/job_submissions/parTab_forecast.csv")
 chain <- lazymcmc::load_mcmc_chains(chainWD,parTab,FALSE,1,50000,TRUE,FALSE,FALSE)[["chain"]]
 datFile = "~/Documents/Zika/Data/brazil/Northeast/northeast_microceph.csv"
 incFile = "~/Documents/Zika/Data/brazil/Northeast/northeast_zikv.csv"

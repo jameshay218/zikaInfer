@@ -254,7 +254,7 @@ load_mcmc_chains <- function(location="",asList=FALSE, convertMCMC=FALSE,unfixed
 
 #' Read partab
 #'
-#' Read in the initial parameter file, which is the same as the parameter table produced from zikaProj
+#' Read in the initial parameter file, which is the same as the parameter table produced from zikaInfer
 #' @param location the path to the directory to read from
 #' @return the full parameter table
 #' @export

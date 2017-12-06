@@ -5,7 +5,7 @@
 ## of this script
 library(data.table)
 library(lazymcmc)
-library(zikaProj)
+library(zikaInfer)
 library(coda)
 
 ## Location of all the MCMC chains - this should be the top level directory that contains

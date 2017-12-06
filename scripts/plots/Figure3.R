@@ -10,7 +10,7 @@ library(coda)
 library(extrafont)
 library(hexbin)
 library(RColorBrewer)
-library(zikaProj)
+library(zikaInfer)
 
 #chainWD <- "~/net/home/zika/outputs/"
 chainWD <- "/media/james/JH USB/Forecast_runs/"
