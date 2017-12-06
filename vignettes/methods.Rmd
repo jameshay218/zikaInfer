@@ -14,8 +14,10 @@ output:
   word_document:
     toc: yes
 bibliography: bibliography1.bib
-vignette: "%\\VignetteIndexEntry{Vignette Title} \n%\\VignetteEngine{knitr::rmarkdown}
-  \n%\\VignetteEncoding{UTF-8}\n"
+vignette:  >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, echo=FALSE}

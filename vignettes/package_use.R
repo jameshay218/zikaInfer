@@ -1,5 +1,5 @@
 ## ----setup, echo=FALSE, message=FALSE, warning=FALSE---------------------
-library(zikaProj)
+library(zikaInfer)
 library(lazymcmc)
 library(kableExtra)
 library(knitr)
@@ -68,4 +68,36 @@ ggplot(incDat) +
   xlab("Time (days)") +
   scale_y_continuous(sec.axis=sec_axis(~.*1000,name="Per birth microcephaly\n incidence (blue)")) +
   theme_bw()
+
+## ----  message=FALSE, warning=FALSE, error=FALSE, cache=FALSE------------
+library(lazymcmc)
+## Generate random starting points for MCMC chain
+## Note that we have to constrain the starting points for R0 and the epidemic seed time
+## such that trajectory is near expected peak time
+startTab <- generateStartingParTab(exampleParTab, peakTimes, restrictedR0=TRUE,"")
+
+## MCMC control parameters
+mcmcPars <- c("adaptive_period"=2000,"iterations"=5000,"opt_freq"=1000,"thin"=10,"save_block"=100,"popt"=0.44)
+
+## Run MCMC chain using univariate sampler
+result <- lazymcmc::run_MCMC(parTab=startTab, data=microDat, mcmcPars=mcmcPars,filename="test_univariate",
+                    CREATE_POSTERIOR_FUNC = create_posterior, mvrPars=NULL,PRIOR_FUNC=NULL,
+                    OPT_TUNING=0.2, ts=ts,incDat=incDat,peakTimes=NULL)
+
+## Use these results to get covariance matrix to run multivariate sampler
+chain <- read.csv(result$file)
+chain <- chain[chain$sampno >= mcmcPars["adaptive_period"],]
+covMat <- cov(chain[,2:(ncol(chain)-1)])
+startTab$values <- get_best_pars(chain)
+mvrPars <- list(covMat,2.38/sqrt(nrow(startTab[startTab$fixed==0,])),w=0.8)
+mcmcPars["popt"] <- 0.234
+
+## Run MCMC chain using multivariate sampler
+## Run two chains to calculate gelman diagnostics
+final <- lazymcmc::run_MCMC(parTab=startTab, data=microDat, mcmcPars=mcmcPars,filename="test_2_multivariate",
+                    CREATE_POSTERIOR_FUNC = create_posterior, mvrPars=mvrPars,PRIOR_FUNC=NULL,
+                    OPT_TUNING=0.2, ts=ts,incDat=incDat,peakTimes=NULL)
+finalB <- lazymcmc::run_MCMC(parTab=startTab, data=microDat, mcmcPars=mcmcPars,filename="test_1_multivariate",
+                    CREATE_POSTERIOR_FUNC = create_posterior, mvrPars=mvrPars,PRIOR_FUNC=NULL,
+                    OPT_TUNING=0.2, ts=ts,incDat=incDat,peakTimes=NULL)
 

@@ -230,18 +230,18 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
     peakTimes$peakUpper <- peakTimes$peakTime + peakTimes$peakTimeRange/2
     peakTimes$peakLower <- peakTimes$peakTime - peakTimes$peakTimeRange/2
     
-    p <- ggplot() +
-        geom_ribbon(data=microBounds,aes(ymin=lower,ymax=upper,x=x,fill="Model microcephaly (two waves)"),alpha=0.5) +
+    p <- ggplot() +        
         geom_ribbon(data=incBounds,aes(ymin=lower/incScale,ymax=upper/incScale,x=x,fill="Model ZIKV"),alpha=0.5) +
-        geom_line(data=microBounds,aes(x=x,y=best,colour="Model microcephaly (two waves)")) +
-        geom_line(data=incBounds,aes(x=x,y=best/incScale,colour="Model ZIKV"))
+        geom_line(data=incBounds,aes(x=x,y=best/incScale,colour="Model ZIKV")) +
+        geom_ribbon(data=predict_bounds,aes(ymin=lower,ymax=upper,x=time,fill="Model microcephaly (single wave)"),alpha=0.5) +
+        geom_line(data=predict_bounds,aes(x=time,y=best,colour="Model microcephaly (single wave)"))
+    if(forecast){
+        p <- p +
+            geom_ribbon(data=microBounds,aes(ymin=lower,ymax=upper,x=x,fill="Model microcephaly (two waves)"),alpha=0.5) +
+            geom_line(data=microBounds,aes(x=x,y=best,colour="Model microcephaly (two waves)"))
+    }
     if(!is.null(incFile)){
         p <- p + geom_line(data=incDat,aes(x=meanDay,y=inc/N_H/incScale,col="Reported ZIKV"),linetype="longdash")
-        if(forecast){
-            p <- p +
-                geom_ribbon(data=predict_bounds,aes(ymin=lower,ymax=upper,x=time,fill="Model microcephaly (single wave)"),alpha=0.5) +
-                geom_line(data=predict_bounds,aes(x=time,y=best,colour="Model microcephaly (single wave)"))
-        }
     } else {
         p <- p +
             geom_rect(data=peakTimes,

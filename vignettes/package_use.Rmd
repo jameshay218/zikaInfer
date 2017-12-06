@@ -4,14 +4,23 @@ author: "James Hay"
 date: "`r Sys.Date()`"
 output: 
   rmarkdown::html_vignette:
-    toc: true
+    number_sections: yes
+    toc: yes
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  html_document:
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
-library(zikaProj)
+library(zikaInfer)
 library(lazymcmc)
 library(kableExtra)
 library(knitr)
@@ -21,7 +30,7 @@ knitr::opts_chunk$set(fig.width=6, fig.height=4)
 ```
 
 ### Introduction
-This vignette describes the work flow for analysis using [`zikaProj`] in detail. Users should be able to follow each section to understand how the cod relates to the methods described in the accompanying methods vignette.
+This vignette describes the work flow for analysis using [`zikaInfer`] in detail. Users should be able to follow each section to understand how the cod relates to the methods described in the accompanying methods vignette.
 
 ### Input parameters
 The first step in using this package is to define the set of model parameters. An example table of parameters is provided in the package and can be viewed using the following:
@@ -106,7 +115,7 @@ ggplot(incDat) +
 
 ## Re-estimate model parameters
 Parameter estimation is done using the [`lazymcmc`](www.github.com/jameshay218/lazymcmc) package as follows:
-```{r,  message=FALSE, warning=FALSE}
+```{r,  message=FALSE, warning=FALSE, error=FALSE, cache=FALSE}
 library(lazymcmc)
 ## Generate random starting points for MCMC chain
 ## Note that we have to constrain the starting points for R0 and the epidemic seed time
@@ -114,7 +123,7 @@ library(lazymcmc)
 startTab <- generateStartingParTab(exampleParTab, peakTimes, restrictedR0=TRUE,"")
 
 ## MCMC control parameters
-mcmcPars <- c("adaptive_period"=20000,"iterations"=50000,"opt_freq"=1000,"thin"=10,"save_block"=100,"popt"=0.44)
+mcmcPars <- c("adaptive_period"=10000,"iterations"=20000,"opt_freq"=1000,"thin"=10,"save_block"=100,"popt"=0.44)
 
 ## Run MCMC chain using univariate sampler
 result <- lazymcmc::run_MCMC(parTab=startTab, data=microDat, mcmcPars=mcmcPars,filename="test_univariate",
