@@ -117,7 +117,6 @@ startTab <- generateStartingParTab(exampleParTab, peakTimes, restrictedR0=TRUE,"
 mcmcPars <- c("adaptive_period"=20000,"iterations"=50000,"opt_freq"=1000,"thin"=10,"save_block"=100,"popt"=0.44)
 
 ## Run MCMC chain using univariate sampler
-## Note invisible is just to suppress print outs in this vignette
 result <- lazymcmc::run_MCMC(parTab=startTab, data=microDat, mcmcPars=mcmcPars,filename="test_univariate",
                     CREATE_POSTERIOR_FUNC = create_posterior, mvrPars=NULL,PRIOR_FUNC=NULL,
                     OPT_TUNING=0.2, ts=ts,incDat=incDat,peakTimes=NULL)
@@ -132,7 +131,6 @@ mcmcPars <- c("adaptive_period"=10000,"iterations"=20000,"opt_freq"=1000,"thin"=
 
 ## Run MCMC chain using multivariate sampler
 ## Run two chains to calculate gelman diagnostics
-## Note invisible is just to suppress print outs in this vignette
 final <- lazymcmc::run_MCMC(parTab=startTab, data=microDat, mcmcPars=mcmcPars,filename="test_2_multivariate",
                     CREATE_POSTERIOR_FUNC = create_posterior, mvrPars=mvrPars,PRIOR_FUNC=NULL,
                     OPT_TUNING=0.2, ts=ts,incDat=incDat,peakTimes=NULL)
