@@ -14,8 +14,10 @@ output:
   word_document:
     toc: yes
 bibliography: bibliography1.bib
-vignette: |
-  %\VignetteIndexEntry{Vignette Title}  %\VignetteEngine{knitr::rmarkdown}  %\VignetteEncoding{UTF-8}
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}  
+  %\VignetteEngine{knitr::rmarkdown}  
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, echo=FALSE}
@@ -144,7 +146,7 @@ Numbers of live births were obtained for Brazil from the SINASC/CGIAE/SVS/MS sys
 All data are available to download in human readable form in the accompanying R package \href{https://github.com/jameshay218/zikaInfer/tree/master/RawData/}{here}. The files [`data_sources.csv`](https://github.com/jameshay218/zikaInfer/tree/master/RawData/data_sources.csv) and [`data_key.csv`](https://github.com/jameshay218/zikaInfer/tree/master/RawData/data_key.csv) describe the sources of these data and the column names respectively. Note that `startDay` and `endDay` refer to the first and last day that the reporting period covers; `buckets` refers to the number of days that that reportig window covers; and all dates were converted to integers (where 1 day = 1), and 01/01/2013 was taken as day 0.
 
 
-**Table 1: Summary of datasets included in the analysis.** *For each location, the type of incidence data, the time resolution of reports, whether or not data were extracted using a digitiser and the data source are provided. Sources are cross referenced at the bottom of the table to references in the text.*
+**Table 1: Summary of datasets included in the analysis.** *For each location, the type of incidence data, the time resolution of reports, whether or not data were extracted using a digitiser and the data source are provided. Sources refer to references in the main text.*
 \tiny
 ```{r, echo=FALSE}
 data_sources <- read.csv("data_sources.csv", stringsAsFactors=FALSE)
@@ -153,33 +155,29 @@ colnames(data_sources) <- c("Country","Location","Incidence type","Resolution","
 kable(data_sources, caption="Summary of datasets included in the analysis")
 ```
 \normalsize
-a [@deOliveira2017]; b [@PahoColombia] ; c [@Cuevas2016b] ; d [@BahiaReports]; e [@Zoca2016]; f [@RioReports]; g [@RioReportsB]; h [@PernambucoReports]; i [@Paploski]
 
 
 ## Model parameters
 Model parameters related to ZIKV transmission were obtained from the literature as described in Table 2. Parameters were predominately chosen based on a previously published transmission model, with point values chosen to give a generation time of approximately 20 days.[@Ferguson2016] Values used were as described in Table S6 of [@Ferguson2016], with the intrinsic latency period here taken as the intrinsic incubation period described in [@Ferguson2016] less 1.5 days to reflect the assumption that infectiousness starts 1.5 days before symptom onset. Given a fixed generation time, the shape of the SEIR model predicted incidence curve was allowed to vary depending on the value of $R_0$. As $R_0$ is comprised of multiple correlated parameters, all components of $R_0$ other than the vector density per human were fixed at arbitrary values. Vital statistics (human life expectancy and population size) for particular locations are described in Table 3.
 
-**Table 2. Summary of model parameters, sources and assumed parameter ranges.** *Parameter symbols are as described in the text. The component column refers to which part of the model or which part of the analysis that parameter relates. Values shown are the fixed point values used in the analysis or estimated. Where specified, lower and upper bounds refer to prior ranges imposed during the MCMC fitting. Sources are cross referenced at the bottom of the table to refer to references in the main text.* 
+**Table 2. Summary of model parameters, sources and assumed parameter ranges.** *Parameter symbols are as described in the text. The component column refers to which part of the model or which part of the analysis that parameter relates. Values shown are the fixed point values used in the analysis or estimated. Where specified, lower and upper bounds refer to prior ranges imposed during the MCMC fitting. Sources refer to references in the main text.* 
 \tiny
 ```{r, echo=FALSE}
 parameters <- read.csv("model_parameters2.csv", stringsAsFactors=FALSE, check.names=FALSE)
 kable(parameters, caption="Summary of model parameters, sources and assumed parameter ranges")
 ```
 \normalsize
-a [@Sheppard1969]; b [@Lessler2016]; c [@Majumder2016a]; d [@Ferguson2016]; e [@BahiaLifeExpectancy]; f[@ColombiaLifeExpectancy]; g [@BahiaPopn]; h[@ColombiaPopn].
-
 
 ## Vital statistics
-**Table 3. Summary of vital statistics and sources.**
+**Table 3. Summary of vital statistics and sources.** *Sources refer to references in the main text*
 \small
 ```{r, echo=FALSE}
-colnames(vital_statistics) <- c("State/Country","Population size (2015)a,b","Life expectancy (years) (2014)c,d")
+colnames(vital_statistics) <- c("State/Country","Population size (2015)[@BahiaPopn],[@ColombiaPopn]","Life expectancy (years) (2014)[@BahiaLifeExpectancy],[@ColombiaLifeExpectancy]")
 vital_statistics <- vital_statistics[!(vital_statistics$`State/Country` %in% c("Colombia 2014","Colombia 2016","Ceará")),]
 row.names(vital_statistics) <- NULL
 kable(vital_statistics, caption="Summary of vital statistics and sources")
 ```
 \normalsize
-a [@BahiaPopn]; b [@ColombiaPopn]; c [@BahiaLifeExpectancy]; d[@ColombiaLifeExpectancy].
 
 
 # Model fitting

@@ -156,15 +156,15 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <p>A summary of data included in the analyses can be found in Table 1. Some data sources were only available in graphical form, and these numbers were therefore extracted using a web digitizer available at . The results presented in the main text used data from Northeast Brazil, weekly microcephaly incidence from Colombia, state-reported weekly microcephaly incidence from Bahia, Brazil, and state-reported monthly microcephaly incidence from Rio Grande do Norte. Model fitting using the other data sources for the same locations, as well as fitting a single microcephaly risk curve to data from multiple locations simultaneously, was carried out but results are not presented here. Different data sources for the same location produced qualitatively similar risk curve estimates in terms of the window and timing of risk.</p>
 <p>Numbers of live births were obtained for Brazil from the SINASC/CGIAE/SVS/MS system.<span class="citation">[9]</span> For Colombia, live births were obtained from a publication of microcephaly and ZIKV incidence in Colombia.<span class="citation">[14]</span> Where reporting of live births was incomplete, we estimated the number of live births by averaging the number of births in the previous two years for the same dates.</p>
 <p>All data are available to download in human readable form in the accompanying R package . The files <a href="https://github.com/jameshay218/zikaInfer/tree/master/RawData/data_sources.csv"><code>data_sources.csv</code></a> and <a href="https://github.com/jameshay218/zikaInfer/tree/master/RawData/data_key.csv"><code>data_key.csv</code></a> describe the sources of these data and the column names respectively. Note that <code>startDay</code> and <code>endDay</code> refer to the first and last day that the reporting period covers; <code>buckets</code> refers to the number of days that that reportig window covers; and all dates were converted to integers (where 1 day = 1), and 01/01/2013 was taken as day 0.</p>
-<p><strong>Table 1: Summary of datasets included in the analysis.</strong> <em>For each location, the type of incidence data, the time resolution of reports, whether or not data were extracted using a digitiser and the data source are provided. Sources are cross referenced at the bottom of the table to references in the text.</em> </p>
+<p><strong>Table 1: Summary of datasets included in the analysis.</strong> <em>For each location, the type of incidence data, the time resolution of reports, whether or not data were extracted using a digitiser and the data source are provided. Sources refer to references in the main text.</em> </p>
 <table>
 <colgroup>
 <col width="5%"></col>
-<col width="61%"></col>
-<col width="15%"></col>
+<col width="57%"></col>
+<col width="14%"></col>
 <col width="6%"></col>
 <col width="6%"></col>
-<col width="4%"></col>
+<col width="11%"></col>
 </colgroup>
 <thead>
 <tr class="header">
@@ -183,7 +183,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">Microcephaly and ZIKV</td>
 <td align="left">Weekly</td>
 <td align="left">No</td>
-<td align="left">a</td>
+<td align="left"><span class="citation">[12]</span></td>
 </tr>
 <tr class="even">
 <td align="left">Colombia</td>
@@ -191,7 +191,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">Microcephaly</td>
 <td align="left">Weekly</td>
 <td align="left">Yes</td>
-<td align="left">b</td>
+<td align="left"><span class="citation">[13]</span></td>
 </tr>
 <tr class="odd">
 <td align="left">Colombia</td>
@@ -199,7 +199,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">ZIKV</td>
 <td align="left">Weekly</td>
 <td align="left">Yes</td>
-<td align="left">b</td>
+<td align="left"><span class="citation">[13]</span></td>
 </tr>
 <tr class="even">
 <td align="left">Colombia</td>
@@ -207,7 +207,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">Microcephaly</td>
 <td align="left">Monthly</td>
 <td align="left">No</td>
-<td align="left">c</td>
+<td align="left"><span class="citation">[14]</span></td>
 </tr>
 <tr class="odd">
 <td align="left">Brazil</td>
@@ -215,7 +215,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">Microcephaly</td>
 <td align="left">Weekly</td>
 <td align="left">Yes</td>
-<td align="left">d</td>
+<td align="left"><span class="citation">[15]</span></td>
 </tr>
 <tr class="even">
 <td align="left">Brazil</td>
@@ -223,7 +223,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">Microcephaly</td>
 <td align="left">Monthly</td>
 <td align="left">No</td>
-<td align="left">e</td>
+<td align="left"><span class="citation">[10]</span></td>
 </tr>
 <tr class="odd">
 <td align="left">Brazil</td>
@@ -231,7 +231,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">ZIKV</td>
 <td align="left">Weekly</td>
 <td align="left">Yes</td>
-<td align="left">d</td>
+<td align="left"><span class="citation">[15]</span></td>
 </tr>
 <tr class="even">
 <td align="left">Brazil</td>
@@ -239,7 +239,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">Microcephaly</td>
 <td align="left">Monthly</td>
 <td align="left">No</td>
-<td align="left">f</td>
+<td align="left"><span class="citation">[16]</span></td>
 </tr>
 <tr class="odd">
 <td align="left">Brazil</td>
@@ -247,7 +247,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">Microcephaly</td>
 <td align="left">Monthly</td>
 <td align="left">No</td>
-<td align="left">e</td>
+<td align="left"><span class="citation">[10]</span></td>
 </tr>
 <tr class="even">
 <td align="left">Brazil</td>
@@ -255,7 +255,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">ZIKV</td>
 <td align="left">Weekly</td>
 <td align="left">Yes</td>
-<td align="left">g</td>
+<td align="left"><span class="citation">[17]</span></td>
 </tr>
 <tr class="odd">
 <td align="left">Brazil</td>
@@ -263,7 +263,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">Microcephaly</td>
 <td align="left">Weekly</td>
 <td align="left">Yes</td>
-<td align="left">h</td>
+<td align="left"><span class="citation">[18]</span></td>
 </tr>
 <tr class="even">
 <td align="left">Brazil</td>
@@ -271,7 +271,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">ZIKV</td>
 <td align="left">Weekly</td>
 <td align="left">Yes</td>
-<td align="left">h</td>
+<td align="left"><span class="citation">[18]</span></td>
 </tr>
 <tr class="odd">
 <td align="left">Brazil</td>
@@ -279,7 +279,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">Microcephaly</td>
 <td align="left">Monthly</td>
 <td align="left">No</td>
-<td align="left">e</td>
+<td align="left"><span class="citation">[10]</span></td>
 </tr>
 <tr class="even">
 <td align="left">Brazil</td>
@@ -287,7 +287,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">Microcephaly</td>
 <td align="left">Weekly</td>
 <td align="left">No</td>
-<td align="left">i</td>
+<td align="left"><span class="citation">[19]</span></td>
 </tr>
 <tr class="odd">
 <td align="left">Brazil</td>
@@ -295,26 +295,26 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">Acute exanthematous illness</td>
 <td align="left">Weekly</td>
 <td align="left">No</td>
-<td align="left">i</td>
+<td align="left"><span class="citation">[19]</span></td>
 </tr>
 </tbody>
 </table>
-<p>a <span class="citation">[12]</span>; b <span class="citation">[13]</span> ; c <span class="citation">[14]</span> ; d <span class="citation">[15]</span>; e <span class="citation">[10]</span>; f <span class="citation">[16]</span>; g <span class="citation">[17]</span>; h <span class="citation">[18]</span>; i <span class="citation">[19]</span></p>
+<p></p>
 </div>
 <div id="model-parameters" class="section level2">
 <h2><span class="header-section-number">3.2</span> Model parameters</h2>
 <p>Model parameters related to ZIKV transmission were obtained from the literature as described in Table 2. Parameters were predominately chosen based on a previously published transmission model, with point values chosen to give a generation time of approximately 20 days.<span class="citation">[8]</span> Values used were as described in Table S6 of <span class="citation">[8]</span>, with the intrinsic latency period here taken as the intrinsic incubation period described in <span class="citation">[8]</span> less 1.5 days to reflect the assumption that infectiousness starts 1.5 days before symptom onset. Given a fixed generation time, the shape of the SEIR model predicted incidence curve was allowed to vary depending on the value of <span class="math inline">\(R_0\)</span>. As <span class="math inline">\(R_0\)</span> is comprised of multiple correlated parameters, all components of <span class="math inline">\(R_0\)</span> other than the vector density per human were fixed at arbitrary values. Vital statistics (human life expectancy and population size) for particular locations are described in Table 3.</p>
-<p><strong>Table 2. Summary of model parameters, sources and assumed parameter ranges.</strong> <em>Parameter symbols are as described in the text. The component column refers to which part of the model or which part of the analysis that parameter relates. Values shown are the fixed point values used in the analysis or estimated. Where specified, lower and upper bounds refer to prior ranges imposed during the MCMC fitting. Sources are cross referenced at the bottom of the table to refer to references in the main text.</em> </p>
-<table style="width:100%;">
+<p><strong>Table 2. Summary of model parameters, sources and assumed parameter ranges.</strong> <em>Parameter symbols are as described in the text. The component column refers to which part of the model or which part of the analysis that parameter relates. Values shown are the fixed point values used in the analysis or estimated. Where specified, lower and upper bounds refer to prior ranges imposed during the MCMC fitting. Sources refer to references in the main text.</em> </p>
+<table>
 <colgroup>
+<col width="5%"></col>
+<col width="21%"></col>
 <col width="6%"></col>
-<col width="25%"></col>
-<col width="7%"></col>
-<col width="7%"></col>
-<col width="5%"></col>
-<col width="5%"></col>
-<col width="3%"></col>
-<col width="39%"></col>
+<col width="6%"></col>
+<col width="4%"></col>
+<col width="4%"></col>
+<col width="17%"></col>
+<col width="33%"></col>
 </colgroup>
 <thead>
 <tr class="header">
@@ -336,7 +336,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">5 days</td>
 <td align="left">N/A</td>
 <td align="left">N/A</td>
-<td align="left">a, d</td>
+<td align="left"><span class="citation">[8]</span>, <span class="citation">[20]</span></td>
 <td align="left"></td>
 </tr>
 <tr class="even">
@@ -346,7 +346,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">4 days</td>
 <td align="left">N/A</td>
 <td align="left">N/A</td>
-<td align="left">b, d</td>
+<td align="left"><span class="citation">[21]</span>, <span class="citation">[8]</span></td>
 <td align="left"></td>
 </tr>
 <tr class="odd">
@@ -356,7 +356,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">8.4 days</td>
 <td align="left">N/A</td>
 <td align="left">N/A</td>
-<td align="left">c, d</td>
+<td align="left"><span class="citation">[22]</span>, <span class="citation">[8]</span></td>
 <td align="left"></td>
 </tr>
 <tr class="even">
@@ -366,7 +366,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">6 days</td>
 <td align="left">N/A</td>
 <td align="left">N/A</td>
-<td align="left">c, d</td>
+<td align="left"><span class="citation">[22]</span>, <span class="citation">[8]</span></td>
 <td align="left"></td>
 </tr>
 <tr class="odd">
@@ -436,7 +436,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">Location-specific</td>
 <td align="left">N/A</td>
 <td align="left">N/A</td>
-<td align="left">e, f</td>
+<td align="left"><span class="citation">[4]</span>, <span class="citation">[6]</span></td>
 <td align="left"></td>
 </tr>
 <tr class="even">
@@ -446,7 +446,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">Location-specific</td>
 <td align="left">N/A</td>
 <td align="left">N/A</td>
-<td align="left">g, h</td>
+<td align="left"><span class="citation">[5]</span>, <span class="citation">[7]</span></td>
 <td align="left"></td>
 </tr>
 <tr class="odd">
@@ -536,7 +536,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">01/02/16</td>
 <td align="left">N/A</td>
 <td align="left">N/A</td>
-<td align="left">i</td>
+<td align="left"></td>
 <td align="left"></td>
 </tr>
 <tr class="even">
@@ -546,7 +546,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">12 weeks</td>
 <td align="left">N/A</td>
 <td align="left">N/A</td>
-<td align="left">j</td>
+<td align="left"><span class="citation">[12]</span></td>
 <td align="left"></td>
 </tr>
 <tr class="odd">
@@ -576,7 +576,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">11/11/2015</td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="left">k</td>
+<td align="left"><span class="citation">[23]</span></td>
 <td align="left"></td>
 </tr>
 <tr class="even">
@@ -586,7 +586,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 <td align="left">13/03/2016</td>
 <td align="left">N/A</td>
 <td align="left">N/A</td>
-<td align="left">l</td>
+<td align="left"><span class="citation">[24]</span></td>
 <td align="left"></td>
 </tr>
 <tr class="odd">
@@ -631,17 +631,22 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 </tr>
 </tbody>
 </table>
-<p>a <span class="citation">[20]</span>; b <span class="citation">[21]</span>; c <span class="citation">[22]</span>; d <span class="citation">[8]</span>; e <span class="citation">[4]</span>; f<span class="citation">[6]</span>; g <span class="citation">[5]</span>; h<span class="citation">[7]</span>.</p>
+<p></p>
 </div>
 <div id="vital-statistics" class="section level2">
 <h2><span class="header-section-number">3.3</span> Vital statistics</h2>
-<p><strong>Table 3. Summary of vital statistics and sources.</strong> </p>
+<p><strong>Table 3. Summary of vital statistics and sources.</strong> <em>Sources refer to references in the main text</em> </p>
 <table>
+<colgroup>
+<col width="12%"></col>
+<col width="34%"></col>
+<col width="53%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">State/Country</th>
-<th align="right">Population size (2015)a,b</th>
-<th align="right">Life expectancy (years) (2014)c,d</th>
+<th align="right">Population size (2015)<span class="citation">[5]</span>,<span class="citation">[7]</span></th>
+<th align="right">Life expectancy (years) (2014)<span class="citation">[4]</span>,<span class="citation">[6]</span></th>
 </tr>
 </thead>
 <tbody>
@@ -667,7 +672,7 @@ P'_m(x) = \frac{c}{\Gamma(x)\theta^k }x^{k-1}e^{-\frac{x}{\theta}}
 </tr>
 </tbody>
 </table>
-<p>a <span class="citation">[5]</span>; b <span class="citation">[7]</span>; c <span class="citation">[4]</span>; d<span class="citation">[6]</span>.</p>
+<p></p>
 </div>
 </div>
 <div id="model-fitting" class="section level1">
@@ -764,7 +769,7 @@ P_I(t) = \left\{\begin{array}{lr}
 <span class="math display">\[\begin{equation}
 \phi_I = \frac{\sum_t I(t)/N}{AR}
 \end{equation}\]</span>
-<p>Where <span class="math inline">\(I(t)\)</span> is the reported incidence at week <span class="math inline">\(t\)</span>, <span class="math inline">\(N\)</span> is the population size of Salvador, and <span class="math inline">\(AR\)</span> is the reported attack rate based on seroprevalence. We placed a uniform prior on <span class="math inline">\(AR\)</span> such that the total attack rate was between 59.4 and 66.8%.<span class="citation">[23]</span> <span class="math inline">\(N\)</span> was inferred by dividing the total number of reported AEI cases by the reported total incidence per 1000 persons (giving 2922037); life expectancy was assumed to be the same as Bahia overall at 73.1 years. We calculated weekly number of live births by backtracking from the reported microcephaly incidence in this time period and the total number of microcephaly cases reported. Paploski et al. report “367 newborns with suspected microcephaly (15.6 cases/1,000 newborns during July 2015–February 2016, which peaked at 31.4 cases/1,000 newborns in December)”“, suggesting that there were 23526 newborns in this period. We assumed that these births were distributed uniformly across each week such that there were 420 births per week from July 2015 – February 2016. The microcephaly reporting rate, <span class="math inline">\(\phi_m\)</span>, was assumed to be 100%.</p>
+<p>Where <span class="math inline">\(I(t)\)</span> is the reported incidence at week <span class="math inline">\(t\)</span>, <span class="math inline">\(N\)</span> is the population size of Salvador, and <span class="math inline">\(AR\)</span> is the reported attack rate based on seroprevalence. We placed a uniform prior on <span class="math inline">\(AR\)</span> such that the total attack rate was between 59.4 and 66.8%.<span class="citation">[25]</span> <span class="math inline">\(N\)</span> was inferred by dividing the total number of reported AEI cases by the reported total incidence per 1000 persons (giving 2922037); life expectancy was assumed to be the same as Bahia overall at 73.1 years. We calculated weekly number of live births by backtracking from the reported microcephaly incidence in this time period and the total number of microcephaly cases reported. Paploski et al. report “367 newborns with suspected microcephaly (15.6 cases/1,000 newborns during July 2015–February 2016, which peaked at 31.4 cases/1,000 newborns in December)”“, suggesting that there were 23526 newborns in this period. We assumed that these births were distributed uniformly across each week such that there were 420 births per week from July 2015 – February 2016. The microcephaly reporting rate, <span class="math inline">\(\phi_m\)</span>, was assumed to be 100%.</p>
 <p>Model fitting was then carried out as above; fixing all model parameters other than <span class="math inline">\(\phi_I\)</span>; <span class="math inline">\(\alpha\)</span>; <span class="math inline">\(\beta\)</span>; and <span class="math inline">\(c\)</span> as described in Table 2. Note that in this analysis the SEIR model component is not included.</p>
 </div>
 <div id="references" class="section level1 unnumbered">
@@ -836,8 +841,14 @@ P_I(t) = \left\{\begin{array}{lr}
 <div id="ref-Majumder2016a">
 <p>22. Majumder MS, Cohn E, Fish D, Brownstein JS. Estimating a feasible serial interval range for Zika fever. Bull World Heal Organ. 2016; doi:<a href="https://doi.org/10.2471/BLT.16.171009">10.2471/BLT.16.171009</a></p>
 </div>
+<div id="ref-ReportingChange">
+<p>23. Epidemiological Alert. Zika virus infection 7 May 2015 [Internet]. Available: <a href="http://www.paho.org/hq/index.php?option=com_docman&amp;task=doc_view&amp;Itemid=270&amp;gid=30075" class="uri">http://www.paho.org/hq/index.php?option=com_docman&amp;task=doc_view&amp;Itemid=270&amp;gid=30075</a></p>
+</div>
+<div id="ref-ProtocolCZS">
+<p>24. Protocol for surveillance and response to the occurrence of microcephaly and/or central nervous system (CNS) alterations [in Portuguese] [Internet]. Available: <a href="http://portalarquivos.saude.gov.br/images/pdf/2016/marco/24/Microcefalia-Protocolo-vigil--ncia-resposta-versao2.1.pdf" class="uri">http://portalarquivos.saude.gov.br/images/pdf/2016/marco/24/Microcefalia-Protocolo-vigil--ncia-resposta-versao2.1.pdf</a></p>
+</div>
 <div id="ref-Netto">
-<p>23. Netto EM, Moreira-Soto A, Pedroso C, Höser C, Funk S, Kucharski AJ, et al. High Zika Virus Seroprevalence in Salvador, Northeastern Brazil Limits the Potential for Further Outbreaks. MBio. American Society for Microbiology; 2017;8: e01390–17. doi:<a href="https://doi.org/10.1128/mBio.01390-17">10.1128/mBio.01390-17</a></p>
+<p>25. Netto EM, Moreira-Soto A, Pedroso C, Höser C, Funk S, Kucharski AJ, et al. High Zika Virus Seroprevalence in Salvador, Northeastern Brazil Limits the Potential for Further Outbreaks. MBio. American Society for Microbiology; 2017;8: e01390–17. doi:<a href="https://doi.org/10.1128/mBio.01390-17">10.1128/mBio.01390-17</a></p>
 </div>
 </div>
 </div>
