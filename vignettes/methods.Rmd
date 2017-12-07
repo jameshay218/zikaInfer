@@ -2,10 +2,10 @@
 title: "Epidemiological dynamics of ZIKV-associated microcephaly risk"
 csl: plos.csl
 output:
-  rmarkdown::html_vignette:
+  pdf_document:
     number_sections: yes
     toc: yes
-  pdf_document:
+  rmarkdown::html_vignette:
     number_sections: yes
     toc: yes
   html_document:
