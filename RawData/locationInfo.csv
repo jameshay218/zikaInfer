@@ -1,0 +1,32 @@
+rawName,fullName,incidenceOrder,fullName_noAccents,N_H,L_H,peakTime,peakTimeRange
+acre,Acre,4,Acre,803513,73.3,858,120
+alagoas,Alagoas,10,Alagoas,3340932,70.8,858,120
+amapa,Amapá,27,Amapa,766679,73.4,858,120
+amazonas,Amazonas,23,Amazonas,3938336,71.4,858,120
+bahia,Bahia,5,Bahia,15203934,73,855,60
+ceara,Ceará,11,Ceara,8904459,73.4,858,120
+distritofederal,Distrito Federal,21,Distito Federal,2914830,77.6,858,120
+espiritosanto,Espírito Santo,14,Espirito Santo,3929911,77.5,858,120
+goias,Goiás,22,Goias,6610681,73.8,858,120
+maranhao,Maranhão,12,Maranhao,6904241,70,858,120
+matogrossdosul,Mato Grosso do Sul,19,Mato Grosso do Sul,3265486,73.7,858,120
+matogrosso,Mato Grosso,8,Mato Grosso,2651235,75,858,120
+minasgerais,Minas Gerais,18,Minas Gerais,20869101,76.7,858,120
+para,Pará,20,Para,8175113,71.7,858,120
+paraiba,Paraíba,3,Paraiba,3972202,72.6,858,120
+parana,Paraná,24,Parana,9345173,73,858,120
+pernambuco,Pernambuco,1,Pernambuco,11163018,76.5,804,60
+piaui,Piauí,7,Piaui,3204028,70.7,858,120
+riodejaneiro,Rio de Janeiro,16,Rio de Janeiro,16550024,75.6,858,120
+riograndedonorte,Rio Grande do Norte,6,Rio Grande do Norte,3442175,75.2,862,60
+riograndedosul,Rio Grande do Sul,25,Rio Grande do Sul,11247972,77.2,858,120
+rondonia,Rondônia,13,Rondonia,1768204,70.9,858,120
+roraima,Roraima,15,Roraima,505665,70.9,858,120
+saopaulo,São Paulo,17,Sao Paulo,6819190,78.4,858,120
+santacatarina,Santa Catarina,26,Santa Catarina,44396484,77.5,858,120
+sergipe,Sergipe,2,Sergipe,2242937,72.1,858,120
+tocantins,Tocantins,9,Tocantins,1515126,72.8,858,120
+colombia,Colombia,28,Colombia,47791393,73.95,1128,60
+northeast,Northeast Brazil,29,Northeast Brazil,56560081,72.3,858,120
+pernambuco_confirmed,Pernambuco,1,Pernambuco,11163018,76.5,804,60
+riograndedonorte_confirmed,Rio Grande do Norte,6,Rio Grande do Norte,3442175,75.2,862,60

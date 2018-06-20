@@ -2,9 +2,9 @@ Column name,Column definition
 startDay,"First day of reporting period for this entry, where days are integers relative to the start day of 01/01/2013 = 0"
 endDay,"Last day of reporting period for this entry, where days are integers relative to the start day of 01/01/2013 = 0"
 buckets,Duration of this reporting period in days
-microCeph,Number of microcephaly cases reported in this period
+microCeph,Number of microcephaly cases reported OR confirmed in this period (clarified in data_sources.csv)
 births,Number of live births during this period
 local,Location to which these entries correspond
 N_H,Population size of that location
 L_H,Life expectancy in years for that location
-inc,Number of reported ZIKV infection cases during that period
+inc,Number of reported OR confirmed ZIKV infection cases during that period (clarified in data_sources.csv)

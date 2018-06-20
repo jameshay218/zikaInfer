@@ -52,7 +52,7 @@ main_model_fits <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/multi_
         unfixed = FALSE,
         thin = 10,
         burnin = 750000)
-    
+
     parTab <- read_inipars()
     ts <- seq(0,3003,by=1)
     
@@ -61,6 +61,7 @@ main_model_fits <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/multi_
     tmp <- NULL
     tmpDat <- dat[dat$local %in% unique(parTab$local),]
     states <- unique(tmpDat$local)
+
     for(state in states){
         tmp[[state]] <- plot_setup_data(
             chain, tmpDat, incDat,
@@ -71,7 +72,7 @@ main_model_fits <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/multi_
     }
     
     incDat$meanDay <- (incDat$startDay + incDat$endDay)/2
-    incDat$local <- convert_name_to_state_factor(incDat$local)
+    incDat$local <- convert_name_to_location_factor(incDat$local)
     
     peakTimes <- generate_peak_time_table(dat,incDat)
     
@@ -86,9 +87,9 @@ main_model_fits <- function(chainWD = "~/Documents/Zika/28.02.2017_chains/multi_
    
     dat$meanDay <- rowMeans(dat[,c("startDay","endDay")])
     dat <- dat[dat$startDay < datCutOff,]
-    dat$local <- convert_name_to_state_factor(dat$local)
-    microBounds$local <- convert_name_to_state_factor(microBounds$local)
-    incBounds$local <- convert_name_to_state_factor(incBounds$local)
+    dat$local <- convert_name_to_location_factor(dat$local)
+    microBounds$local <- convert_name_to_location_factor(microBounds$local)
+    incBounds$local <- convert_name_to_location_factor(incBounds$local)
 
     inc_scales <- ddply(microBounds, "local", function(x) max(x$upper))
 
@@ -147,7 +148,8 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
                             chain=NULL,
                             forecast=FALSE,
                             forecastPostChange=FALSE,
-                            weeks=FALSE){
+                            weeks=FALSE,
+                            incCutoff=NULL){
     ts <- seq(0,3003,by=1)
 
     microDat <- read.csv(datFile,stringsAsFactors = FALSE)
@@ -157,6 +159,7 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
     if(!is.null(incFile)){
         incDat <- read.csv(incFile,stringsAsFactors=FALSE)    
         incDat <- incDat[incDat$local == local,]
+        if(!is.null(incCutoff)) incDat <- incDat[incDat$startDay < incCutoff,]
         incDat$meanDay <- rowMeans(incDat[,c("startDay","endDay")])
         peakTime <- incDat[which.max(incDat$inc),"meanDay"]
     }

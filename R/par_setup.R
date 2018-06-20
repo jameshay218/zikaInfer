@@ -463,3 +463,14 @@ generateAllowableParams <- function(peakTime=927, peakTimeRange=60, stateNames,p
     return(allowablePars)
 }
 
+#' @export
+convert_number_to_date <- function(x){
+    y <- as.Date(x,origin="2013-01-01")
+    return(y)
+}
+
+#' @export
+convert_date_to_number <- function(x){
+    y <- as.numeric(as.Date(x,origin="2013-01-01")) - as.numeric(as.Date("2013-01-01",origin="2013-01-01"))
+    return(y)
+}

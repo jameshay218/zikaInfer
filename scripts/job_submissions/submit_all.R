@@ -1,8 +1,9 @@
 setwd("~/net/home/zika")
-source("scripts/model_fitting_script.R")
-source("scripts/cluster_setup.R")
+source("~/Documents/Zika/zikaInfer/scripts/job_submissions/model_fitting_script.R")
+source("~/Documents/Zika/zikaInfer/scripts/job_submissions/cluster_setup.R")
 
-setwd("scripts/runs_18112017")
+#setwd("~/Documents/Zika/zikaInfer/scripts/job_submissions/runs_18112017")
+setwd("~/net/home/zika")
 
 mcmcPars <- c("adaptive_period"=300000,"iterations"=700000,"opt_freq"=1000,
               "thin"=50,"save_block"=100,"popt"=0.44)
@@ -11,7 +12,7 @@ mcmcPars2 <- c("adaptive_period"=750000,"iterations"=2000000,"opt_freq"=1000,
 
 ## Single state jobs
 source("bahia.R") # Yes
-source("NEJM.R") # Yes
+source("nejm.R") # Yes
 source("colombia.R") # Yes - note jobs from here are a list
 source("rio.R") # Yes
 source("pernambuco.R") # Yes
@@ -22,10 +23,10 @@ source("reports_3.R") # Yes - list of jobs
 source("reports_2.R") # Yes - list of jobs
 
 
-mcmcPars1 <- c("iterations"=100000,"adaptive_period"=50000,
+mcmcPars1 <- c("iterations"=1000000,"adaptive_period"=500000,
               "popt"=0.44,"thin"=10,"save_block"=1000,
               "opt_freq"=1000)
-mcmcPars2 <- c("iterations"=200000,"adaptive_period"=50000,
+mcmcPars2 <- c("iterations"=2000000,"adaptive_period"=500000,
               "popt"=0.234,"thin"=10,"save_block"=1000,
               "opt_freq"=1000)
 

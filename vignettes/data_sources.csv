@@ -1,24 +1,35 @@
-Country,Locations,Incidence type,Resolution,Digitised?,FullSource,Source
-Brazil,"Northeast states (Alagoas, Bahia, Ceará, Maranhão, Paraíba, Pernambuco, Piauí, Rio Grande do Norte and Sergipe)",Microcephaly and ZIKV,Weekly,No,"N Engl J Med 2017; 376:1591-1593April 20, 2017DOI: 10.1056/NEJMc1608612",[@deOliveira2017]
-Colombia,Country-wide,Microcephaly,Weekly,Yes,"Pan American Health Organization / World Health Organization. Zika - Epidemiological Report Colombia.
-December 2016. Washington, D.C.: PAHO/WHO; 2016",[@PahoColombia]
-Colombia,Country-wide,ZIKV,Weekly,Yes,"Pan American Health Organization / World Health Organization. Zika - Epidemiological Report Colombia.
-December 2016. Washington, D.C.: PAHO/WHO; 2016",[@PahoColombia]
-Colombia,Country-wide,Microcephaly,Monthly,No,"Pan American Health Organization / World Health Organization. Zika - Epidemiological Report Colombia.
-December 2016. Washington, D.C.: PAHO/WHO; 2016",[@Cuevas2016b]
-Brazil,Bahia,Microcephaly,Weekly,Yes,"Boletim da Microcefalia e outras alterações do SNC sugestivas de infecção congênita.
-Bahia, 2016. Available at http://www.suvisa.ba.gov.br/sites/default/files/CIEVS Boletim Epidemiológico número 1 - 26 de Janeiro 2017.pdf",[@BahiaReports]
-Brazil,Bahia,Microcephaly,Monthly,No,https://public.tableau.com/profile/bruno.zoca#!/vizhome/Painel2-microcefalia/Painel2-Microcefalia,[@Zoca2016]
-Brazil,Bahia,ZIKV,Weekly,Yes,"Boletim da Microcefalia e outras alterações do SNC sugestivas de infecção congênita.
-Bahia, 2016. Available at http://www.suvisa.ba.gov.br/sites/default/files/CIEVS Boletim Epidemiológico número 1 - 26 de Janeiro 2017.pdf",[@BahiaReports]
-Brazil,Rio Grande do Norte,Microcephaly,Monthly,No,"Boletim Epidemiologico, Atualização da Situação Epidemiológica da Microcefalia e/ou outras alterações do sistema nervoso central de causas infecciosas no Rio Grande do Norte. 05/02/2017. Available at http://www.saude.rn.gov.br/Conteudo.asp?TRAN=ITEM&TARG=96506&ACT=&PAGE=&PARM=&LBL=MAT%C9RIA",[@RioReports]
-Brazil,Rio Grande do Norte,Microcephaly,Monthly,No,https://public.tableau.com/profile/bruno.zoca#!/vizhome/Painel2-microcefalia/Painel2-Microcefalia,[@Zoca2016]
-Brazil,Rio Grande do Norte,ZIKV,Weekly,Yes,"Boletim Epidemiologico, Atualização da Situação Epidemiológica das
-Arboviroses no Rio Grande do Norte. December 2016. Available at http://www.saude.rn.gov.br/Conteudo.asp?TRAN=ITEM&TARG=110749&ACT=&PAGE=0&PARM=&LBL=Arboviroses",[@RioReportsB]
-Brazil,Pernambuco,Microcephaly,Weekly,Yes,"Pan American Health Organization / World Health Organization. Zika Epidemiological
-Update, 26 May 2016. Washington, D.C.: PAHO/WHO; 2016",[@PernambucoReports]
-Brazil,Pernambuco,ZIKV,Weekly,Yes,"Pan American Health Organization / World Health Organization. Zika Epidemiological
-Update, 26 May 2016. Washington, D.C.: PAHO/WHO; 2016",[@PernambucoReports]
-Brazil,Pernambuco,Microcephaly,Monthly,No,https://public.tableau.com/profile/bruno.zoca#!/vizhome/Painel2-microcefalia/Painel2-Microcefalia,[@Zoca2016]
-Brazil,"Salvador, Bahia",Microcephaly,Weekly,No,"Paploski I, Prates A, Cardoso CW, Kikuti M, Silva M, Waller LA, et al. Time Lags between Exanthematous Illness Attributed to Zika Virus, Guillain-Barré Syndrome, and Microcephaly, Salvador, Brazil. Emerg Infect Dis. 2016;22(8):1438-1444. https://dx.doi.org/10.3201/eid2208.160496",[@Paploski]
-Brazil,"Salvador, Bahia",Acute exanthematous illness,Weekly,No,"Paploski I, Prates A, Cardoso CW, Kikuti M, Silva M, Waller LA, et al. Time Lags between Exanthematous Illness Attributed to Zika Virus, Guillain-Barré Syndrome, and Microcephaly, Salvador, Brazil. Emerg Infect Dis. 2016;22(8):1438-1444. https://dx.doi.org/10.3201/eid2208.160496",[@Paploski]
+Country,Locations,Incidence type,Reported or Confirmed?,Filename,Resolution,Digitised?,FullSource,Note,Source
+Brazil,"Northeast states (Alagoas, Bahia, Ceará, Maranhão, Paraíba, Pernambuco, Piauí, Rio Grande do Norte and Sergipe)",Microcephaly and ZIKV,Microcephaly confirmed; ZIKV reported,Northeast/northeast_microceph.csv & Northeast/northeast_zikv.csv,Weekly,No,"N Engl J Med 2017; 376:1591-1593April 20, 2017DOI: 10.1056/NEJMc1608612",,[@deOliveira2017]
+Brazil,"Northeast states (Alagoas, Bahia, Ceará, Maranhão, Paraíba, Pernambuco, Piauí, Rio Grande do Norte and Sergipe)",Microcephaly and ZIKV,Microcephaly confirmed & predicted; ZIKV reported,"Northeast/deOliveira2017/microCeph_deOliveira2017_clean.csv & 
+Northeast/deOliveira2017/zikv_inc_deOliveira2017_clean.csv",Weekly,Yes,The Lancet 2017; 390:861-870 DOI:10.1016/S0140-6736(17)31368-5,Extracted from incidence per 10000 births/pregnant women – see accompanying extraction_readme.txt,[@deOliveira2017a]
+Colombia,Country-wide,Microcephaly,Reported,Colombia/microcephaly_dat_weekly_2017.csv,Weekly,Yes,"Pan American Health Organization / World Health Organization. Zika - Epidemiological Report Colombia.
+September 2017. Washington, D.C.: PAHO/WHO; 2017",,[@PahoColombia]
+Colombia,Country-wide,ZIKV,Reported,Colombia/zikv_inc_2017.csv,Weekly,Yes,"Pan American Health Organization / World Health Organization. Zika - Epidemiological Report Colombia.
+September 2017. Washington, D.C.: PAHO/WHO; 2017",,[@PahoColombia]
+Colombia,Country-wide,ZIKV,Confirmed,Colombia/zikv_inc_2017_confirmed.csv,Weekly,Yes,"Pan American Health Organization / World Health Organization. Zika - Epidemiological Report Colombia.
+September 2017. Washington, D.C.: PAHO/WHO; 2017",,[@PahoColombia]
+Colombia,Country-wide,Microcephaly,Reported,Colombia/colombia_microceph_monthly.csv,Monthly,No,MMWR. Morbidity and Mortality Weekly Report; 65(45):1409-1413  2016,,[@Cuevas2016b]
+Colombia,Country-wide,Microcephaly,Reported,Colombia/colombia_reports_microceph_2017.csv,Weekly,No,Instituto Nacional de Salud (Colombia). Boletín Epidemiológico. EW14 2016 – EW 34 2017. Available at: http://www.ins.gov.co/buscador-eventos/BoletinEpidemiologico/Forms/AllItems.aspx Accessed 15/06/2018.,"Extracted from cumulative values for under review, discarded and confirmed, so not strictly true incidence. New under review cases are R_t – R_(t-1) + new_D_t + new_C_t (review, discarded, confirmed)",[@ColombiaReports]
+Colombia,Country-wide,Microcephaly,Confirmed,Colombia/colombia_reports_microceph_2017_confirmed.csv,Weekly,No,Instituto Nacional de Salud (Colombia). Boletín Epidemiológico. EW14 2016 – EW 34 2017. Available at: http://www.ins.gov.co/buscador-eventos/BoletinEpidemiologico/Forms/AllItems.aspx Accessed 15/06/2018.,"Extracted from cumulative values for under review, discarded and confirmed, so not strictly true incidence. Confirmed cases are number of confirmed cases in week t less the number of cases in time t-1",[@ColombiaReports]
+Brazil,Bahia,Microcephaly,Reported,Brazil/microceph_reports_2016.csv,Weekly,Yes,"Boletim da Microcefalia e outras alterações do SNC sugestivas de infecção congênita. Bahia,
+2016 [in Portuguese] [Internet]. Available: http://www.saude.ba.gov.br/wp-content/uploads/2017/11/
+2017-Boletim-epidemiol%C3%B3gico-da-Microcefalia-n.-01.pdf",,[@BahiaReports]
+Brazil,Bahia,Microcephaly,Reported,Brazil/brazil_microCeph_28022017.csv,Monthly,No,https://public.tableau.com/profile/bruno.zoca#!/vizhome/Painel2-microcefalia/Painel2-Microcefalia,,[@Zoca2016]
+Brazil,Bahia,ZIKV,Reported,Brazil/brazil_report_zikv_inc_2016.csv,Weekly,Yes,"Boletim da Microcefalia e outras alterações do SNC sugestivas de infecção congênita. Bahia,
+2016 [in Portuguese] [Internet]. Available: http://www.saude.ba.gov.br/wp-content/uploads/2017/11/
+2017-Boletim-epidemiol%C3%B3gico-da-Microcefalia-n.-01.pdf",,[@BahiaReportsB]
+Brazil,Rio Grande do Norte,Microcephaly,Reported,Brazil/microceph_reports_2016.csv,Monthly,No,"Boletim Epidemiologico, Atualização da Situação Epidemiológica da Microcefalia e/ou outras alterações do sistema nervoso central de causas infecciosas no Rio Grande do Norte. 05/02/2017. Available at http://www.saude.rn.gov.br/Conteudo.asp?TRAN=ITEM&TARG=96506&ACT=&PAGE=&PARM=&LBL=MAT%C9RIA",,[@RioReports]
+Brazil,Rio Grande do Norte,Microcephaly,Confirmed,Brazil/microceph_reports_2016.csv,Monthly,Yes,"Boletim Epidemiologico, Atualização da Situação Epidemiológica da Microcefalia e/ou outras alterações do sistema nervoso central de causas infecciosas no Rio Grande do Norte. 05/02/2017. Available at http://www.saude.rn.gov.br/Conteudo.asp?TRAN=ITEM&TARG=96506&ACT=&PAGE=&PARM=&LBL=MAT%C9RIA",,[@RioReports]
+Brazil,Rio Grande do Norte,Microcephaly,Reported,Brazil/brazil_microCeph_28022017.csv,Monthly,No,https://public.tableau.com/profile/bruno.zoca#!/vizhome/Painel2-microcefalia/Painel2-Microcefalia,,[@Zoca2016]
+Brazil,Rio Grande do Norte,ZIKV,Reported,Brazil/brazil_report_zikv_inc_2016.csv,Weekly,Yes,"Boletim Epidemiologico, Atualização da Situação Epidemiológica das
+Arboviroses no Rio Grande do Norte. December 2016. Available at http://www.saude.rn.gov.br/Conteudo.asp?TRAN=ITEM&TARG=110749&ACT=&PAGE=0&PARM=&LBL=Arboviroses",,[@RioReportsB]
+Brazil,Pernambuco,Microcephaly,Confirmed & Reported,Brazil/microceph_reports_2016.csv,Weekly,Yes,Technical Report No 02/2017 Congenital syndrome associated with Zika virus infection (SCZ) SEVS report 03/02/2017,,[@PernambucoReports]
+Brazil,Pernambuco,ZIKV,Reported,Brazil/brazil_report_zikv_inc_2016.csv,Weekly,Yes,"Pan American Health Organization / World Health Organization. Zika Epidemiological
+Update, 26 May 2016. Washington, D.C.: PAHO/WHO; 2016",,[@PahoPernambuco]
+Brazil,Pernambuco,Microcephaly,Reported,Brazil/brazil_microCeph_28022017.csv,Monthly,No,https://public.tableau.com/profile/bruno.zoca#!/vizhome/Painel2-microcefalia/Painel2-Microcefalia,,[@Zoca2016]
+Brazil,"Salvador, Bahia",ZIKV,Reported,Brazil/salvador_inc_scaled.csv,Weekly,No,"Paploski IA, Prates APP, Cardoso CW, Kikuti M, Silva MMO, Waller LA, et al. Time Lags between
+Exanthematous Illness Attributed to Zika Virus, Guillain-Barré Syndrome, and Microcephaly, Salvador,
+Brazil. Emerg Infect Dis. 2016;22: 1438–1444. doi:10.3201/eid2208.160496",,[@Paploski]
+Brazil,"Salvador, Bahia",Microcephaly,Reported,Brazil/salvador_microcephaly.csv,Weekly,No,"Paploski IA, Prates APP, Cardoso CW, Kikuti M, Silva MMO, Waller LA, et al. Time Lags between
+Exanthematous Illness Attributed to Zika Virus, Guillain-Barré Syndrome, and Microcephaly, Salvador,
+Brazil. Emerg Infect Dis. 2016;22: 1438–1444. doi:10.3201/eid2208.160496",,[@Paploski]

@@ -412,12 +412,14 @@ posterior_known_inc_seir <- function(pars, startDays, endDays,
 
     ## Generate probability of observing a microcephaly case on a given day
     ## Note that this is on a log scale here
-    bp <- exp(pars["baselineProb"])
+    #bp <- exp(pars["baselineProb"])
+    bp <- pars["baselineProb"]
     
     tmp_buckets <- buckets[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
     tmp_births <- births[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
     tmp_microCeph <- microCeph[which(startDays >= min(inc_start) & endDays <= max(inc_end))]
     ## Getting non-aborted births, (1-a)p_m(t)
+
     probM_a <- generate_probM_forecast(inc, probs, bp,
                                        pars["abortion_rate"], pars["birth_reduction"],
                                        which(ts == pars["switch_time_behaviour"]), pars["abortion_cutoff"], FALSE)
@@ -425,17 +427,16 @@ posterior_known_inc_seir <- function(pars, startDays, endDays,
     probM_b <- generate_probM_forecast(inc, probs, bp,
                                        pars["abortion_rate"], pars["birth_reduction"],
                                        which(ts == pars["switch_time_behaviour"]), pars["abortion_cutoff"], TRUE)
-
     ## So probability of becoming a microcephaly case and being observed is
     ## the proportion of births that become microcephaly cases of those that
     ## were not aborted microcephaly cases
     probM <- probM_a/(1-probM_b)
-    
+
     probM[which(ts < switch_time_m)] <- probM[which(ts < switch_time_m)]*pars["propn"]
     probM[which(ts >= switch_time_m)] <- probM[which(ts >= switch_time_m)]*pars["propn2"]
 
     probM <- average_buckets(probM,tmp_buckets)
-    
+
     ## Births after prediction time are not realised births - it may be that some of these
     ## were avoided at time t-40 from switch_time_behaviour
     ## Comment this out if we don't want to use avoided births parameter
@@ -463,6 +464,7 @@ posterior_known_inc_seir <- function(pars, startDays, endDays,
     ## The actual number of births after the prediction time are inferred
     births2 <- tmp_births
     births2[which(startDays >= prediction_time)] <- as.integer(inferred_births)
+ 
     lik <- lik + (1-pars["inc_weight"])*likelihood_probM(tmp_microCeph,births2,probM)
 
     return(lik)

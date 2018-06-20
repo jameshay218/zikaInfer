@@ -80,7 +80,8 @@ scale_x_continuous(limits=c(0,1),breaks=seq(0,1,by=0.25)) +
     ylab("Proportion of microcephaly\naffected births aborted") +
     xlab("Relative reduction in infection\nrisk in pregnant women") +
     labs(fill="Density") + heatmap_theme
-p4 <- ggplot() + geom_hex(data=bahia_chain_noreportingchange,aes(x=abortion_rate,y=abortions,fill=..density..),bins=200)+ 
+p4 <- ggplot() + geom_hex(data=bahia_chain_noreportingchange,aes(x=abortion_rate,y=abortions,fill=..density..),bins=200)+
+    scale_y_continuous(limits=c(0,1500),breaks=seq(0,1500,by=500))+
     scale_fill_gradient2(low="turquoise4",mid="#FAFDB8",high="#9E0142",midpoint= 0.0025) +
 ylab("Total number of microcephaly\naffected births aborted") +
     xlab("Proportion of microcephaly\naffected births aborted") +
