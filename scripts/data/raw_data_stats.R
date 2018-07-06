@@ -11,7 +11,7 @@
 ##    c. Boxplot
 ##    d. Cross-correlations
 ##    e. Spatio-temporal correlations
-##    f. Correlation plots
+##    f. Correlation plotsother
 ## 3. Summary stats on peak times
 ## 4. Summary stats on max cases
 ## 5. Save a .csv file with all of the summary statistics (peak time and max cases)
@@ -46,6 +46,10 @@ if(NORMALISE){
 
 
 ## Get subset of data and then reformat data to give columns as states
+brazilMicroDat$per_birth <- brazilMicroDat$microCeph/brazilMicroDat$births
+per_birth <- ddply(brazilMicroDat,~local, function(x) max(x$per_birth))
+per_birth$V1 <- per_birth$V1*10000
+per_birth$V1 <- as.integer(per_birth$V1)
 microDat <- brazilMicroDat[,c("startDay","microCeph","local","births")]
 incDat <- brazilIncDat
 microcephaly <- NULL
@@ -561,7 +565,7 @@ peakTimes_micro <- data.frame("state"=locals,"peakTime"=peakTimes)
 # Get peak times for incidence
 peakTimes <- NULL
 locals <- NULL
-times <- incDat[incDat$local=="Bahia",c("startDay","endDay")]
+times <- incDat[incDat$local=="bahia",c("startDay","endDay")]
 for(local in sort(unique(incDat$local))){
   tmp <- incDat[incDat$local==local,c("startDay","endDay","inc")]
   peakRow <- which.max(tmp[,"inc"])

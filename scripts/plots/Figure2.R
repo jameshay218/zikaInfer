@@ -13,15 +13,15 @@ library(ggplot2)
 library(extrafont)
 
 ## Where are the MCMC chains stored
-topDir <- "/media/james/JH USB/Forecast_runs/"
+topDir <- "~/net/home/zika/outputs/"
 
 ###################################################
 ## NEJM Northeast Brazil model fit
-chainWD <- paste0(topDir, "northeast/northeast/model_1")
+chainWD <- paste0(topDir, "northeast_deOliveira2017/northeast/model_1")
 parTab <- read_inipars(chainWD)
 chain <- lazymcmc::load_mcmc_chains(chainWD,parTab,FALSE,1,750000,TRUE,FALSE,FALSE)[["chain"]]
-datFile = "~/Documents/Zika/Data/brazil/Northeast/northeast_microceph.csv"
-incFile = "~/Documents/Zika/Data/brazil/Northeast/northeast_zikv.csv"
+datFile = "~/Documents/Zika/Data/brazil/deOliveira2017/microCeph_deOliveira2017_clean.csv"
+incFile = "~/Documents/Zika/Data/brazil/deOliveira2017/zikv_inc_deOliveira2017_clean.csv"
 local = "northeast"
 localName = "Northeast Brazil NEJM"
 incScale=0.015
@@ -31,6 +31,25 @@ NE_plot <- indiv_model_fit(datFile,incFile, local, localName,
                            incScale, runs, ylim,xlim=730,bot=FALSE,standalone=FALSE,
                             parTab=parTab, chain=chain, forecast=FALSE, weeks=FALSE)
 NE_plot
+
+###################################################
+## Pernambuco Brazil model fit
+chainWD <- paste0(topDir, "pernambuco_peak_confirmed/pernambuco/model_1")
+parTab <- read_inipars(chainWD)
+chain <- lazymcmc::load_mcmc_chains(chainWD,parTab,FALSE,1,750000,TRUE,FALSE,FALSE)[["chain"]]
+datFile = "~/Documents/Zika/Data/brazil/microceph_reports_2016_confirmed.csv"
+incFile = NULL
+local = "pernambuco"
+localName = "Pernambuco"
+incScale=10
+runs=200
+ylim=0.02
+pern_plot <- indiv_model_fit(datFile,incFile, local, localName,
+                           incScale, runs, ylim,xlim=0,bot=FALSE,standalone=FALSE,
+                           parTab=parTab, chain=chain, forecast=FALSE, weeks=TRUE)
+pern_plot
+
+
 ###################################################
 ## Bahia reports data fit
 chainWD = paste0(topDir,"bahia/bahia/model_1")
@@ -50,8 +69,8 @@ bahia_plot <- indiv_model_fit(datFile,incFile, local, localName,
 bahia_plot
 ###################################################
 ## Rio Grande Do Norte reports data fit
-chainWD = paste0(topDir,"riograndedonorte/riograndedonorte/model_1")
-datFile = "~/Documents/Zika/Data/brazil/microceph_reports_2016.csv"
+chainWD = paste0(topDir,"riograndedonorte_confirmed/riograndedonorte/model_1")
+datFile = "~/Documents/Zika/Data/brazil/microceph_reports_2016_confirmed.csv"
 incFile = "~/Documents/Zika/Data/brazil/brazil_report_zikv_inc_2016.csv"
 parTab <- read_inipars(chainWD)
 chain <- lazymcmc::load_mcmc_chains(chainWD,parTab,FALSE,1,750000,TRUE,FALSE,FALSE)[["chain"]]
@@ -67,9 +86,9 @@ rio_plot <- indiv_model_fit(datFile,incFile, local, localName,
 rio_plot
 ###################################################
 ## Colombia weekly inc fit
-chainWD = paste0(topDir,"colombia_inc/colombia/model_1")
-datFile = "~/Documents/Zika/Data/colombia/microcephaly_dat_weekly.csv"
-incFile = "~/Documents/Zika/Data/colombia/zikv_inc_2016.csv"
+chainWD = paste0(topDir,"colombia_inc_confirmed/colombia/model_1")
+datFile = "~/Documents/Zika/Data/colombia/microcephaly_dat_weekly_2017.csv"
+incFile = "~/Documents/Zika/Data/colombia/zikv_inc_2017_confirmed.csv"
 parTab <- read_inipars(chainWD)
 chain <- lazymcmc::load_mcmc_chains(chainWD,parTab,FALSE,1,750000,TRUE,FALSE,FALSE)[["chain"]]
 local = "colombia"

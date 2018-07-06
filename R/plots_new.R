@@ -162,8 +162,17 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
         if(!is.null(incCutoff)) incDat <- incDat[incDat$startDay < incCutoff,]
         incDat$meanDay <- rowMeans(incDat[,c("startDay","endDay")])
         peakTime <- incDat[which.max(incDat$inc),"meanDay"]
+    } else {
+        startDay <- 0
+        endDay <- max(microDat$endDay)
+        startDays <- seq(startDay, endDay-7, by=7)
+        endDays <- seq(7, endDay, by=7)
+        N_H <- parTab[parTab$names == "N_H","values"]
+        L_H <- parTab[parTab$names == "L_H","values"]
+        buckets <- rep(7, length(startDays))
+        incDat <- data.frame(inc=9,N_H=N_H, buckets=buckets,startDay=startDays,endDay=endDays, local=local)
     }
-    
+        
     if(forecast){
         f <- create_forecast_function(parTab, microDat, incDat, ts, FALSE)
     } else {

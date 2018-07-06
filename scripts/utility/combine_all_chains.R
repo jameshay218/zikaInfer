@@ -11,7 +11,7 @@ library(coda)
 library(zikaInfer)
 library(nleqslv)
 
-saveFile <- "~/Documents/Zika/combinedChains.csv" ## Where to save the results
+saveFile <- "~/Documents/Zika/combinedChains_21June2018.csv" ## Where to save the results
 topDir <- "~/net/home/zika/outputs/" ## Where are the MCMC chains saved?
 thin <- 100
 ## Thin the read in MCMC chains - this speeds up the code massively and prevents
@@ -21,7 +21,13 @@ burnin <- 750000 ## Iterations to discard
 runNames <- c("bahia/bahia","colombia_inc/colombia","northeast/northeast",
               "colombia_inc_month/colombia","colombia_peak/colombia","multi_3","multi_3_varied",
               "reports_2_inc","reports_2_weeks","reports_3","reports_3_inc",
-              "reports_3_varied_inc","riograndedonorte/riograndedonorte")
+              "reports_3_varied_inc",
+              "riograndedonorte/riograndedonorte",
+              "colombia_inc_suspected/colombia",
+              "colombia_inc_confirmed/colombia",
+              "northeast_deOliveira2017/northeast",
+              "pernambuco_peak_confirmed/pernambuco",
+              "riograndedonorte_confirmed/riograndedonorte")
 
 correctedRunNames <- c("bahia/bahia"="Bahia, Brazil (reports)",
                        "colombia_inc/colombia"="Colombia",
@@ -31,7 +37,12 @@ correctedRunNames <- c("bahia/bahia"="Bahia, Brazil (reports)",
                        "multi_3"="Brazil Model 3 states",
                        "reports_3" = "Reports 3 states, no incidence",
                        "reports_3_inc"="Reports 3 states",
-                       "riograndedonorte/riograndedonorte"="Rio Grande do Norte, Brazil (reports)")
+                       "riograndedonorte/riograndedonorte"="Rio Grande do Norte, Brazil (reports)",
+                       "colombia_inc_suspected/colombia"="Colombia (suspected)",
+                       "colombia_inc_confirmed/colombia"="Colombia (confirmed)",
+                       "northeast_deOliveira2017/northeast"="Northeast Brazil, Lancet",
+                       "pernambuco_peak_confirmed/pernambuco"="Pernambuco (confirmed, reports)",
+                       "riograndedonorte_confirmed/riograndedonorte"="Rio Grande do Norte, Brazil (confirmed)")
 
 models <- c("model_1","model_2")
 extraMicroParNames <-c("chain","mode","maxWeek","lower","upper","range","max","tr1","tr2","tr3")

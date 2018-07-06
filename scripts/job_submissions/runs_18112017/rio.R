@@ -24,6 +24,7 @@ jobs_rio <- queuer::enqueue_bulk(obj1, combos, "model_fitting_script",
 
 
 datFile <- "~/Documents/Zika/Data/brazil/microceph_reports_2016_confirmed.csv"
+microDat <- read.csv(datFile,stringsAsFactors=FALSE)
 combos <- expand.grid(runName = "riograndedonorte_confirmed", chainNo=1:maxChain,version=versions,stringsAsFactors=FALSE)
 jobs_rio <- queuer::enqueue_bulk(obj1, combos, "model_fitting_script",
                                  stateNames="riograndedonorte",microDat=microDat,
