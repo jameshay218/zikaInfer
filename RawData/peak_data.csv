@@ -1,0 +1,10 @@
+"local","peakTimes","confirmed_vec","peakMicros","peakTimes_inc","confirmed_vec_inc","peakIncs","diff","mean"
+"Bahia - reports",2015-12-09,"Suspected microcephaly",241.331484049931,2015-05-06,"Suspected ZIKV",3.52893444770245,217,2015-08-23
+"Colombia",2016-07-13,"Suspected microcephaly",32.5596927700785,2016-02-03,"Suspected ZIKV",1.31951349167605,161,2016-04-24
+"Colombia",2016-07-13,"Suspected microcephaly",32.5596927700785,2016-02-03,"Confirmed ZIKV",1.31951349167605,161,2016-04-24
+"Northeast Brazil Lancet",2015-11-16,"Suspected microcephaly",48.5429459596037,2015-04-16,"Suspected ZIKV",0.0419023445175052,214,2015-08-01
+"Pernambuco - reports",2015-11-18,"Suspected microcephaly",760.617760617761,2015-03-16,NA,NA,247.5,2015-07-17
+"Pernambuco - reports",2015-11-18,"Confirmed microcephaly",760.617760617761,2015-03-16,NA,NA,247.5,2015-07-17
+"Rio Grande do Norte - reports",2015-11-16,"Suspected microcephaly",195.431472081218,2015-05-13,"Suspected ZIKV",2.03940822299854,186.5,2015-08-14
+"Rio Grande do Norte - reports",2015-11-16,"Confirmed microcephaly",195.431472081218,2015-05-13,"Suspected ZIKV",2.03940822299854,186.5,2015-08-14
+"Salvador, Brazil",2015-12-02,"Suspected microcephaly",264.116575591985,2015-05-06,"Suspected ZIKV",1230.15012363123,210,2015-08-19
