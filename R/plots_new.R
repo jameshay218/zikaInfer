@@ -154,7 +154,7 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
 
     microDat <- read.csv(datFile,stringsAsFactors = FALSE)
     microDat <- microDat[microDat$local == local,]
-
+    print(incFile)
     incDat <- NULL
     if(!is.null(incFile)){
         incDat <- read.csv(incFile,stringsAsFactors=FALSE)    

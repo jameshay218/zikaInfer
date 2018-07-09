@@ -10,8 +10,8 @@ library(coda)
 
 ## Location of all the MCMC chains - this should be the top level directory that contains
 ## the MCMC chain subfolders
-#chainwd <- "~/net/home/zika/outputs/"
-chainwd <- "/media/james/JH USB/Forecast_runs/"
+#chainwd <- "/media/james/JH USB/Forecast_runs/"
+chainwd <- "/media/james/JH USB/outputs/"
 setwd(chainwd)
 ## This might vary depending on the subfolder - you should either specify each one, or run this script
 ## for each length of chain
