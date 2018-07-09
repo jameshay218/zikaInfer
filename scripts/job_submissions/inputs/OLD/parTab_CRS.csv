@@ -1,0 +1,12 @@
+names,values,fixed,lower_bounds,upper_bounds,steps
+mean,65,0,0,1000,0.1
+var,726,0,0,100000,0.1
+c,3.13,0,0,1000,0.1
+tstep,7,1,7,7,0.1
+propn,1,0,0,1,0.1
+propn2,1,1,0,10,0.1
+baselineProb,0,1,0,0,0.1
+incPropn,1,0,0,10,0.1
+L_H,27448,1,0,73000,0.1
+N_H,27018000,1,0,100000000,0.1
+switch_time,485,1,0,10000,0.1

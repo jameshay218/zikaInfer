@@ -1,0 +1,7 @@
+"local","peakTimes","confirmed_vec","peakMicros","peakTimes_inc","confirmed_vec_inc","peakIncs","diff","mean"
+"Bahia",1072.5,"Notified microcephaly",0.0241331484049931,855.5,"Notified ZIKV",0.000352893444770245,217,964
+"Colombia",1289.5,"Notified microcephaly",0.00325596927700785,1128.5,"Notified ZIKV",0.000131951349167605,161,1209
+"Northeast Brazil",1049,"Notified microcephaly",0.00485429459596037,835,"Notified ZIKV",4.19023445175052e-06,214,942
+"Pernambuco",1051.5,"Notified microcephaly",0.0760617760617761,804,NA,NA,247.5,927.75
+"Rio Grande do Norte",1049,"Notified microcephaly",0.0195431472081218,862.5,"Notified ZIKV",0.000203940822299854,186.5,955.75
+"Salvador, Brazil",1065.5,"Notified microcephaly",0.0264116575591985,855.5,"Notified ZIKV",0.123015012363123,210,960.5

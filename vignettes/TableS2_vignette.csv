@@ -1,0 +1,31 @@
+Parameter,Description,Component,Value,Lower Bound,Upper Bound,Source,Notes
+$1/\mu_M$,Lifespan of mosquitoes,SEIR,5 days,N/A,N/A,"[@Ferguson2016], [@Sheppard1969]",
+$\sigma_H$,Intrinsic latency period,SEIR,4 days,N/A,N/A,"[@Lessler2016], [@Ferguson2016]",
+$\sigma_M$,Extrinsic latency period,SEIR,8.4 days,N/A,N/A,"[@Majumder2016a], [@Ferguson2016]",
+$\gamma_H$,Human infectious period,SEIR,6 days,N/A,N/A,"[@Majumder2016a], [@Ferguson2016]",
+$p_{HM}$,Probability of transmission from human to mosquito given bite,SEIR,0.5,N/A,N/A,,Arbitrarily fixed - component of R0
+$p_{MH}$,Probability of transmission from mosquito to human given bite,SEIR,0.5,N/A,N/A,,Arbitrarily fixed - component of R0
+b,Per vector per day bite rate,SEIR,0.5,N/A,N/A,,Arbitrarily fixed - component of R0
+$\alpha$,Microcephaly curve rate parameter (mean/variance),Gamma risk curve,Estimated,0,10000,,
+$\beta$,Microcephaly curve shape parameter (mean*alpha),Gamma risk curve,Estimated,0,100000,,
+c,Microcephaly curve scaling parameter,Gamma risk curve,Estimated,0,100,,
+$1/\mu_H$,Human lifespan,SEIR,Location-specific,N/A,N/A,"[@BahiaLifeExpectancy], [@ColombiaLifeExpectancy]",
+$N_H$,Human population size,SEIR,Location-specific,N/A,N/A,"[@BahiaPopn], [@ColombiaPopn]",
+d,Mosquito density per human,SEIR,Estimated,Varied,Varied,,Free component of R0. Upper and lower prior range were such that R0 was bounded between 1 and 7.
+$t0$,Epidemic seed time in days,SEIR,Estimated,0,10000,,Effective seed time of the SEIR epidemic. 01/01/2013 taken as day 0
+$\phi_m$,Proportion of observed microcephaly cases,Likelihood,Estimated,0,2,,Reporting rate
+$\phi_i$,Proportion of observed ZIKV cases,Likelihood,Estimated,0,1,,Reporting rate
+$bp$,Baseline proportion of microcephaly affected births,Likelihood,Estimated,0,1,,
+$b_inc$,Baseline incidence rate of ZIKV case reporting,Likelihood,Estimated,0,1,,
+$a_r$,Proportion of microcephaly affected births that are aborted,Second wave,Estimated,0,1,,
+$b_r$,Proportion of potentially affected births avoided,Second wave,Estimated,0,1,,
+$t_{switch}$,Time of behavioural change,Second wave,01/02/16,N/A,N/A,,
+$t_{abortion}$,Latest pregnancy termination time in gestational weeks,Second wave,12 weeks,N/A,N/A,[@deOliveira2017],
+$\phi_{i1}$,ZIKV reporting rate before t_1,Second wave,Estimated,,,,
+$\phi_{i2}$,ZIKV reporting rate after t_1,Second wave,Estimated,,,,
+$t_1$,Time of ZIKV reporting rate change,Second wave,11/11/2015,,,[@ReportingChange],
+$t_2$,Time of microcephaly reporting rate change,Second wave,13/03/2016,N/A,N/A,[@ProtocolCZS],
+$\phi_{m1}$,Microcephaly reporting rate before t_2,Second wave,,,,,
+$\phi_{m2}$,Microcephaly reporting rate before t_2,Second wave,1,N/A,N/A,,Assumed accurate reporting in 2016
+Attack rate,Attack rate of SEIR model,SEIR,Estimated,N/A,N/A,,
+$R_0$,Basic reproductive value,SEIR,Estimated,N/A,N/A,,
