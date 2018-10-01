@@ -274,8 +274,8 @@ for(local in unique(all_incDat$local)){
         microCeph <- dat2$microCeph
         weeks1 <- rowMeans(dat2[,c("startDay","endDay")])
         
-        y <- bootstrap_pois(microCeph,inc,weeks1,weeks2,N=5000)
-        y1 <- bootstrap_sample(microCeph,inc,weeks1,weeks2,N=5000)
+        #y <- bootstrap_pois(microCeph,inc,weeks1,weeks2,N=50)
+        y1 <- bootstrap_sample(microCeph,inc,weeks1,weeks2,N=50)
         
         ## get 95% confidence intervals and look by week rather than day
         #bootstrapped_pois[[local]] <- c(mean(y/7),quantile(y/7,c(0.025,0.975)))

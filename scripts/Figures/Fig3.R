@@ -296,6 +296,7 @@ p2_c <- ggplot() +
         axis.text.x=element_blank(), 
         axis.ticks.x = element_blank(),
         panel.grid.minor = element_blank(),
+        legend.text=element_text(size=8,family="Arial"),
         legend.title=element_blank(),
         legend.position = "bottom") +
   scale_x_continuous(limits=c(365,max(labels)),breaks=labels,labels=labels_names)
@@ -441,6 +442,12 @@ p4 <- plot_grid(p4, legend, ncol=1,rel_heights=c(1,0.1))
 cairo_ps("Fig3.eps",width=7,height=7,family="Arial")
 print(p4)
 dev.off()
+
+## Save plot
+svg("Fig3.svg",width=7,height=7,family="Arial")
+print(p4)
+dev.off()
+
 
 png("data_plot.png",width=7,height=7,family="Arial",units = "in",res=300)
 print(p4)
