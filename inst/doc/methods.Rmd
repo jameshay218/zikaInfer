@@ -1,11 +1,13 @@
 ---
-title: "Epidemiological dynamics of ZIKV-associated microcephaly risk"
+title: Potential inconsistencies in Zika surveillance data and our understanding of
+  risk during pregnancy
 csl: plos.csl
+geometry: margin = 1.2in
 output:
-  html_document:
+  pdf_document:
     number_sections: yes
     toc: yes
-  pdf_document:
+  html_document:
     number_sections: yes
     toc: yes
   rmarkdown::html_vignette:
@@ -13,10 +15,18 @@ output:
     toc: yes
   word_document:
     toc: yes
+header-includes:
+- \usepackage{placeins}
+- \usepackage{setspace}
+- \usepackage{chngcntr}
+- \onehalfspacing
+sansfont: Arial
+subtitle: Supplementary Text S1
 bibliography: bibliography1.bib
 vignette: |
   %\VignetteIndexEntry{Vignette Title}  %\VignetteEngine{knitr::rmarkdown}  %\VignetteEncoding{UTF-8}
 ---
+\fontsize{12}{22}
 
 ```{r setup, echo=FALSE}
 library(kableExtra)
@@ -97,7 +107,7 @@ R_0 = \frac{b^2p_{HM}p_{MH}N_M}{\mu_M(\sigma_M + \mu_M)(\gamma_H + \mu_H)N_H}
 
 Where $N_M$ is the total number of mosquitoes; $N_H$ is the total number of humans; $\mu_M$ is the birth/death rate of mosquitoes; $\sigma_M$ is the rate at which mosquitoes leave the exposed class; $\sigma_H$ is the rate at which humans leave the exposed class; $\gamma_H$ is the rate at which humans leave the infected class; and $\mu_H$ is the birth/death rate of the human population. Critical values for $R_0$ were used to validate model implementation (values at, just above and below 1). We also validated the use of $R_0$ within the standard final-size equation to calculate the proportion of exposed individuals at the end of a single epidemic peak, which allowed to the calculation the final attack rate based on $R_0$.[@Diekmann2000]
 
-All biological parameters related to transmission properties and course of infection were assumed to be the same for all locations, whereas parameters relating to life expectancy, population size, vector density (the free component of $R_0$) and seeding time ($t_0$) were estimated and assumed to be location specific. Human life expectancy and population size were assumed to be known and fixed based on official statistics.[@BahiaLifeExpectancy, @BahiaPopn, @ColombiaLifeExpectancy, @ColombiaPopn] We assumed a fixed mosquito lifespan of 5 days, and fixed other model parameters such that the generation time of ZIKV was assumed to be ~20 days in line with previously published analyses on Zika transmission.[@Ferguson2016] A sensitivity analysis was run where mosquito lifespan was fixed at 7 days, but this did not have a significant impact on the inferred microcephaly risk profile, although we note that $R_0$ estimates are conditional on the assumed generation time. A table summarising the chosen model parameters and their sources can be found in Table S2.
+All biological parameters related to transmission properties and course of infection were assumed to be the same for all locations, whereas parameters relating to life expectancy, population size, vector density (the free component of $R_0$) and seeding time ($t_0$) were estimated and assumed to be location specific. Human life expectancy and population size were assumed to be known and fixed based on official statistics.[@BahiaLifeExpectancy; @BahiaPopn; @ColombiaLifeExpectancy; @ColombiaPopn] We assumed a fixed mosquito lifespan of 5 days, and fixed other model parameters such that the generation time of ZIKV was assumed to be ~20 days in line with previously published analyses on Zika transmission.[@Ferguson2016] A sensitivity analysis was run where mosquito lifespan was fixed at 7 days, but this did not have a significant impact on the inferred microcephaly risk profile, although we note that $R_0$ estimates are conditional on the assumed generation time. A table summarising the chosen model parameters and their sources can be found in Table S2.
 
 ## Microcephaly risk model
 The second component of the model described the risk of a fetus developing microcephaly given that the mother was infected in a particular week during pregnancy. Fitting this risk profile as a curve rather than a set of per-trimester risk estimates captures more information regarding the width and shape of the gestational-time-varying risk profile at the resolution of weeks or days rather than per trimester. We used a scaled gamma distribution to characterise the shape and scale of this curve with only 3 free parameters - the shape, scale, and an additional scaling constant to increase the magnitude of the curve. This additional scaling constant was required as the sum under the risk profile did not need to sum to 1 as in the unmodified gamma distribution. The probability of developing microcephaly given infection was described as:
@@ -116,10 +126,10 @@ Where $P'_m(x)$ is the probability of developing microcephaly given infection in
 Based on the transmission model and microcephaly risk model, the expected proportion of microcephaly affected births (Figure 1E) was calculated by multiplying these two components together. The probability of ZIKV-associated microcephaly affected birth at time, $t$, was therefore given by:
 
 \begin{equation}
- P_m(t) = \sum^t_{i=t-40} P_I(i)P'_m(i + 40 - t)
+ P_m(t) = \sum^t_{i=t-40} P_I(i)P'_m(i - t + 40)
 \end{equation}
 
-Where $P_m(t)$ is the per live birth probability of a ZIKV-associated microcephaly birth at time $t$, $P_I(i)$ is the probability of an individual becoming infected at time $i$ (and not before), and \(P'_m(i + 40 - t)\) is the probability of fetus developing microcephaly given ZIKV infection at gestational week $i + 40 - t$. Essentially, the probability of a live birth being affected by ZIKV-associated microcephaly is the sum of all of the opportunities that the mother could have been infected and the fetus subsequently developed microcephaly in each of the 40 weeks of pregnancy preceding the birth.
+Where $P_m(t)$ is the per live birth probability of a ZIKV-associated microcephaly birth at time $t$, $P_I(i)$ is the probability of an individual becoming infected at time $i$ (and not before), and \(P'_m(i - t + 40)\) is the probability of fetus developing microcephaly given ZIKV infection at gestational week $i - t + 40$. Essentially, the probability of a live birth being affected by ZIKV-associated microcephaly is the sum of all of the opportunities that the mother could have been infected and the fetus subsequently developed microcephaly in each of the 40 weeks of pregnancy preceding the birth.
 
 Including a baseline microcephaly rate (ie. not associated with ZIKV) gives the probability of observing any microcephaly case at time $t$ as:
 
@@ -133,7 +143,7 @@ Where $P_b$ is the baseline per birth microcephaly incidence rate and $\phi_{m,i
 ## Microcephaly and ZIKV incidence data
 We searched the literature and Brazilian state health authority websites for reports of suspected ZIKV incidence and microcephaly cases in 2015 and early 2016, as described in the main text. To recap: we searched \href{www.paho.org}{www.paho.org}, \href{www.who.int}{www.who.int}, Brazilian state-level ministry of health websites (eg. \href{www.suvisa.ba.gov.br}{www.suvisa.ba.gov.br}), and PubMed for the terms "zika" and "microcephaly". 
 
-ZIKV and microcephaly incidence data from 2015 were available from publications and epidemiological reports for the states of Pernambuco, Rio Grande do Norte and Bahia (at state level and for the city of Salvador), though no useable data sets from 2015 were found for any other state. Monthly microcephaly incidence and births by state was also found online from the SINASC/CGIAE/SVS/MS system as reported previously.[@Johansson2016, @Zoca2016] An additional source of ZIKV incidence for all Brazilian states was also obtained from a publication in 2016;[@Faria2016] however, the timing of the epidemic peak in these data suggested that incidence peaked in July 2015, contrasting with state-level reports which suggested an earlier peak. We also considered preliminary and later confirmed data ZIKV and microcephaly incidence published from the Brazilian ministry of health, which suggested a later ZIKV infection peak time compared to early state-level reports.[@deOliveira2017, @deOliveira2017a] Microcephaly and ZIKV incidence data were obtained for Colombia at the national level.[@PahoColombia, @Cuevas2016b] Finally, we found confirmed microcephaly case data for some locations (Rio Grande do Norte, Pernambuco, Northeast Brazil aggregated) and also confirmed ZIKV infection incidence for Colombia. Confirmed case reports were available for Colombia from weekly epidemiological bulletins; however, these did not include the date of report of confirmed cases, and we were therefore unable to extract incidence from reported cumulative cases.[@ColombiaReport2017] 
+ZIKV and microcephaly incidence data from 2015 were available from publications and epidemiological reports for the states of Pernambuco, Rio Grande do Norte and Bahia (at state level and for the city of Salvador), though no useable data sets from 2015 were found for any other state. Monthly microcephaly incidence and births by state was also found online from the SINASC/CGIAE/SVS/MS system as reported previously.[@Johansson2016; @Zoca2016] An additional source of ZIKV incidence for all Brazilian states was also obtained from a publication in 2016;[@Faria2016] however, the timing of the epidemic peak in these data suggested that incidence peaked in July 2015, contrasting with state-level reports which suggested an earlier peak. We also considered preliminary and later confirmed data ZIKV and microcephaly incidence published from the Brazilian ministry of health, which suggested a later ZIKV infection peak time compared to early state-level reports.[@deOliveira2017; @deOliveira2017a] Microcephaly and ZIKV incidence data were obtained for Colombia at the national level.[@PahoColombia; @Cuevas2016b] Finally, we found confirmed microcephaly case data for some locations (Rio Grande do Norte, Pernambuco, Northeast Brazil aggregated) and also confirmed ZIKV infection incidence for Colombia. Confirmed case reports were available for Colombia from weekly epidemiological bulletins; however, these did not include the date of report of confirmed cases, and we were therefore unable to extract incidence from reported cumulative cases.[@ColombiaReport2017] 
 
 A summary of data included in the analyses can be found in Table S1. Some data sources were only available in graphical form, and these numbers were therefore extracted using a web digitizer (\href{https://automeris.io/WebPlotDigitizer/}{https://automeris.io/WebPlotDigitizer/}). The results presented in the main text used: 
 
@@ -148,7 +158,7 @@ A summary of data included in the analyses can be found in Table S1. Some data s
 
 Model fitting using other data sources for the same locations, as well as fitting a single microcephaly risk profile to data from multiple locations simultaneously, was carried out but results are not presented here. Different data sources for the same location produced qualitatively similar risk profile estimates in terms of the window and timing of risk.
 
-Numbers of live births were obtained for Brazil from the SINASC/CGIAE/SVS/MS system.[@Johansson2016, @Zoca2016] For Colombia, live births were obtained from a publication of microcephaly and ZIKV incidence in Colombia and ratified against country wide statistics.[@Cuevas2016b, @ColombiaBirths] Where reporting of live births was incomplete, we estimated the number of live births by averaging the number of births in the previous two years for the same dates. Where birth data was only available at a lower time resolution than reported incidence data, we assumed that  the total number of births for that year were uniformly distributed across each day.
+Numbers of live births were obtained for Brazil from the SINASC/CGIAE/SVS/MS system.[@Johansson2016; @Zoca2016] For Colombia, live births were obtained from a publication of microcephaly and ZIKV incidence in Colombia and ratified against country wide statistics.[@Cuevas2016b; @ColombiaStatistics] Where reporting of live births was incomplete, we estimated the number of live births by averaging the number of births in the previous two years for the same dates. Where birth data was only available at a lower time resolution than reported incidence data, we assumed that  the total number of births for that year were uniformly distributed across each day.
 
 Extraction of incidence data from [@deOliveira2017a] was slightly more involved, as exact microcephaly case numbers were not provided. However, we were able to estimate the case count data given the methodology in this publication. [@deOliveira2017a] reported confirmed microcephaly incidence per 10,000 births and notified ZIKV infection incidence per 10,000 pregnant women, as well as the total number of microcephaly cases and monthly number of infected pregnant women. We could therefore infer the number of monthly births as follows:
 \begin{equation}
@@ -168,8 +178,7 @@ Where $\text{microcephaly cases(t)}$ is the number of microcephaly cases reporte
 
 Note that we use the total population size for Northeast Brazil as the denominator for per capita incidence, as the reporting rate parameter (described below) accounts for the fact that infected pregnant women only represent a fraction of the true infected population.
 
-All data are available to download in human readable form in the accompanying R package \href{https://github.com/jameshay218/zikaInfer/tree/master/RawData/}{here}. The files [`data_sources.csv`](https://github.com/jameshay218/zikaInfer/tree/master/RawData/data_sources.csv) and [`data_key.csv`](https://github.com/jameshay218/zikaInfer/tree/master/RawData/data_key.csv) describe the sources of these data and the column names respectively. Note that `startDay` and `endDay` refer to the first and last day that the reporting period covers; `buckets` refers to the number of days that that reportig window covers; and all dates were converted to integers (where 1 day = 1), and 01/01/2013 was taken as day 0.
-
+All data are available to download in human readable form in the accompanying R package \href{https://github.com/jameshay218/zikaInfer/tree/master/RawData/}{here}. The files [`data_sources.csv`](https://github.com/jameshay218/zikaInfer/tree/master/RawData/data_sources.csv) and [`data_key.csv`](https://github.com/jameshay218/zikaInfer/tree/master/RawData/data_key.csv) describe the sources of these data and the column names respectively. Note that `startDay` and `endDay` refer to the first and last day that the reporting period covers; `buckets` refers to the number of days that that reporting window covers; and all dates were converted to integers (where 1 day = 1), and 01/01/2013 was taken as day 0.
 
 **Table S1: Summary of datasets included in the analysis.** *For each location, the type of incidence data, the time resolution of reports, whether or not data were extracted using a digitiser and the data source are provided. Sources refer to references in the main text.*
 \tiny
@@ -180,6 +189,8 @@ colnames(data_sources) <- c("Country","Location","Incidence type","Reported or C
 kable(data_sources, caption="Summary of datasets included in the analysis")
 ```
 \normalsize
+
+\newpage
 
 ## Model parameters
 Model parameters related to ZIKV transmission were obtained from the literature as described in Table S2. Parameters were predominately chosen based on a previously published transmission model, with point values chosen to give a generation time of approximately 20 days.[@Ferguson2016] Values used were as described in Table S6 of [@Ferguson2016], with the intrinsic latency period here taken as the intrinsic incubation period described in [@Ferguson2016] less 1.5 days to reflect the assumption that infectiousness starts 1.5 days before symptom onset. Given a fixed generation time, the shape of the SEIR model predicted incidence curve was allowed to vary depending on the value of $R_0$. As $R_0$ is comprised of multiple correlated parameters, all components of $R_0$ other than the vector density per human were fixed. Vital statistics (human life expectancy and population size) for particular locations are described in Table S3.
@@ -192,6 +203,8 @@ kable(parameters, caption="Summary of model parameters, sources and assumed para
 ```
 \normalsize
 
+\newpage
+
 ## Vital statistics
 **Table S3. Summary of vital statistics and sources.** *Sources refer to references in the main text*
 \small
@@ -202,7 +215,6 @@ row.names(vital_statistics) <- NULL
 kable(vital_statistics, caption="Summary of vital statistics and sources")
 ```
 \normalsize
-
 
 # Model fitting
 Using the expected number of observed microcephaly cases as described above, we fit the model to available microcephaly incidence and live birth data to estimate model parameters. The likelihood function and fitting algorithm are described below.
@@ -223,7 +235,7 @@ P(d_t) \sim B(n=n(t),p=P_{micro}(t))
 Where $n(t)$ is the total number of births observed at time $t$ which was known; and $P_{micro}(t)$ is the proportion of microcephaly affected births at time $t$ as defined by the model parameters $\Psi$ and $\theta_i$; and $B$ is the binomial probability mass function. 
 
 ## ZIKV incidence and combined likelihood
-Note that the reporting proportion parameter, $\phi_{m,i}$ was assumed to be location-specific as described above. Note also that this log likelihood is easily extended to incorporate ZIKV incidence data as well as microcephaly incidence data $I_i = \left \{i_t\right \}^T_{t=1}$ as:
+Note that the reporting rate scaling parameter, $\phi_{m,i}$ was assumed to be location-specific as described above. Note also that this log likelihood is easily extended to incorporate ZIKV incidence data as well as microcephaly incidence data $I_i = \left \{i_t\right \}^T_{t=1}$ as:
 
 \begin{equation}
 l(D_i, I_i|\Psi, \theta_i) = \omega \sum_{t_m} \log P(d_t|\Psi, \theta_i) + (1-\omega)\sum_{t_i} \log P(i_t|\Psi, \theta_i)
@@ -239,7 +251,7 @@ P(i_t) \sim B(n=N, p=\phi_{I,i} P_I(t))
 
 Where $i_t$ is the observed ZIKV incidence at time t; $N$ is the total population size; $\phi_{I,i}$ is the state-specific proportion of true ZIKV cases that observed incidence represents (through under or overreporting, or misdiagnosis) and $P_I(t)$ is the model predicted probability of becoming infected at time $t$ as described above.
 
-The complete log likelihood function combining information from all included locations in the model was given by:
+All results in the main text are based on independent fits to data from single locations, giving parameter estimates unique to each location. However, for completeness, we show the complete log likelihood function combining information from multiple locations:
 
 \begin{equation}
 l(D|\Psi, \theta) = \sum_{n=i}l(D_i,I_i|\Psi, \theta_i)
@@ -262,7 +274,7 @@ We were able to fit the model to microcephaly incidence data alone by setting th
 p(t_{peak}) \sim unif(a - \frac{b}{2},a + \frac{b}{2})
 \end{equation}
 
-Where $t_{peak}$ is the model generated ZIKV peak incidence time in that location; $a$ is the peak time of the ZIKV epidemic in that location based on the day of maximum reported ZIVK incidence; and $b$ is the width of the uniform window around this peak time, representing uncertainty in the timing of the peak. Here, we chose $b$ to be 120 days to represent a ~4 month window of uncertainty around the timing of the ZIKV epidemic peak.
+Where $t_{peak}$ is the model generated ZIKV peak incidence time in that location; $a$ is the peak time of the ZIKV epidemic in that location based on the day of maximum reported ZIVK incidence; and $b$ is the width of the uniform window around this peak time, representing uncertainty in the timing of the peak. Here, we chose $b$ to be 120 days to represent a ~4 month window of uncertainty around the timing of the ZIKV epidemic peak. Parameter values that give  $t_{peak} <  a - \frac{b}{2}$ or $t_{peak} >  a + \frac{b}{2}$ are therefore assigned a probability of 0. $a$ was 06/05/2015 for Bahia; 03/02/2016 for Colombia; 16/03/2015 for Pernambuco; and 13/05/2015 for Rio Grande do Norte based on the sources shown in Table S1.
 
 ## MCMC algorithm
 Using the equation above, we defined a binomial likelihood of observing a number of microcephaly cases at any unit time given a set of model parameters and known number of births. We defined the likelihood function such that we could calculate the combined likelihood of observing ZIKV and microcephaly incidence data from any number of geographical locations conditional on both universal and location-specific parameters. Furthermore, we incorporated the potential for location specific over and underreporting through reporting rate parameters, $\phi_I$ and $\phi_m$. Total births were either known from the data, or estimated by taking the average of the previous two years' births in the same time period. Where weekly birth data was required from monthly data, we evenly spread the monthly number of births across the number of days in that month and then summed the number of births for each 7 day block. 
@@ -273,24 +285,26 @@ Using the log posterior function defined above, we fit the model to available in
 We added four additional model parameters to quantify potential changes in behaviour and reporting rates across two seasons of microcephaly and ZIKV incidence that would explain the two seasons of observed data, where only one wave of microcephaly incidence was observed despite two waves of ZIKV incidence. We tested the following hypotheses:
 
 1. Microcephaly reporting accuracy was different before the most recent change in microcephaly case definition on 13/03/2016 for cases reported through the Registro de Eventos em Saúde Pública (RESP) database in Brazil. Under/over-reporting of microcephaly may therefore have been different before and after this date.
-2. Following the WHO announcement of a Public Health Emergency of International (PHEIC) concern on 01/02/2016, women may have begun to seek targeted abortions for microcephaly affected pregnancies <12 weeks of gestation, which would manifest itself as a probability of seeking an abortion given development of ZIKV-associated microcephaly in a particular week of pregnancy.
+2. Following the WHO announcement of a Public Health Emergency of International (PHEIC) concern on 01/02/2016, women may have begun to seek targeted abortions for microcephaly affected pregnancies <24 weeks of gestation, which would manifest itself as a probability of seeking an abortion given development of ZIKV-associated microcephaly in a particular week of pregnancy.
 3. The proportion of ZIKV-affected births after 11/11/2015 may have decreased relative to reported per capita ZIKV incidence, either through pregnant women taking additional precautions to avoid infection relative to the rest of the population or through delaying pregnancy entirely.
 4. ZIKV incidence reporting accuracy may have changed after 11/11/2015 after the WHO/PAHO issued an alert accompanied by improved laboratory detection guidelines for ZIKV. Under/over-reporting of ZIKV infection may therefore have been different before and after this date.
 
-We define the probability of not developing microcephaly during the first $i + 40 - t$ days of pregnancy as $\bar{bp_i} : (1-bp)^{i + 40 - t}$. We also make the following notational simplification to give the probability of a fetus developing ZIKV-associated microcephaly at time $i$, $P_i : P_I(i)P'_m(i+40-t)$. The expected proportion of observed microcephaly affected live-births was therefore given by:
+We define the probability of not developing microcephaly during the first $i-t+40$ days of pregnancy as $\bar{bp_i} : (1-bp)^{i - t + 40}$. We also make the following notational simplification to give the probability of a fetus developing ZIKV-associated microcephaly at time $i$, $P_i : P_I(i)P'_m(i-t+40)$. The expected proportion of observed microcephaly affected live-births was therefore given by:
 
+\small
 \begin{equation}
 P_{micro}(t) = \phi_{m}\sum^t_{i=t-40}\left\{\begin{array}{lr}
 \bar{bp_i}(P_i + bpP_i + bp) & t < t_{switch} \\\\
-(1-a_r)\bar{bp_i}((1-b_r)P_i + bp(1-b_r)P_i + bp) & t \geq t_{switch} \hspace{0.1cm}\&\hspace{0.1cm} (i + 40 - t) <  t_{abortion}\\\\ 
-\bar{bp_i}((1-b_r)P_i +bp(1-b_r)P_i + bp) & t \geq t_{switch} \hspace{0.1cm}\&\hspace{0.1cm}(i + 40 - t) \geq  t_{abortion}
+(1-a_r)\bar{bp_i}((1-b_r)P_i + bp(1-b_r)P_i + bp) & t \geq t_{switch} \hspace{0.1cm}\&\hspace{0.1cm} (i - t + 40) <  t_{abortion}\\\\ 
+\bar{bp_i}((1-b_r)P_i +bp(1-b_r)P_i + bp) & t \geq t_{switch} \hspace{0.1cm}\&\hspace{0.1cm}(i - t + 40) \geq  t_{abortion}
 \end{array}
 \right.
 \end{equation}
+\normalsize
 
-Where $P_I(i)$ is the probability of becoming infected at time $i$; $P'_m(i + 40 - t)$ is the probability of developing microcephaly given infection in gestational week $i + 40 - t$; $t_{switch}$ is the time at which behavioural changes could have occurred (assumed to be 01/02/2016, mechanism 3); $b_r$ is the proportion of potentially affected births that were avoided (mechanism 3); $a_r$ is the proportion of microcephaly-affected births that were aborted (mechanism 2); and $t_{abortion}$ is the gestational time before which abortions could occur, assumed to be 12 weeks (mechanism 2); $bp$ is the baseline daily *probability* of developing microcephaly during pregnancy (note that this is different to the previous definition of baseline microcephaly, $P_b$, which was defined as a rate per observed live birth rather than a probability per day during pregnancy). 
+Where $P_I(i)$ is the probability of becoming infected at time $i$; $P'_m(i -t + 40)$ is the probability of developing microcephaly given infection in gestational week $i - t + 40$; $t_{switch}$ is the time at which behavioural changes could have occurred (assumed to be 01/02/2016, mechanism 3); $b_r$ is the proportion of potentially affected births that were avoided (mechanism 3); $a_r$ is the proportion of microcephaly-affected births that were aborted (mechanism 2); and $t_{abortion}$ is the gestational time before which abortions could occur, assumed to be 24 weeks (mechanism 2); $bp$ is the baseline daily *probability* of developing microcephaly during pregnancy (note that this is different to the previous definition of baseline microcephaly, $P_b$, which was defined as a rate per observed live birth rather than a probability per day during pregnancy). 
 
-Overall, this term gives the probability of an individual not developing baseline microcephaly during the first $i + 40 - t$ days of pregnancy and either developing ZIKV-associated microcephaly, baseline microcephaly or both on day $i$. This term is then multiplied by the probability of observing that microcephaly case (ie. the reporting rate), given by $\phi_m$, which was assumed to have one value before and one after 13/03/2016 (mechanism 1). 
+Overall, this term gives the probability of an individual not developing baseline microcephaly during the first $i - t + 40$ days of pregnancy and either developing ZIKV-associated microcephaly, baseline microcephaly or both on day $i$. This term is then multiplied by the probability of observing that microcephaly case (ie. the reporting rate), given by $\phi_m$, which was assumed to have one value before and one after 13/03/2016 (mechanism 1). 
 
 As our model did not explicitly include seasonality, we used reported ZIKV incidence directly to estimate the per capita infection risk across two seasons. We calculated the probability of becoming infected with ZIKV as:
 
@@ -321,7 +335,7 @@ We obtained reported acute exanthematous illness (AEI) attributed to Zika virus 
 \phi_I = \frac{\sum_t I(t)/N}{AR}
 \end{equation}
 
-Where $I(t)$ is the reported incidence at week $t$, $N$ is the population size of Salvador, and $AR$ is the reported attack rate based on seroprevalence. We placed a uniform prior on $AR$ such that the total attack rate was between 59.4 and 66.8%.[@Netto] $N$ was inferred by dividing the total number of reported AEI cases by the reported total incidence per 1000 persons (giving 2922037); life expectancy was assumed to be the same as Bahia overall at 73.1 years. We calculated weekly number of live births by backtracking from the reported microcephaly incidence in this time period and the total number of microcephaly cases reported. Paploski et al. report  "367 newborns with suspected microcephaly (15.6 cases/1,000 newborns during July 2015–February 2016, which peaked at 31.4 cases/1,000 newborns in December)"", suggesting that there were 23526 newborns in this period. We assumed that these births were distributed uniformly across each week such that there were 420 births per week from July 2015 – February 2016. The microcephaly reporting rate, $\phi_m$, was assumed to be 100%.
+Where $I(t)$ is the reported incidence at week $t$, $N$ is the population size of Salvador, and $AR$ is the reported attack rate based on seroprevalence. We placed a uniform prior on $AR$ such that the total attack rate was between 59.4 and 66.8%.[@Netto] $N$ was inferred by dividing the total number of reported AEI cases by the reported total incidence per 1000 persons (giving 2922037); life expectancy was assumed to be the same as Bahia overall at 73.1 years. We calculated weekly number of live births by backtracking from the reported microcephaly incidence in this time period and the total number of microcephaly cases reported. Paploski et al. report  "367 newborns with suspected microcephaly (15.6 cases/1,000 newborns during July 2015–February 2016, which peaked at 31.4 cases/1,000 newborns in December)", suggesting that there were 23,526 newborns in this period. We assumed that these births were distributed uniformly across each week such that there were 420 births per week from July 2015 – February 2016. The microcephaly reporting rate, $\phi_m$, was assumed to be 100%.
 
 Model fitting was then carried out as above; fixing all model parameters other than $\phi_I$; $\alpha$; $\beta$; and $c$ as described in Table S2. Note that in this analysis the SEIR model component is not included.
 
