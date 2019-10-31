@@ -20,7 +20,7 @@ topDir <- "/media/james/JH USB/zika/outputs"
 
 ###################################################
 ## NEJM Northeast Brazil model fit
-chainWD <- paste0(topDir, "northeast_deOliveira2017/northeast/model_1")
+chainWD <- paste0(topDir, "/northeast_deOliveira2017/northeast/model_1")
 parTab <- read_inipars(chainWD)
 chain <- lazymcmc::load_mcmc_chains(chainWD,parTab,FALSE,1,750000,TRUE,FALSE,FALSE)[["chain"]]
 datFile = "~/Documents/Zika/Data/brazil/deOliveira2017/microCeph_deOliveira2017_clean.csv"

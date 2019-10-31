@@ -37,7 +37,7 @@ brazilMicroDat <- read.csv("~/Documents/Zika/Data/brazil/brazil_microCeph_280220
 SUBSET_STATES <- FALSE
 EPIDEMIC_STATES <- FALSE
 NORMALISE <- FALSE
-SAVE_PLOT <- TRUE
+SAVE_PLOT <- FALSE
 LOG_CORRELATION <- FALSE
 
 # Data --------------------------------------------------------------------

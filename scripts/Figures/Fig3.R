@@ -207,8 +207,8 @@ otherDat$confirmed <- as.factor(otherDat$confirmed)
 
 peakTimes2 <- data.frame(local=c("Northeast Brazil","Colombia","Pernambuco - reports","Bahia - reports",
                                  "Rio Grande do Norte - reports"),
-                         start=c(NA,NA, 804-30,NA,NA),
-                         end=c(NA,NA,804+30,NA,NA))
+                         start=c(NA,NA, 804-60,NA,NA),
+                         end=c(NA,NA,804+60,NA,NA))
 actual2 <- data.frame(local=c("Northeast Brazil","Colombia","Pernambuco - reports","Bahia - reports",
                               "Rio Grande do Norte - reports"),peakTime=c(NA,NA,804,NA,NA))
 
