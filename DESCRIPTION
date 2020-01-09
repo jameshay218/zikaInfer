@@ -11,7 +11,8 @@ BugReports: https://github.com/jameshay218/zikaInfer/issues
 Suggests:
     testthat,
     knitr,
-    rmarkdown
+    rmarkdown,
+    rlsoda
 LinkingTo: Rcpp
 Imports:
     coda,
@@ -23,8 +24,7 @@ Imports:
     MASS,
     nleqslv,		
     Rcpp,	
-    reshape2,
-    rlsoda
+    reshape2
 RoxygenNote: 5.0.1
 VignetteBuilder: knitr
 Encoding: UTF-8

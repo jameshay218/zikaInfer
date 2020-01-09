@@ -16,6 +16,7 @@ library(coda)
 ## Where are the MCMC chains stored
 #topDir <- "~/net/home/zika/outputs/"
 topDir <- "/media/james/JH USB/zika/outputs"
+topDir <- "H:/all_results_backup/zika/zika_usb/outputs/"
 
 
 ###################################################
@@ -56,8 +57,8 @@ pern_plot
 ###################################################
 ## Bahia reports data fit
 chainWD = paste0(topDir,"bahia/bahia/model_1")
-datFile = "~/Documents/Zika/Data/brazil/microceph_reports_2016.csv"
-incFile = "~/Documents/Zika/Data/brazil/brazil_report_zikv_inc_2016.csv"
+datFile = "H:/all_results_backup/zika/Data/brazil/microceph_reports_2016.csv"
+incFile = "H:/all_results_backup/zika/Data/brazil/brazil_report_zikv_inc_2016.csv"
 parTab <- read_inipars(chainWD)
 chain <- lazymcmc::load_mcmc_chains(chainWD,parTab,FALSE,1,750000,TRUE,FALSE,FALSE)[["chain"]]
 local = "bahia"
@@ -69,7 +70,90 @@ ylim <- 0.03
 bahia_plot <- indiv_model_fit(datFile,incFile, local, localName,
                       incScale, runs, ylim,xlim=730,bot=FALSE,standalone=FALSE,
                       parTab=parTab, chain=chain, forecast=FALSE, weeks=FALSE)
-bahia_plot
+bahia_plot[[1]]
+
+## Generate residual plot
+all_dat <- bahia_plot[[2]]
+
+inc_preds <- all_dat$incPredictions
+inc_preds$index <- rep(1:200, each=length(unique(inc_preds$time)))
+inc_dat <- all_dat$incDat
+inc_dat <- inc_dat[,c("meanDay","inc","N_H")]
+colnames(inc_dat) <- c("time","obs","N_H")
+inc_dat$obs <- inc_dat$obs/inc_dat$N_H
+inc_preds <- merge(inc_preds, inc_dat)
+inc_preds$residual <- inc_preds$obs - inc_preds$inc
+
+inc_preds_bounds <- plyr::ddply(inc_preds, ~time, function(x) quantile(x$residual,c(0.025,0.5,0.975)))
+colnames(inc_preds_bounds) <- c("time","lower","median","upper")
+inc_preds_bounds$dat <- "ZIKV infection"
+
+micro_preds <- all_dat$microPredictions
+micro_preds$index <- rep(1:200, each=length(unique(micro_preds$time)))
+micro_dat <- all_dat$data
+micro_dat <- micro_dat[,c("meanDay","microCeph","births")]
+colnames(micro_dat) <- c("time","obs","births")
+micro_dat$obs <- micro_dat$obs/micro_dat$births
+micro_preds <- merge(micro_preds, micro_dat)
+micro_preds$residual <- micro_preds$obs - micro_preds$micro
+
+micro_preds_bounds <- plyr::ddply(micro_preds, ~time, function(x) quantile(x$residual,c(0.025,0.5,0.975)))
+colnames(micro_preds_bounds) <- c("time","lower","median","upper")
+micro_preds_bounds$dat <- "Microcephaly"
+
+all_bounds <- rbind(inc_preds_bounds, micro_preds_bounds)
+options(scipen = 999)
+
+
+labels <- rep(getDaysPerMonth(3),4)
+labels <- c(0,cumsum(labels))
+labels_names <- as.yearmon(as.Date(labels,origin="2013-01-01"))
+x_lower <- 730
+
+p1 <- ggplot(all_bounds) + 
+  geom_hline(yintercept=0,linetype="dashed",col="grey70") +
+  geom_ribbon(aes(x=time,ymax=upper,ymin=lower,fill=dat),alpha=0.3) + 
+  geom_line(aes(x=time,y=median,col=dat)) +
+  ylab("Residual per birth/capita incidence\n(observed - predicted)") +
+  xlab("Date") +
+  scale_fill_manual(values=c("blue","forestgreen")) +
+  scale_colour_manual(values=c("blue","forestgreen")) +
+  scale_x_continuous(limits=c(x_lower,max(labels)),breaks=labels,labels=labels_names) +
+  facet_wrap(~dat,scales="free_y",ncol=1) +
+  theme_classic() +
+  theme(legend.position="none",
+        axis.text=element_text(size=6),
+        axis.title = element_text(size=8),
+        strip.text=element_text(size=8))
+
+p2 <- ggplot(all_bounds) + 
+  geom_histogram(aes(x=median,fill=dat),bins=25) + 
+  geom_vline(xintercept=0,linetype="dashed",col="grey70") +
+  #ylab("Residual per birth/capita incidence\n(observed - predicted)") +
+  ylab("Count") +
+  xlab("Residual per birth/capita incidence\n(observed - predicted)") +
+  scale_fill_manual(values=c("blue","forestgreen")) +
+  scale_colour_manual(values=c("blue","forestgreen")) +
+  scale_x_continuous(breaks= scales::pretty_breaks(5)) +
+  #scale_x_continuous(limits=c(x_lower,max(labels)),breaks=labels,labels=labels_names) +
+  facet_wrap(~dat,scales="free",ncol=1) +
+  theme_classic() +
+  theme(legend.position="none",
+        axis.text=element_text(size=6),
+        axis.title = element_text(size=8),
+        strip.text=element_text(size=8))
+
+pdf("E:/James/Google Drive/Thesis/Corrections/residual_plot.pdf",width=7.5,height=5)
+p1 + p2 + plot_layout(widths=c(1.5,1))
+dev.off()
+png("E:/James/Google Drive/Thesis/Corrections/residual_plot.pdf",width=7.5,height=5,res=300,units="in")
+p1 + p2 + plot_layout(widths=c(1.5,1))
+dev.off()
+
+
+inc_preds <- reshape2::dcast(inc_preds, time~index,value.var="inc")
+
+
 ###################################################
 ## Rio Grande Do Norte reports data fit
 chainWD = paste0(topDir,"riograndedonorte_confirmed/riograndedonorte/model_1")

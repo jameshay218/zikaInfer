@@ -196,6 +196,8 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
         if(forecast) pars["baselineProb"] <- exp(pars["baselineProb"])
         microCurves <- rbind(microCurves, f1(pars,TRUE)$microCeph)
     }
+    micro_predictions <- microCurves
+    
     predict_bounds <- as.data.frame(t(sapply(unique(microCurves$time),function(x) quantile(microCurves[microCurves$time==x,"microCeph"],c(0.025,0.5,0.975)))[c(1,3),]))
     bestPars <- get_best_pars(chain)
     ## If forecasting version, we had baseline prob on exponential scale
@@ -330,7 +332,7 @@ indiv_model_fit <- function(datFile = "~/Documents/Zika/Data/northeast_microceph
               legend.justification = c(1,1),
               legend.text=element_text(size=8,family="Arial"),
               legend.background = element_blank())
-    return(p)
+    return(list(p,all_dat=tmp))
 }
 
 

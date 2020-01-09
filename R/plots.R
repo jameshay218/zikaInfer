@@ -125,7 +125,8 @@ plot_setup_data <- function(chain, dat=NULL, incDat=NULL, parTab, ts, local, run
                                         # microBounds[,"time"] <- tmpDat[,"meanDay"][microBounds[,"time"]]
                                         # incBounds[,"time"] <- tmpInc[,"meanDay"][incBounds[,"time"]]
     
-    return(list("incBounds"=incBounds,"microBounds"=microBounds, "data"=tmpDat,"incDat"=tmpInc))
+    return(list("incBounds"=incBounds,"microBounds"=microBounds, "data"=tmpDat,"incDat"=tmpInc, 
+                "incPredictions"=allInc, "microPredictions"=allMicro))
 }
 
 
